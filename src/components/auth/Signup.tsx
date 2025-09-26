@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Container } from '@mui/material';
-import useAuth from '../../hooks/useAuth'; // Remove curly braces since it's a default export
+import useAuth from '../../hooks/useAuth';
 
 const Signup: React.FC = () => {
-    const { signup } = useAuth();
+    const { signupUser } = useAuth(); // Changed from signup to signupUser
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -11,7 +11,7 @@ const Signup: React.FC = () => {
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         try {
-            await signup(email, password);
+            await signupUser(email, password); // Changed from signup to signupUser
             // Redirect or show success message
         } catch (err) {
             setError('Signup failed. Please try again.');
