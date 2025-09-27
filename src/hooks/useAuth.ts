@@ -1,42 +1,51 @@
 import { useState } from 'react';
-import { loginUser, signupUser } from '../services/api';
+import { login, signup } from '../services/api';
+
+interface User {
+    email: string;
+    id: string;
+}
 
 const useAuth = () => {
-    const [user, setUser] = useState(null);
-    const [error, setError] = useState(null);
+    const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const login = async (email, password) => {
+    const loginUser = async (email: string, password: string) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await loginUser(email, password);
-            setUser(response.data);
-        } catch (err) {
-            setError(err.message);
+            const response = await login(email, password);
+            setUser(response.data || response);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError(String(err));
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    const signup = async (email, password) => {
+    const signupUser = async (email: string, password: string, name?: string) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await signupUser(email, password);
-            setUser(response.data);
-        } catch (err) {
-            setError(err.message);
+            const response = await signup(name || '', email, password);
+            setUser(response.data || response);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError(String(err));
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    const logout = () => {
-        setUser(null);
-    };
-
-    return { user, error, loading, login, signup, logout };
+    return { loginUser, signupUser, user, loading, error };
 };
 
 export default useAuth;

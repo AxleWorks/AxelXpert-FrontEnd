@@ -2,17 +2,27 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import Header from './components/common/Header';
 import Home from './pages/Home';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
+import Signup from './components/auth/Signup';
+import SignIn from './components/auth/SignIn';
 
 const App: React.FC = () => {
   return (
     <Router>
-      <Header />
       <Switch>
-        <Route path="/" exact component={Home} />
-        <Route path="/login" component={Login} />
-        <Route path="/signup" component={Signup} />
+        {/* Auth routes without Header */}
+        <Route path="/signin" exact component={SignIn} />
+        <Route path="/signup" exact component={Signup} />
+        <Route path="/login" exact component={SignIn} />
+        
+        {/* All other routes with Header */}
+        <Route path="/" render={() => (
+          <>
+            <Header />
+            <Switch>
+              <Route path="/" exact component={Home} />
+            </Switch>
+          </>
+        )} />
       </Switch>
     </Router>
   );

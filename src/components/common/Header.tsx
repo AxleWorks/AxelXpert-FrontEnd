@@ -9,8 +9,8 @@ const Header: React.FC = () => {
                 <Typography variant="h6" style={{ flexGrow: 1 }}>
                     Automobile Service Store
                 </Typography>
-                <Button color="inherit" component={Link} to="/login">
-                    Login
+                <Button color="inherit" component={Link} to="/signin">
+                    Signin
                 </Button>
                 <Button color="inherit" component={Link} to="/signup">
                     Signup
