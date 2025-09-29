@@ -1,66 +1,16 @@
-# Automobile Service App
+# React + Vite
 
-## Overview
-The Automobile Service App is a frontend application designed for an automobile service store. It provides users with the ability to log in and sign up for services, utilizing Material-UI (MUI) components for a modern and responsive user interface.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Features
-- User authentication with login and signup functionality.
-- Responsive design using Material-UI components.
-- Navigation bar for easy access to different sections of the application.
+Currently, two official plugins are available:
 
-## Project Structure
-```
-automobile-service-app
-├── src
-│   ├── components
-│   │   ├── auth
-│   │   │   ├── Login.jsx
-│   │   │   └── Signup.jsx
-│   │   └── common
-│   │       └── Header.tsx
-│   ├── pages
-│   │   ├── Home.jsx
-│   │   ├── Login.jsx
-│   │   └── Signup.jsx
-│   ├── hooks
-│   │   └── useAuth.js
-│   ├── services
-│   │   └── api.js
-│   ├── utils
-│   │   └── validation.js
-│   ├── types
-│   │   └── index.js
-│   ├── App.jsx
-│   └── index.jsx
-├── public
-│   └── index.html
-├── package.json
-└── README.md
-```
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Installation
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   ```
-2. Navigate to the project directory:
-   ```
-   cd automobile-service-app
-   ```
-3. Install the dependencies:
-   ```
-   npm install
-   ```
+## React Compiler
 
-## Usage
-To start the application, run:
-```
-npm start
-```
-This will launch the application in your default web browser.
+The React Compiler is not enabled on this template. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Contributing
-Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
+## Expanding the ESLint configuration
 
-## License
-This project is licensed under the MIT License.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

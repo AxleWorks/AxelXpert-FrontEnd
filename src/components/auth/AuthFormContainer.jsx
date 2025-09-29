@@ -1,41 +1,62 @@
-import React from 'react';
-import { Paper, Typography } from '@mui/material';
+import React from "react";
+import { Paper, Typography } from "@mui/material";
 
 const AuthFormContainer = ({ title, error, children }) => {
-    return (
-        <Paper
-            elevation={0}
-            sx={{
-                padding: { xs: 3, sm: 4 },
-                width: '100%',
-                maxWidth: { xs: '100%', sm: 420, md: 380 },
-                backgroundColor: 'white',
-                borderRadius: 2,
-                boxSizing: 'border-box'
-            }}
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        padding: { xs: 4, sm: 5, md: 6 },
+        width: "100%",
+        maxWidth: { xs: "100%", sm: 480, md: 420 },
+        backgroundColor: "white",
+        borderRadius: 3,
+        boxShadow:
+          "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        boxSizing: "border-box",
+        border: "1px solid #e2e8f0",
+      }}
+    >
+      <Typography
+        variant="h4"
+        sx={{
+          fontWeight: 700,
+          mb: 4,
+          textAlign: "center",
+          color: "#1e293b",
+          fontSize: { xs: "1.75rem", sm: "2rem", md: "2.25rem" },
+          letterSpacing: "-0.025em",
+        }}
+      >
+        {title}
+      </Typography>
+
+      {error && (
+        <Box
+          sx={{
+            mb: 3,
+            p: 2,
+            backgroundColor: "#fef2f2",
+            border: "1px solid #fecaca",
+            borderRadius: 2,
+            textAlign: "center",
+          }}
         >
-            <Typography
-                variant="h4"
-                sx={{
-                    fontWeight: 600,
-                    mb: 3,
-                    textAlign: 'center',
-                    color: '#1e293b',
-                    fontSize: { xs: '1.6rem', sm: '1.8rem', md: '2rem' }
-                }}
-            >
-                {title}
-            </Typography>
+          <Typography
+            color="error"
+            sx={{
+              fontSize: "0.875rem",
+              fontWeight: 500,
+            }}
+          >
+            {error}
+          </Typography>
+        </Box>
+      )}
 
-            {error && (
-                <Typography color="error" sx={{ mb: 1.5, textAlign: 'center', fontSize: { xs: '0.85rem', md: '0.9rem' } }}>
-                    {error}
-                </Typography>
-            )}
-
-            {children}
-        </Paper>
-    );
+      {children}
+    </Paper>
+  );
 };
 
 export default AuthFormContainer;
