@@ -14,28 +14,27 @@ automobile-service-app
 ├── src
 │   ├── components
 │   │   ├── auth
-│   │   │   ├── Login.tsx
-│   │   │   └── Signup.tsx
+│   │   │   ├── Login.jsx
+│   │   │   └── Signup.jsx
 │   │   └── common
 │   │       └── Header.tsx
 │   ├── pages
-│   │   ├── Home.tsx
-│   │   ├── Login.tsx
-│   │   └── Signup.tsx
+│   │   ├── Home.jsx
+│   │   ├── Login.jsx
+│   │   └── Signup.jsx
 │   ├── hooks
-│   │   └── useAuth.ts
+│   │   └── useAuth.js
 │   ├── services
-│   │   └── api.ts
+│   │   └── api.js
 │   ├── utils
-│   │   └── validation.ts
+│   │   └── validation.js
 │   ├── types
-│   │   └── index.ts
-│   ├── App.tsx
-│   └── index.tsx
+│   │   └── index.js
+│   ├── App.jsx
+│   └── index.jsx
 ├── public
 │   └── index.html
 ├── package.json
-├── tsconfig.json
 └── README.md
 ```
 
