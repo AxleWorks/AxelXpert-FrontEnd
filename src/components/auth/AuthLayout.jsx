@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Box, Grid } from '@mui/material';
 
 const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
+    // Keep margins/paddings clean but avoid forcing viewport sizes or hiding overflow
     useEffect(() => {
         document.body.style.margin = '0';
         document.body.style.padding = '0';
@@ -26,22 +27,25 @@ const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
 
     const leftStyles = {
         margin: 0,
-        backgroundImage: `url(${backgroundImage})`,
+        // Only show background image on md+ screens. On small screens use a solid background so text stays readable.
+        backgroundImage: { xs: 'none', md: `url(${backgroundImage})` },
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        minHeight: '100vh',
+        backgroundColor: { xs: '#0f172a', md: 'transparent' },
+        minHeight: { xs: 'auto', md: '100vh' },
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 2,
+        padding: { xs: 4, md: 2 },
         color: 'white',
         position: 'relative',
         textAlign: 'center',
         boxSizing: 'border-box',
         '&::before': {
+            display: { xs: 'none', md: 'block' },
             content: '""',
             position: 'absolute',
             top: 0,
@@ -54,9 +58,9 @@ const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
     };
 
     const rightStyles = {
-        padding: 0,
+        padding: { xs: 4, md: 0 },
         margin: 0,
-        minHeight: '100vh',
+        minHeight: { xs: 'auto', md: '100vh' },
         width: '100%',
         backgroundColor: 'white',
         display: 'flex',
@@ -77,19 +81,21 @@ const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
             boxSizing: 'border-box',
         }}>
             <Grid container sx={{ minHeight: '100vh', width: '100%', margin: 0 }}>
-                <Grid item xs={12} md={6} sx={{ ...leftStyles }}>
+                {/* Show form first on small screens for quicker access */}
+                <Grid item xs={12} md={6} sx={{ ...rightStyles }} order={{ xs: 1, md: 2 }}>
+                    {rightContent}
+                </Grid>
+
+                <Grid item xs={12} md={6} sx={{ ...leftStyles }} order={{ xs: 2, md: 1 }}>
                     <Box sx={{ 
                         position: 'relative', 
                         zIndex: 2, 
-                        width: '70%',
+                        width: { xs: '100%', md: '70%' },
                         textAlign: 'center',
                         boxSizing: 'border-box'
                     }}>
                         {leftContent}
                     </Box>
-                </Grid>
-                <Grid item xs={12} md={6} sx={{ ...rightStyles }}>
-                    {rightContent}
                 </Grid>
             </Grid>
         </Box>

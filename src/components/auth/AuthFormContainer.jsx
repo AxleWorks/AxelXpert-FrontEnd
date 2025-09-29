@@ -6,11 +6,12 @@ const AuthFormContainer = ({ title, error, children }) => {
         <Paper
             elevation={0}
             sx={{
-                padding: 3,
+                padding: { xs: 3, sm: 4 },
                 width: '100%',
-                maxWidth: 380,
+                maxWidth: { xs: '100%', sm: 420, md: 380 },
                 backgroundColor: 'white',
-                borderRadius: 2
+                borderRadius: 2,
+                boxSizing: 'border-box'
             }}
         >
             <Typography
@@ -20,14 +21,14 @@ const AuthFormContainer = ({ title, error, children }) => {
                     mb: 3,
                     textAlign: 'center',
                     color: '#1e293b',
-                    fontSize: { xs: '1.8rem', md: '2rem' }
+                    fontSize: { xs: '1.6rem', sm: '1.8rem', md: '2rem' }
                 }}
             >
                 {title}
             </Typography>
 
             {error && (
-                <Typography color="error" sx={{ mb: 1.5, textAlign: 'center', fontSize: '0.9rem' }}>
+                <Typography color="error" sx={{ mb: 1.5, textAlign: 'center', fontSize: { xs: '0.85rem', md: '0.9rem' } }}>
                     {error}
                 </Typography>
             )}
