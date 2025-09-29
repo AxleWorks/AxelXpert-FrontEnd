@@ -27,11 +27,23 @@ import {
 
 const DRAWER_WIDTH = 280;
 
-// Simplified menu configuration
+// Menu configuration with dropdown support
 const menuItems = [
   { text: "Dashboard", icon: DashboardIcon, path: "/", badge: "New" },
-  { text: "Vehicles", icon: DirectionsCarIcon, path: "/vehicles" },
-  { text: "Services", icon: BuildIcon, path: "/services" },
+  {
+    text: "Vehicles",
+    icon: DirectionsCarIcon,
+    path: "/vehicles",
+    hasSubmenu: true,
+    submenu: [{ text: "All Vehicles", path: "/vehicles" }],
+  },
+  {
+    text: "Services",
+    icon: BuildIcon,
+    path: "/services",
+    hasSubmenu: true,
+    submenu: [{ text: "All Vehicles", path: "/vehicles" }],
+  },
   { text: "Customers", icon: PeopleIcon, path: "/customers" },
   { text: "Appointments", icon: AssignmentIcon, path: "/appointments" },
   { text: "Analytics", icon: AnalyticsIcon, path: "/analytics", badge: "Pro" },
@@ -40,6 +52,7 @@ const menuItems = [
 
 const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
   const location = useLocation();
+  const [openDropdown, setOpenDropdown] = useState({});
 
   const isSelected = (path) => {
     return (
@@ -47,12 +60,94 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
     );
   };
 
+  const toggleDropdown = (itemText) => {
+    setOpenDropdown((prev) => ({
+      ...prev,
+      [itemText]: !prev[itemText],
+    }));
+  };
+
   const MenuItem = ({ item }) => {
     const selected = isSelected(item.path);
     const IconComponent = item.icon;
+    const isOpen = openDropdown[item.text];
+
+    if (item.hasSubmenu) {
+      return (
+        <>
+          <ListItem disablePadding sx={{ mb: 1.5}}>
+            <ListItemButton
+              onClick={() => toggleDropdown(item.text)}
+              sx={{
+                mx: 1,
+                borderRadius: 2,
+                minHeight: 48,
+                "&:hover": {
+                  bgcolor: "#f5f5f5",
+                  transform: "translateX(2px)",
+                  transition: "all 0.2s ease-in-out",
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40, color: "#666" }}>
+                <IconComponent />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {item.text}
+                  </Typography>
+                }
+              />
+              {isOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={isOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              {item.submenu.map((subItem) => (
+                <ListItem key={subItem.text} disablePadding sx={{ mb: 1 }}>
+                  <ListItemButton
+                    component={Link}
+                    to={subItem.path}
+                    selected={isSelected(subItem.path)}
+                    sx={{
+                      mx: 1,
+                      ml: 4,
+                      borderRadius: 2,
+                      minHeight: 40,
+                      "&.Mui-selected": {
+                        bgcolor: "#e3f2fd",
+                        color: "#1976d2",
+                      },
+                      "&:hover": {
+                        bgcolor: "#f5f5f5",
+                      },
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: "0.8rem",
+                            fontWeight: isSelected(subItem.path) ? 600 : 400,
+                          }}
+                        >
+                          {subItem.text}
+                        </Typography>
+                      }
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Collapse>
+        </>
+      );
+    }
 
     return (
-      <ListItem disablePadding sx={{ mb: 0.5 }}>
+      <ListItem disablePadding sx={{ mb: 1.5 }}>
         <ListItemButton
           component={Link}
           to={item.path}
@@ -131,7 +226,7 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
 
       {/* Menu Items */}
       <Box sx={{ flexGrow: 1, overflowY: "auto", p: 1 }}>
-        <List disablePadding>
+        <List disablePadding sx={{ mt: 2 }}>
           {menuItems.map((item) => (
             <MenuItem key={item.text} item={item} />
           ))}
