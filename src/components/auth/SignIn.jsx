@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, redirect } from "react-router-dom";
 import { TextField, Button, Typography, Box } from "@mui/material";
-
+import { useNavigate as UserNavigate } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
@@ -24,19 +24,13 @@ const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = UserNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    try {
-      const response = await loginUser(email, password);
-      console.log(response);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    navigate("/");
   };
 
   const leftContent = <AuthBranding subtitle="Your Car, Our Expertise." />;
