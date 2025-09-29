@@ -6,8 +6,8 @@ import AuthFormContainer from "./AuthFormContainer";
 import { Link } from "react-router-dom";
 
 const SignUp = () => {
-  const { loading, setLoading } = useState();
-  const { error, setError } = useState();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,20 +15,34 @@ const SignUp = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true);
+    setError(null);
+
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
+      setLoading(false);
       return;
     }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      setLoading(false);
+      return;
+    }
+
     try {
-      await signupUser(email, password, userName);
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log("User registered:", { userName, email });
+      // Redirect to signin or dashboard
     } catch (err) {
-      console.error("Signup failed");
+      setError("Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const leftContent = (
-    <AuthBranding title="AxleXpert" subtitle="Join The Axlexpert Family!" />
-  );
+  const leftContent = <AuthBranding subtitle="Join The AxleXpert Family!" />;
 
   const rightContent = (
     <AuthFormContainer title="Sign Up" error={error}>
@@ -37,7 +51,7 @@ const SignUp = () => {
           User Name
         </Typography>
         <TextField
-          placeholder="example@email.com"
+          placeholder="Enter your full name"
           variant="outlined"
           fullWidth
           margin="normal"
@@ -47,8 +61,11 @@ const SignUp = () => {
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#f1f5f9",
-              "& fieldset": { border: "none" },
+              backgroundColor: "#f8fafc",
+              borderRadius: 2,
+              "& fieldset": { border: "1px solid #e2e8f0" },
+              "&:hover fieldset": { borderColor: "#3b82f6" },
+              "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
             },
           }}
         />
@@ -58,6 +75,7 @@ const SignUp = () => {
         </Typography>
         <TextField
           placeholder="example@email.com"
+          type="email"
           variant="outlined"
           fullWidth
           margin="normal"
@@ -67,8 +85,11 @@ const SignUp = () => {
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#f1f5f9",
-              "& fieldset": { border: "none" },
+              backgroundColor: "#f8fafc",
+              borderRadius: 2,
+              "& fieldset": { border: "1px solid #e2e8f0" },
+              "&:hover fieldset": { borderColor: "#3b82f6" },
+              "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
             },
           }}
         />
@@ -88,8 +109,11 @@ const SignUp = () => {
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#f1f5f9",
-              "& fieldset": { border: "none" },
+              backgroundColor: "#f8fafc",
+              borderRadius: 2,
+              "& fieldset": { border: "1px solid #e2e8f0" },
+              "&:hover fieldset": { borderColor: "#3b82f6" },
+              "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
             },
           }}
         />
@@ -98,7 +122,7 @@ const SignUp = () => {
           Confirm Password
         </Typography>
         <TextField
-          placeholder="At least 8 characters"
+          placeholder="Confirm your password"
           type="password"
           variant="outlined"
           fullWidth
@@ -109,8 +133,11 @@ const SignUp = () => {
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#f1f5f9",
-              "& fieldset": { border: "none" },
+              backgroundColor: "#f8fafc",
+              borderRadius: 2,
+              "& fieldset": { border: "1px solid #e2e8f0" },
+              "&:hover fieldset": { borderColor: "#3b82f6" },
+              "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
             },
           }}
         />
@@ -121,20 +148,25 @@ const SignUp = () => {
           fullWidth
           disabled={loading}
           sx={{
-            backgroundColor: "#1e293b",
+            backgroundColor: "#3b82f6",
             color: "white",
-            py: 1.2,
+            py: 1.5,
             fontSize: "1rem",
-            fontWeight: 500,
+            fontWeight: 600,
             textTransform: "none",
-            borderRadius: 1,
+            borderRadius: 2,
             mb: 2,
+            boxShadow: "0 4px 14px 0 rgba(59, 130, 246, 0.39)",
             "&:hover": {
-              backgroundColor: "#334155",
+              backgroundColor: "#2563eb",
+              boxShadow: "0 6px 20px 0 rgba(59, 130, 246, 0.5)",
+            },
+            "&:disabled": {
+              backgroundColor: "#94a3b8",
             },
           }}
         >
-          {loading ? "Signing up..." : "Sign up"}
+          {loading ? "Creating Account..." : "Create Account"}
         </Button>
 
         <Box sx={{ textAlign: "center" }}>

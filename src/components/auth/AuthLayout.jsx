@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { Box, Grid } from "@mui/material";
 
 const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
-  // Keep margins/paddings clean but avoid forcing viewport sizes or hiding overflow
   useEffect(() => {
     document.body.style.margin = "0";
     document.body.style.padding = "0";
@@ -25,44 +24,58 @@ const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
     };
   }, []);
 
-  const containerStyles = {
-    display: "flex",
-    flexDirection: "row", // Always keep left and right sections side-by-side
-    width: "100%",
-    height: "100vh",
-  };
-
-  // left column responsive styles: explicit xs and md values to avoid leakage
-  const leftStyles = {
-    flex: 1,
-    // wrap URL in quotes to ensure proper CSS generation
-    backgroundImage: `url(${backgroundImage})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    color: "white",
-    padding: "2rem",
-  };
-
-  const rightStyles = {
-    flex: 1,
-    backgroundColor: "white",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: "2rem",
-  };
-
   return (
-    <div style={containerStyles}>
-      <div style={leftStyles}>{leftContent}</div>
-      <div style={rightStyles}>{rightContent}</div>
-    </div>
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+      {/* Left Section - Brand & Background */}
+      <Box
+        sx={{
+          flex: { xs: 0, md: 1 },
+          display: { xs: "none", md: "flex" },
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          color: "white",
+          padding: 4,
+          position: "relative",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            zIndex: 1,
+          },
+          "& > *": {
+            position: "relative",
+            zIndex: 2,
+          },
+        }}
+      >
+        {leftContent}
+      </Box>
+
+      {/* Right Section - Form */}
+      <Box
+        sx={{
+          flex: 1,
+          backgroundColor: "#f8fafc",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: { xs: 2, sm: 3, md: 4 },
+          minHeight: "100vh",
+        }}
+      >
+        {rightContent}
+      </Box>
+    </Box>
   );
 };
 

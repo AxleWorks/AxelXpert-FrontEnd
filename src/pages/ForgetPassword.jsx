@@ -14,9 +14,7 @@ const ForgetPassword = () => {
     setSubmitted(true);
   };
 
-  const leftContent = (
-    <AuthBranding title="AxleXpert" subtitle="We've Got You Back!" />
-  );
+  const leftContent = <AuthBranding subtitle="We've Got You Back!" />;
 
   const rightContent = (
     <AuthFormContainer title="Forgot Password?" error={null}>
@@ -32,6 +30,7 @@ const ForgetPassword = () => {
           </Typography>
           <TextField
             placeholder="example@email.com"
+            type="email"
             variant="outlined"
             fullWidth
             margin="normal"
@@ -40,11 +39,12 @@ const ForgetPassword = () => {
             required
             sx={{
               mb: 2,
-              fontSize: "16px",
               "& .MuiOutlinedInput-root": {
-                backgroundColor: "#f1f5f9",
-                fontSize: "16px",
-                "& fieldset": { border: "none" },
+                backgroundColor: "#f8fafc",
+                borderRadius: 2,
+                "& fieldset": { border: "1px solid #e2e8f0" },
+                "&:hover fieldset": { borderColor: "#3b82f6" },
+                "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
               },
             }}
           />
@@ -53,16 +53,18 @@ const ForgetPassword = () => {
             variant="contained"
             fullWidth
             sx={{
-              backgroundColor: "#1e293b",
+              backgroundColor: "#3b82f6",
               color: "white",
-              height: "52px",
-              fontSize: "16px",
-              fontWeight: 500,
+              py: 1.5,
+              fontSize: "1rem",
+              fontWeight: 600,
               textTransform: "none",
-              borderRadius: 1,
+              borderRadius: 2,
               mb: 2,
+              boxShadow: "0 4px 14px 0 rgba(59, 130, 246, 0.39)",
               "&:hover": {
-                backgroundColor: "#334155",
+                backgroundColor: "#2563eb",
+                boxShadow: "0 6px 20px 0 rgba(59, 130, 246, 0.5)",
               },
             }}
           >

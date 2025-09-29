@@ -39,9 +39,7 @@ const SignIn = () => {
     }
   };
 
-  const leftContent = (
-    <AuthBranding title="AxleXpert" subtitle="Your Car, Our Expertise." />
-  );
+  const leftContent = <AuthBranding subtitle="Your Car, Our Expertise." />;
 
   const rightContent = (
     <AuthFormContainer title="Sign In" error={error}>
@@ -51,6 +49,7 @@ const SignIn = () => {
         </Typography>
         <TextField
           placeholder="example@email.com"
+          type="email"
           variant="outlined"
           fullWidth
           margin="normal"
@@ -60,8 +59,11 @@ const SignIn = () => {
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#f1f5f9",
-              "& fieldset": { border: "none" },
+              backgroundColor: "#f8fafc",
+              borderRadius: 2,
+              "& fieldset": { border: "1px solid #e2e8f0" },
+              "&:hover fieldset": { borderColor: "#3b82f6" },
+              "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
             },
           }}
         />
@@ -70,7 +72,7 @@ const SignIn = () => {
           Password
         </Typography>
         <TextField
-          placeholder="At least 8 characters"
+          placeholder="Enter your password"
           type="password"
           variant="outlined"
           fullWidth
@@ -81,8 +83,11 @@ const SignIn = () => {
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#f1f5f9",
-              "& fieldset": { border: "none" },
+              backgroundColor: "#f8fafc",
+              borderRadius: 2,
+              "& fieldset": { border: "1px solid #e2e8f0" },
+              "&:hover fieldset": { borderColor: "#3b82f6" },
+              "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
             },
           }}
         />
@@ -102,20 +107,25 @@ const SignIn = () => {
           fullWidth
           disabled={loading}
           sx={{
-            backgroundColor: "#1e293b",
+            backgroundColor: "#3b82f6",
             color: "white",
-            py: 1.2,
+            py: 1.5,
             fontSize: "1rem",
-            fontWeight: 500,
+            fontWeight: 600,
             textTransform: "none",
-            borderRadius: 1,
+            borderRadius: 2,
             mb: 2,
+            boxShadow: "0 4px 14px 0 rgba(59, 130, 246, 0.39)",
             "&:hover": {
-              backgroundColor: "#334155",
+              backgroundColor: "#2563eb",
+              boxShadow: "0 6px 20px 0 rgba(59, 130, 246, 0.5)",
+            },
+            "&:disabled": {
+              backgroundColor: "#94a3b8",
             },
           }}
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? "Signing in..." : "Sign In"}
         </Button>
 
         <Box sx={{ textAlign: "center" }}>
