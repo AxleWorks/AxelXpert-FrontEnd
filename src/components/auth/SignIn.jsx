@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, redirect } from "react-router-dom";
 import { TextField, Button, Typography, Box } from "@mui/material";
-
+import { useNavigate as UserNavigate } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
@@ -24,19 +24,13 @@ const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = UserNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    try {
-      const response = await loginUser(email, password);
-      console.log(response);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    navigate("/");
   };
 
   const leftContent = <AuthBranding subtitle="Your Car, Our Expertise." />;
@@ -147,7 +141,7 @@ const SignIn = () => {
     <AuthLayout
       leftContent={leftContent}
       rightContent={rightContent}
-      backgroundImage="/images/signin-bg.png"
+      backgroundImage="https://images.unsplash.com/photo-1727893304219-063d142ce6f3?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     />
   );
 };
