@@ -116,7 +116,6 @@ const SignIn = () => {
                         Don't you have an account?{' '}
                         <Typography
                             component="a"
-                            href="/signup"
                             sx={{
                                 color: '#3b82f6',
                                 textDecoration: 'none',
@@ -124,7 +123,7 @@ const SignIn = () => {
                                 fontFamily: 'inherit'
                             }}
                         >
-                            Sign up
+                            <Link to="/signup" style={{ color: '#3b82f6', textDecoration: 'none' }}> Sign up</Link>
                         </Typography>
                     </Typography>
                 </Box>

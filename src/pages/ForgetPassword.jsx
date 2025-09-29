@@ -3,6 +3,7 @@ import { TextField, Button, Typography, Box } from '@mui/material';
 import AuthLayout from '../components/auth/AuthLayout';
 import AuthBranding from '../components/auth/AuthBranding';
 import AuthFormContainer from '../components/auth/AuthFormContainer';
+import { Link } from 'react-router-dom';
 
 const ForgetPassword = () => {
     const [email, setEmail] = useState('');
@@ -74,7 +75,6 @@ const ForgetPassword = () => {
                             Remember your password?{' '}
                             <Typography
                                 component="a"
-                                href="/signin"
                                 sx={{
                                     color: '#3b82f6',
                                     textDecoration: 'none',
@@ -82,7 +82,7 @@ const ForgetPassword = () => {
                                     fontSize: '16px'
                                 }}
                             >
-                                Sign in
+                               <Link to="/signin" style={{ color: '#3b82f6', textDecoration: 'none' }}> Sign in</Link>
                             </Typography>
                         </Typography>
                     </Box>

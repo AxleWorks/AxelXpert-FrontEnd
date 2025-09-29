@@ -25,23 +25,28 @@ const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
         };
     }, []);
 
+    // left column responsive styles: explicit xs and md values to avoid leakage
     const leftStyles = {
         margin: 0,
-        // Only show background image on md+ screens. On small screens use a solid background so text stays readable.
-        backgroundImage: { xs: 'none', md: `url(${backgroundImage})` },
+    // wrap URL in quotes to ensure proper CSS generation
+    backgroundImage: { xs: 'none', md: `url("${backgroundImage}")` },
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundColor: { xs: '#0f172a', md: 'transparent' },
-        minHeight: { xs: 'auto', md: '100vh' },
+        height: { xs: 140, md: '100vh' },
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: { xs: 4, md: 2 },
+        p: { xs: 2, md: 2 },
         color: 'white',
-        position: 'relative',
+        position: { xs: 'fixed', md: 'relative' },
+        left: { xs: 0, md: 'auto' },
+        right: { xs: 0, md: 'auto' },
+        bottom: { xs: 0, md: 'auto' },
+        zIndex: { xs: 1200, md: 'auto' },
         textAlign: 'center',
         boxSizing: 'border-box',
         '&::before': {
@@ -52,7 +57,8 @@ const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            // reduced overlay opacity so the background image shows through
+            backgroundColor: 'rgba(0, 0, 0, 0.12)',
             zIndex: 1,
         }
     };
@@ -68,6 +74,8 @@ const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
         alignItems: 'center',
         justifyContent: 'center',
         boxSizing: 'border-box',
+        // make room for the fixed branding bar on small screens so content doesn't get hidden
+        pb: { xs: '160px', md: 0 }
     };
 
     return (
@@ -86,13 +94,35 @@ const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
                     {rightContent}
                 </Grid>
 
-                <Grid item xs={12} md={6} sx={{ ...leftStyles }} order={{ xs: 2, md: 1 }}>
+                <Grid item xs={12} md={6} sx={leftStyles} order={{ xs: 2, md: 1 }}>
+                    {/* Background image element shown only on md+ so the image reliably renders */}
+                    <Box
+                        component="img"
+                        src={backgroundImage}
+                        alt=""
+                        sx={{
+                            display: { xs: 'none', md: 'block' },
+                            position: 'absolute',
+                            inset: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            zIndex: 0,
+                        }}
+                    />
+
                     <Box sx={{ 
                         position: 'relative', 
                         zIndex: 2, 
                         width: { xs: '100%', md: '70%' },
                         textAlign: 'center',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        py: { xs: 1 },
+                        height: { xs: 'auto', md: '100%' }
                     }}>
                         {leftContent}
                     </Box>

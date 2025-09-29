@@ -4,6 +4,7 @@ import useAuth from '../../hooks/useAuth';
 import AuthLayout from './AuthLayout';
 import AuthBranding from './AuthBranding';
 import AuthFormContainer from './AuthFormContainer';
+import { Link } from 'react-router-dom';
 
 const SignUp = () => {
     const { signupUser, loading, error } = useAuth();
@@ -144,7 +145,6 @@ const SignUp = () => {
                         Already have an account?{' '}
                         <Typography
                             component="a"
-                            href="/signin"
                             sx={{
                                 color: '#3b82f6',
                                 textDecoration: 'none',
@@ -152,7 +152,7 @@ const SignUp = () => {
                                 fontFamily: 'inherit'
                             }}
                         >
-                            Sign in
+                           <Link to="/signin" style={{ color: '#3b82f6', textDecoration: 'none' }}> Sign in</Link>
                         </Typography>
                     </Typography>
                 </Box>
