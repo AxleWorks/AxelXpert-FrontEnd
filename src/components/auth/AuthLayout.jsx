@@ -64,13 +64,32 @@ const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
       <Box
         sx={{
           flex: 1,
-          backgroundColor: "#f8fafc",
+          backgroundImage: `url(https://w0.peakpx.com/wallpaper/440/206/HD-wallpaper-black-background-car-cars-vehicles.jpg)`,
           display: "flex",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
           flexDirection: "column",
           justifyContent: "center",
+          backgroundColor: "",
           alignItems: "center",
           padding: { xs: 2, sm: 3, md: 4 },
           minHeight: "100vh",
+          position: "relative",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(255, 255, 255, 0.93)",
+            zIndex: 1,
+          },
+          "& > *": {
+            position: "relative",
+            zIndex: 2,
+          },
         }}
       >
         {rightContent}
