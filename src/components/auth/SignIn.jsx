@@ -147,7 +147,7 @@ const SignIn = () => {
     <AuthLayout
       leftContent={leftContent}
       rightContent={rightContent}
-      backgroundImage="/images/signin-bg.png"
+      backgroundImage="https://images.unsplash.com/photo-1727893304219-063d142ce6f3?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     />
   );
 };

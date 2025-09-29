@@ -91,7 +91,7 @@ const ForgetPassword = () => {
     <AuthLayout
       leftContent={leftContent}
       rightContent={rightContent}
-      backgroundImage="/images/forgetpassword-bg.png"
+      backgroundImage="https://images.unsplash.com/photo-1618312980096-873bd19759a0?fit=crop&crop=entropy%2Cfaces&auto=format%2Ccompress&w=1280"
     />
   );
 };

@@ -188,7 +188,7 @@ const SignUp = () => {
     <AuthLayout
       leftContent={leftContent}
       rightContent={rightContent}
-      backgroundImage="/images/signup-bg.png"
+      backgroundImage="https://images.unsplash.com/photo-1727893332539-95e491ba4d90?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     />
   );
 };
