@@ -379,6 +379,7 @@ const ServiceBarChart = () => {
         borderRadius: 3,
         border: "1px solid #e2e8f0",
         p: 3,
+        width: "120%",
         height: "400px",
       }}
     >
@@ -440,6 +441,7 @@ const RevenuePieChart = () => {
         borderRadius: 3,
         border: "1px solid #e2e8f0",
         p: 3,
+        width: "120%",
         height: "400px",
       }}
     >
@@ -743,7 +745,7 @@ const Home = () => {
       </Box>
 
       {/* Charts Section - Bar Chart and Pie Chart */}
-      <Grid container spacing={4} sx={{ mb: 4 }}>
+      <Grid container spacing={15} sx={{ mb: 4, justifyContent: "center" }}>
         <Grid item xs={12} md={6}>
           <ServiceBarChart />
         </Grid>
