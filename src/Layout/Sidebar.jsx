@@ -75,7 +75,7 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
     if (item.hasSubmenu) {
       return (
         <>
-          <ListItem disablePadding sx={{ mb: 1.5}}>
+          <ListItem disablePadding sx={{ mb: 1.5 }}>
             <ListItemButton
               onClick={() => toggleDropdown(item.text)}
               sx={{
