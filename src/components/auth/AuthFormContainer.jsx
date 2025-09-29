@@ -1,20 +1,14 @@
 import React from 'react';
 import { Paper, Typography } from '@mui/material';
 
-interface AuthFormContainerProps {
-    title: string;
-    error?: string | null;
-    children: React.ReactNode;
-}
-
-const AuthFormContainer: React.FC<AuthFormContainerProps> = ({ title, error, children }) => {
+const AuthFormContainer = ({ title, error, children }) => {
     return (
         <Paper
             elevation={0}
             sx={{
-                padding: 3, // Reduced from 4 to 3
+                padding: 3,
                 width: '100%',
-                maxWidth: 380, // Reduced from 400 to 380
+                maxWidth: 380,
                 backgroundColor: 'white',
                 borderRadius: 2
             }}
@@ -23,10 +17,10 @@ const AuthFormContainer: React.FC<AuthFormContainerProps> = ({ title, error, chi
                 variant="h4"
                 sx={{
                     fontWeight: 600,
-                    mb: 3, // Reduced from 4 to 3
+                    mb: 3,
                     textAlign: 'center',
                     color: '#1e293b',
-                    fontSize: { xs: '1.8rem', md: '2rem' } // Slightly smaller font
+                    fontSize: { xs: '1.8rem', md: '2rem' }
                 }}
             >
                 {title}

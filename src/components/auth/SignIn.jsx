@@ -1,60 +1,35 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { TextField, Button, Typography, Box } from '@mui/material';
 import useAuth from '../../hooks/useAuth';
 import AuthLayout from './AuthLayout';
 import AuthBranding from './AuthBranding';
 import AuthFormContainer from './AuthFormContainer';
 
-const SignUp: React.FC = () => {
-    const { signupUser, loading, error } = useAuth();
-    const [userName, setUserName] = useState('');
+const SignIn = () => {
+    const { loginUser, loading, error } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
 
-    const handleSubmit = async (event: React.FormEvent) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        if (password !== confirmPassword) {
-            alert('Passwords do not match!');
-            return;
-        }
         try {
-            await signupUser(email, password, userName);
+            await loginUser(email, password);
         } catch (err) {
-            console.error('Signup failed');
+            console.error('Login failed');
         }
     };
 
     const leftContent = (
         <AuthBranding 
             title="AxleXpert"
-            subtitle="Join The Axlexpert Family!"
+            subtitle="Your Car, Our Expertise."
         />
     );
 
     const rightContent = (
-        <AuthFormContainer title="Sign Up" error={error}>
+        <AuthFormContainer title="Sign In" error={error}>
             <form onSubmit={handleSubmit}>
-                <Typography variant="body2" sx={{ mb: 1, color: '#64748b' }}>
-                    User Name
-                </Typography>
-                <TextField
-                    placeholder="example@email.com"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    required
-                    sx={{
-                        mb: 2,
-                        '& .MuiOutlinedInput-root': {
-                            backgroundColor: '#f1f5f9',
-                            '& fieldset': { border: 'none' },
-                        }
-                    }}
-                />
-
                 <Typography variant="body2" sx={{ mb: 1, color: '#64748b' }}>
                     Email
                 </Typography>
@@ -96,26 +71,23 @@ const SignUp: React.FC = () => {
                     }}
                 />
 
-                <Typography variant="body2" sx={{ mb: 1, color: '#64748b' }}>
-                    Confirm Password
-                </Typography>
-                <TextField
-                    placeholder="At least 8 characters"
-                    type="password"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    sx={{
-                        mb: 2,
-                        '& .MuiOutlinedInput-root': {
-                            backgroundColor: '#f1f5f9',
-                            '& fieldset': { border: 'none' },
-                        }
-                    }}
-                />
+                <Box sx={{ textAlign: 'right', mb: 3 }}>
+                    <Typography
+                        component="a"
+                        href="/forget-password"
+                        sx={{
+                            color: '#3b82f6',
+                            textDecoration: 'none',
+                            fontSize: '16px',
+                            fontFamily: 'inherit',
+                            '&:hover': {
+                                textDecoration: 'underline'
+                            }
+                        }}
+                    >
+                       <Link to="/forget-password" style={{ color: '#3b82f6', textDecoration: 'none' }}> Forgot Password?</Link>
+                    </Typography>
+                </Box>
 
                 <Button
                     type="submit"
@@ -136,15 +108,15 @@ const SignUp: React.FC = () => {
                         }
                     }}
                 >
-                    {loading ? 'Signing up...' : 'Sign up'}
+                    {loading ? 'Signing in...' : 'Sign in'}
                 </Button>
 
                 <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="body2" sx={{ color: '#64748b' }}>
-                        Already have an account?{' '}
+                        Don't you have an account?{' '}
                         <Typography
                             component="a"
-                            href="/signin"
+                            href="/signup"
                             sx={{
                                 color: '#3b82f6',
                                 textDecoration: 'none',
@@ -152,7 +124,7 @@ const SignUp: React.FC = () => {
                                 fontFamily: 'inherit'
                             }}
                         >
-                            Sign in
+                            Sign up
                         </Typography>
                     </Typography>
                 </Box>
@@ -164,9 +136,9 @@ const SignUp: React.FC = () => {
         <AuthLayout 
             leftContent={leftContent}
             rightContent={rightContent}
-            backgroundImage="/images/signup-bg.png"
+            backgroundImage="/images/signin-bg.png"
         />
     );
 };
 
-export default SignUp;
+export default SignIn;

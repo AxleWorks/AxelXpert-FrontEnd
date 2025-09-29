@@ -4,11 +4,11 @@ import AuthLayout from '../components/auth/AuthLayout';
 import AuthBranding from '../components/auth/AuthBranding';
 import AuthFormContainer from '../components/auth/AuthFormContainer';
 
-const ForgetPassword: React.FC = () => {
+const ForgetPassword = () => {
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
-    const handleSubmit = (event: React.FormEvent) => {
+    const handleSubmit = (event) => {
         event.preventDefault();
         setSubmitted(true);
     };

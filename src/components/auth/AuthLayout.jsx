@@ -1,13 +1,7 @@
 import React, { useEffect } from 'react';
 import { Box, Grid } from '@mui/material';
 
-interface AuthLayoutProps {
-    leftContent: React.ReactNode;
-    rightContent: React.ReactNode;
-    backgroundImage: string;
-}
-
-const AuthLayout: React.FC<AuthLayoutProps> = ({ leftContent, rightContent, backgroundImage }) => {
+const AuthLayout = ({ leftContent, rightContent, backgroundImage }) => {
     useEffect(() => {
         document.body.style.margin = '0';
         document.body.style.padding = '0';
@@ -31,7 +25,6 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ leftContent, rightContent, back
     }, []);
 
     const leftStyles = {
-
         margin: 0,
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: 'cover',
@@ -65,11 +58,11 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ leftContent, rightContent, back
         margin: 0,
         minHeight: '100vh',
         width: '100%',
-        backgroundColor: 'white', // Single white background
+        backgroundColor: 'white',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center', // Center the box vertically
+        justifyContent: 'center',
         boxSizing: 'border-box',
     };
 
@@ -79,7 +72,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ leftContent, rightContent, back
             width: '100%',
             margin: 0,
             padding: 0,
-            overflowX: 'hidden', // Prevent horizontal scroll
+            overflowX: 'hidden',
             overflowY: 'auto',
             boxSizing: 'border-box',
         }}>

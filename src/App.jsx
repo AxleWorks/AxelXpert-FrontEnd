@@ -6,7 +6,7 @@ import Signup from './components/auth/Signup';
 import SignIn from './components/auth/SignIn';
 import ForgetPassword from './pages/ForgetPassword';
 
-const App: React.FC = () => {
+const App = () => {
   return (
     <Router>
       <Switch>
