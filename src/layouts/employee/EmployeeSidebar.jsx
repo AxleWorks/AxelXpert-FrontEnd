@@ -21,7 +21,7 @@ import {
 
 const DRAWER_WIDTH = 280;
 
-// Employee menu configuration (kept pages requested by user)
+// Employee menu configuration
 const menuItems = [
   { text: "Dashboard", icon: DashboardIcon, path: "/employee/dashboard" },
   { text: "Tasks", icon: AssignmentIcon, path: "/employee/tasks" },

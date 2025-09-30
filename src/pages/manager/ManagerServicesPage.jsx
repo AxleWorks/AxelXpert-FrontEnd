@@ -1,26 +1,26 @@
 import React from "react";
 import { Typography, Paper, Box } from "@mui/material";
-import EmployeeLayout from "../../layouts/employee/EmployeeLayout";
+import ManagerLayout from "../../layouts/manager/ManagerLayout";
 
-const EmployeeBookingCalendarPage = () => {
+const ManagerServicesPage = () => {
   return (
-    <EmployeeLayout>
+    <ManagerLayout>
       <Box>
         <Typography
           variant="h4"
           sx={{ mb: 3, fontWeight: 600, color: "#1e293b" }}
         >
-          Booking Calendar
+          Service Management
         </Typography>
         <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
           <Typography variant="body1">
-            Employee booking calendar and schedule management will be displayed
-            here.
+            Manager service management and service configuration will be
+            displayed here.
           </Typography>
         </Paper>
       </Box>
-    </EmployeeLayout>
+    </ManagerLayout>
   );
 };
 
-export default EmployeeBookingCalendarPage;
+export default ManagerServicesPage;

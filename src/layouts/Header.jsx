@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -9,48 +9,66 @@ import {
   Box,
   Chip,
   Avatar,
+  Badge,
+  Divider,
+  ListItemIcon,
+  ListItemText,
+  Button,
+  Tooltip,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
-  AccountCircle,
-  Logout,
-  Person,
+  Notifications as NotificationsIcon,
+  LightMode as LightModeIcon,
+  DarkMode as DarkModeIcon,
+  Person as PersonIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
+  Email as EmailIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../hooks/useAuth";
+import { useTheme as useCustomTheme } from "../contexts/ThemeContext";
 
 const Header = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const { isDarkMode, toggleTheme } = useCustomTheme();
+  const [profileAnchorEl, setProfileAnchorEl] = useState(null);
+  const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
 
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
+  const handleProfileMenu = (event) => {
+    setProfileAnchorEl(event.currentTarget);
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleNotificationsMenu = (event) => {
+    setNotificationsAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseProfileMenu = () => {
+    setProfileAnchorEl(null);
+  };
+
+  const handleCloseNotificationsMenu = () => {
+    setNotificationsAnchorEl(null);
   };
 
   const handleLogout = () => {
     logout();
-    handleClose();
+    handleCloseProfileMenu();
   };
 
   const getRoleBadge = (role) => {
     const roleConfig = {
       user: {
         label: "Customer",
-        color: "#4CAF50",
-        bgColor: "rgba(76, 175, 80, 0.1)",
+        color: "success",
       },
       employee: {
         label: "Employee",
-        color: "#2196F3",
-        bgColor: "rgba(33, 150, 243, 0.1)",
+        color: "primary",
       },
       manager: {
         label: "Manager",
-        color: "#FF9800",
-        bgColor: "rgba(255, 152, 0, 0.1)",
+        color: "warning",
       },
     };
     const config = roleConfig[role] || roleConfig.user;
@@ -58,29 +76,48 @@ const Header = ({ onMenuClick }) => {
       <Chip
         label={config.label}
         size="small"
+        color={config.color}
+        variant="outlined"
         sx={{
-          color: config.color,
-          backgroundColor: config.bgColor,
           fontWeight: 600,
-          border: `1px solid ${config.color}20`,
+          fontSize: "0.75rem",
         }}
       />
     );
   };
 
+  const getAvatarColor = (role) => {
+    const colors = {
+      user: "#10b981",
+      employee: "#3b82f6",
+      manager: "#f59e0b",
+    };
+    return colors[role] || colors.user;
+  };
+
+  const mockNotifications = [
+    { id: 1, title: "New service request", time: "2 min ago", unread: true },
+    { id: 2, title: "Payment received", time: "1 hour ago", unread: true },
+    {
+      id: 3,
+      title: "Vehicle inspection due",
+      time: "2 hours ago",
+      unread: false,
+    },
+  ];
+
+  const unreadCount = mockNotifications.filter((n) => n.unread).length;
+
   return (
     <AppBar
       position="fixed"
+      elevation={0}
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        background:
-          "linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))",
-        backdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
       }}
     >
-      <Toolbar sx={{ justifyContent: "space-between" }}>
+      <Toolbar sx={{ justifyContent: "space-between", px: 3, py: 1 }}>
+        {/* Left Section */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton
             color="inherit"
@@ -88,104 +125,263 @@ const Header = ({ onMenuClick }) => {
             edge="start"
             onClick={onMenuClick}
             sx={{
-              color: "#1976d2",
-              "&:hover": {
-                backgroundColor: "rgba(25, 118, 210, 0.1)",
-              },
+              mr: 2,
+              display: { sm: "none" },
             }}
           >
             <MenuIcon />
           </IconButton>
+
+          {/* System Name */}
           <Typography
-            variant="h6"
+            variant="h5"
             noWrap
             sx={{
-              fontWeight: 700,
-              background: "linear-gradient(45deg, #1976d2, #42a5f5)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              fontWeight: 800,
+              fontSize: { xs: "1.2rem", sm: "1.5rem" },
               letterSpacing: "0.5px",
-            }}
-          >
-            AxleXpert
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {user && getRoleBadge(user.role)}
-
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Avatar
-              sx={{
-                width: 32,
-                height: 32,
-                bgcolor:
-                  user?.role === "manager"
-                    ? "#FF9800"
-                    : user?.role === "employee"
-                    ? "#2196F3"
-                    : "#4CAF50",
-                fontSize: "0.875rem",
-              }}
-            >
-              {user?.name?.charAt(0).toUpperCase()}
-            </Avatar>
-
-            <IconButton
-              size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleMenu}
-              sx={{
-                color: "#1976d2",
-                "&:hover": {
-                  backgroundColor: "rgba(25, 118, 210, 0.1)",
-                },
-              }}
-            >
-              <AccountCircle />
-            </IconButton>
-          </Box>
-
-          <Menu
-            id="menu-appbar"
-            anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "right",
-            }}
-            keepMounted
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-            sx={{
-              "& .MuiPaper-root": {
-                background: "rgba(255, 255, 255, 0.95)",
-                backdropFilter: "blur(20px)",
-                borderRadius: "12px",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-                minWidth: "180px",
+              color: "primary.main",
+              cursor: "pointer",
+              "&:hover": {
+                opacity: 0.8,
               },
             }}
           >
-            <MenuItem onClick={handleClose} sx={{ gap: 1 }}>
-              <Person fontSize="small" />
-              <Typography variant="body2">
-                {user?.name} ({user?.role})
-              </Typography>
-            </MenuItem>
-            <MenuItem onClick={handleLogout} sx={{ gap: 1, color: "#f44336" }}>
-              <Logout fontSize="small" />
-              <Typography variant="body2">Logout</Typography>
-            </MenuItem>
-          </Menu>
+            <Box component="span" sx={{ color: "primary.main" }}>
+              Axle
+            </Box>
+            <Box component="span" sx={{ color: "text.primary" }}>
+              Xpert
+            </Box>
+          </Typography>
         </Box>
+
+        {/* Right Section */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* Role Badge */}
+          {user && getRoleBadge(user.role)}
+
+          {/* Theme Toggle Button */}
+          <Tooltip
+            title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            <IconButton
+              onClick={toggleTheme}
+              color="inherit"
+              sx={{
+                borderRadius: 2,
+                "&:hover": {
+                  backgroundColor: "action.hover",
+                },
+              }}
+            >
+              {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+            </IconButton>
+          </Tooltip>
+
+          {/* Notifications */}
+          <Tooltip title="Notifications">
+            <IconButton
+              color="inherit"
+              onClick={handleNotificationsMenu}
+              sx={{
+                borderRadius: 2,
+                "&:hover": {
+                  backgroundColor: "action.hover",
+                },
+              }}
+            >
+              <Badge badgeContent={unreadCount} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+
+          {/* Profile Avatar */}
+          {user && (
+            <Tooltip title="Profile">
+              <IconButton
+                onClick={handleProfileMenu}
+                sx={{
+                  p: 0.5,
+                  borderRadius: 2,
+                  "&:hover": {
+                    backgroundColor: "action.hover",
+                  },
+                }}
+              >
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: getAvatarColor(user.role),
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  {user.name?.charAt(0).toUpperCase()}
+                </Avatar>
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+
+        {/* Notifications Menu */}
+        <Menu
+          anchorEl={notificationsAnchorEl}
+          open={Boolean(notificationsAnchorEl)}
+          onClose={handleCloseNotificationsMenu}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
+          PaperProps={{
+            sx: {
+              mt: 1,
+              minWidth: 320,
+              maxWidth: 400,
+              borderRadius: 2,
+              boxShadow: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "0 10px 40px rgba(0, 0, 0, 0.3)"
+                  : "0 10px 40px rgba(0, 0, 0, 0.1)",
+            },
+          }}
+        >
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Notifications
+            </Typography>
+          </Box>
+          {mockNotifications.map((notification) => (
+            <MenuItem
+              key={notification.id}
+              onClick={handleCloseNotificationsMenu}
+              sx={{
+                py: 2,
+                px: 2,
+                borderLeft: notification.unread ? 3 : 0,
+                borderColor: "primary.main",
+                backgroundColor: notification.unread
+                  ? "action.hover"
+                  : "transparent",
+              }}
+            >
+              <Box>
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: notification.unread ? 600 : 400 }}
+                >
+                  {notification.title}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {notification.time}
+                </Typography>
+              </Box>
+            </MenuItem>
+          ))}
+          <Divider />
+          <MenuItem
+            onClick={handleCloseNotificationsMenu}
+            sx={{ justifyContent: "center", py: 1.5 }}
+          >
+            <Typography
+              variant="body2"
+              color="primary.main"
+              sx={{ fontWeight: 600 }}
+            >
+              View All Notifications
+            </Typography>
+          </MenuItem>
+        </Menu>
+
+        {/* Profile Menu */}
+        <Menu
+          anchorEl={profileAnchorEl}
+          open={Boolean(profileAnchorEl)}
+          onClose={handleCloseProfileMenu}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
+          PaperProps={{
+            sx: {
+              mt: 1,
+              minWidth: 250,
+              borderRadius: 2,
+              boxShadow: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "0 10px 40px rgba(0, 0, 0, 0.3)"
+                  : "0 10px 40px rgba(0, 0, 0, 0.1)",
+            },
+          }}
+        >
+          {/* User Info Header */}
+          <Box sx={{ p: 3, borderBottom: 1, borderColor: "divider" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Avatar
+                sx={{
+                  width: 50,
+                  height: 50,
+                  bgcolor: getAvatarColor(user?.role),
+                  fontSize: "1.2rem",
+                  fontWeight: 600,
+                }}
+              >
+                {user?.name?.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  {user?.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {user?.email}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Menu Items */}
+          <MenuItem onClick={handleCloseProfileMenu} sx={{ py: 1.5, px: 3 }}>
+            <ListItemIcon>
+              <EmailIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>
+              <Typography variant="body2">Email</Typography>
+            </ListItemText>
+          </MenuItem>
+
+          <MenuItem onClick={handleCloseProfileMenu} sx={{ py: 1.5, px: 3 }}>
+            <ListItemIcon>
+              <SettingsIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>
+              <Typography variant="body2">Settings</Typography>
+            </ListItemText>
+          </MenuItem>
+
+          <Divider />
+
+          <MenuItem
+            onClick={handleLogout}
+            sx={{ py: 1.5, px: 3, color: "error.main" }}
+          >
+            <ListItemIcon>
+              <LogoutIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>
+              <Typography variant="body2">Logout</Typography>
+            </ListItemText>
+          </MenuItem>
+        </Menu>
       </Toolbar>
     </AppBar>
   );

@@ -35,21 +35,24 @@ export const AuthProvider = ({ children }) => {
         id: 1,
         username: "user",
         role: "user",
-        name: "User Dashboard",
+        name: "John Customer",
+        email: "user@axlexpert.com",
       };
     } else if (username === "employee" && password === "password") {
       userData = {
         id: 2,
         username: "employee",
         role: "employee",
-        name: "Employee Dashboard",
+        name: "Sarah Employee",
+        email: "employee@axlexpert.com",
       };
     } else if (username === "manager" && password === "password") {
       userData = {
         id: 3,
         username: "manager",
         role: "manager",
-        name: "Manager Dashboard",
+        name: "Mike Manager",
+        email: "manager@axlexpert.com",
       };
     } else {
       throw new Error("Invalid credentials");
