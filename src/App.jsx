@@ -2,6 +2,8 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import MainLayout from "./Layout/MainLayout";
 import Home from "./pages/Home";
+import CalendarPage from "./pages/CalendarPage";
+import Vehicles from "./pages/Vehicles";
 import Signup from "./components/auth/Signup";
 import SignIn from "./components/auth/SignIn";
 import ForgetPassword from "./pages/ForgetPassword";
@@ -17,11 +19,13 @@ const App = () => {
 
         {/* All other routes with Header */}
         <Route
-          path="/"
+          path="/*"
           element={
             <MainLayout>
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/vehicles" element={<Vehicles />} />
               </Routes>
             </MainLayout>
           }

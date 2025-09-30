@@ -19,6 +19,7 @@ import {
   Build as BuildIcon,
   People as PeopleIcon,
   Assignment as AssignmentIcon,
+  CalendarToday as CalendarIcon,
   Settings as SettingsIcon,
   Analytics as AnalyticsIcon,
   ExpandLess,
@@ -30,6 +31,7 @@ const DRAWER_WIDTH = 280;
 // Menu configuration with dropdown support
 const menuItems = [
   { text: "Dashboard", icon: DashboardIcon, path: "/", badge: "New" },
+  { text: "Calendar", icon: CalendarIcon, path: "/calendar", badge: "Live" },
   {
     text: "Vehicles",
     icon: DirectionsCarIcon,
