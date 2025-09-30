@@ -157,7 +157,7 @@ const Header = ({ onMenuClick }) => {
         </Box>
 
         {/* Right Section */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
           {/* Role Badge */}
           {user && getRoleBadge(user.role)}
 
@@ -203,8 +203,10 @@ const Header = ({ onMenuClick }) => {
               <IconButton
                 onClick={handleProfileMenu}
                 sx={{
-                  p: 0.5,
+                  p: 0.9,
+                  px: 2,
                   borderRadius: 2,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                   "&:hover": {
                     backgroundColor: "action.hover",
                   },
@@ -221,6 +223,9 @@ const Header = ({ onMenuClick }) => {
                 >
                   {user.name?.charAt(0).toUpperCase()}
                 </Avatar>
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  {user.name}
+                </Typography>
               </IconButton>
             </Tooltip>
           )}
@@ -340,25 +345,16 @@ const Header = ({ onMenuClick }) => {
               </Avatar>
               <Box>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  {user?.name}
+                  {user?.name || "John Doe"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {user?.email}
+                  {user?.email || "jhondoe@gmail.com"}
                 </Typography>
               </Box>
             </Box>
           </Box>
 
           {/* Menu Items */}
-          <MenuItem onClick={handleCloseProfileMenu} sx={{ py: 1.5, px: 3 }}>
-            <ListItemIcon>
-              <EmailIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>
-              <Typography variant="body2">Email</Typography>
-            </ListItemText>
-          </MenuItem>
-
           <MenuItem onClick={handleCloseProfileMenu} sx={{ py: 1.5, px: 3 }}>
             <ListItemIcon>
               <SettingsIcon fontSize="small" />

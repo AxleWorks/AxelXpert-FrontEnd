@@ -24,7 +24,7 @@ const UserLayout = ({ children }) => {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - 280px)` },
-          bgcolor: "#f8fafc",
+
           minHeight: "100vh",
         }}
       >
