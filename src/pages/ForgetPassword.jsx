@@ -41,6 +41,7 @@ const ForgetPassword = () => {
               mb: 2,
               "& .MuiOutlinedInput-root": {
                 backgroundColor: "#f8fafc",
+                color: "#0f172a",
                 borderRadius: 2,
                 "& fieldset": { border: "1px solid #e2e8f0" },
                 "&:hover fieldset": { borderColor: "#3b82f6" },
@@ -54,7 +55,7 @@ const ForgetPassword = () => {
             fullWidth
             sx={{
               backgroundColor: "#3b82f6",
-              color: "white",
+              color: "#ffffffff",
               py: 1.5,
               fontSize: "1rem",
               fontWeight: 600,
