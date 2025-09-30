@@ -66,6 +66,7 @@ const SignUp = () => {
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
+              color: "#0f172a",
             },
           }}
         />
@@ -84,12 +85,14 @@ const SignUp = () => {
           required
           sx={{
             mb: 2,
+
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
+              color: "#0f172a",
             },
           }}
         />
@@ -108,12 +111,14 @@ const SignUp = () => {
           required
           sx={{
             mb: 2,
+
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
+              color: "#0f172a",
             },
           }}
         />
@@ -132,12 +137,14 @@ const SignUp = () => {
           required
           sx={{
             mb: 2,
+
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
+              color: "#0f172a",
             },
           }}
         />

@@ -1,59 +1,169 @@
 import React, { useState } from "react";
-import { Link, redirect } from "react-router-dom";
-import { TextField, Button, Typography, Box } from "@mui/material";
-import { useNavigate as UserNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import {
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Alert,
+  Paper,
+  IconButton,
+  Stack,
+  Tooltip,
+} from "@mui/material";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
 
-const loginUser = async (email, password) => {
-  // Placeholder for login logic
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (email === "test@example.com" && password === "password123") {
-        resolve("Login successful");
-      } else {
-        reject(new Error("Invalid credentials"));
-      }
-    }, 1000);
-  });
-};
-
 const SignIn = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = UserNavigate();
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    navigate("/");
+
+    try {
+      const userData = await login(username, password);
+
+      // Navigate based on role
+      switch (userData.role) {
+        case "user":
+          navigate("/user/dashboard");
+          break;
+        case "employee":
+          navigate("/employee/dashboard");
+          break;
+        case "manager":
+          navigate("/manager/dashboard");
+          break;
+        default:
+          navigate("/");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const leftContent = <AuthBranding subtitle="Your Car, Our Expertise." />;
 
   const rightContent = (
     <AuthFormContainer title="Sign In" error={error}>
+      {/* Login Instructions */}
+      <Paper sx={{ p: 2, mb: 3, bgcolor: "#f8fafc", borderRadius: 2 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{ mb: 1, fontWeight: 700, color: "#0f172a" }}
+        >
+          Test Login Credentials
+        </Typography>
+
+        {/* prettier-ignore */}
+        <Box sx={{ mt: 1 }}>
+          <Stack spacing={1}>
+            {[
+              { role: 'User', username: 'user', password: 'password', color: '#10b981' },
+              { role: 'Employee', username: 'employee', password: 'password', color: '#3b82f6' },
+              { role: 'Manager', username: 'manager', password: 'password', color: '#ef4444' },
+            ].map((r) => (
+              <Box
+                key={r.role}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  p: 1,
+                  bgcolor: '#ffffff',
+                  borderRadius: 1,
+                  boxShadow: '0 1px 2px rgba(2,6,23,0.06)',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box
+                    sx={{
+                      px: 1.2,
+                      py: 0.4,
+                      bgcolor: r.color,
+                      color: '#fff',
+                      borderRadius: 0.6,
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                    }}
+                  >
+                    {r.role}
+                  </Box>
+
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontFamily:
+                        'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+                      color: '#0f172a',
+                      fontSize: '0.95rem',
+                      ml: 0.5,
+                    }}
+                  >
+                    {r.username} / {r.password}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Tooltip title={/* dynamic via aria-label updated below */ 'Copy credentials'}>
+                    <IconButton
+                      size="small"
+                      aria-label={`Copy ${r.role} credentials`}
+                      onClick={() => {
+                        try {
+                          navigator.clipboard.writeText(`${r.username}:${r.password}`);
+                        } catch (e) {
+                          // fallback: create temporary textarea
+                          const ta = document.createElement('textarea');
+                          ta.value = `${r.username}:${r.password}`;
+                          document.body.appendChild(ta);
+                          ta.select();
+                          document.execCommand('copy');
+                          document.body.removeChild(ta);
+                        }
+                      }}
+                    >
+                      <ContentCopyIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+            ))}
+          </Stack>
+        </Box>
+      </Paper>
+
       <form onSubmit={handleSubmit} noValidate>
         <Typography variant="body2" sx={{ mb: 1, color: "#64748b" }}>
-          Email
+          Username
         </Typography>
         <TextField
-          placeholder="example@email.com"
-          type="email"
+          placeholder="Enter your username"
+          type="text"
           variant="outlined"
           fullWidth
           margin="normal"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
+              color: "#0f172a",
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
@@ -79,12 +189,19 @@ const SignIn = () => {
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
               borderRadius: 2,
+              color: "#0f172a",
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
             },
           }}
         />
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         <Box sx={{ textAlign: "right", mb: 3 }}>
           <Link
