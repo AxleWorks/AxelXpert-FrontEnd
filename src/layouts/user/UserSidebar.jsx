@@ -46,7 +46,7 @@ const menuItems = [
 const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
   const location = useLocation();
   const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const isDark = theme.palette.mode === "dark";
 
   const isSelected = (path) => {
     return (
@@ -81,7 +81,12 @@ const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
           }}
         >
           <ListItemIcon
-            sx={{ minWidth: 40, color: selected ? theme.palette.primary.main : theme.palette.text.secondary }}
+            sx={{
+              minWidth: 40,
+              color: selected
+                ? theme.palette.primary.main
+                : theme.palette.text.secondary,
+            }}
           >
             <IconComponent />
           </ListItemIcon>
@@ -89,9 +94,9 @@ const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
             primary={
               <Typography
                 variant="body2"
-                sx={{ 
+                sx={{
                   fontWeight: selected ? 600 : 500,
-                  color: theme.palette.text.primary 
+                  color: theme.palette.text.primary,
                 }}
               >
                 {item.text}
@@ -123,7 +128,10 @@ const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
               U
             </Typography>
           </Box>
-          <Typography variant="h6" sx={{ fontWeight: 600, color: theme.palette.text.primary }}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 600, color: theme.palette.text.primary }}
+          >
             User Panel
           </Typography>
         </Box>
@@ -139,7 +147,13 @@ const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
       </Box>
 
       {/* Footer */}
-      <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}`, textAlign: "center" }}>
+      <Box
+        sx={{
+          p: 2,
+          borderTop: `1px solid ${theme.palette.divider}`,
+          textAlign: "center",
+        }}
+      >
         <Typography variant="caption" color="text.secondary">
           User Dashboard v1.0.0
         </Typography>

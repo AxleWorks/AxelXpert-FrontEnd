@@ -6,10 +6,7 @@ const UserSettingsPage = () => {
   return (
     <UserLayout>
       <Box>
-        <Typography
-          variant="h4"
-          sx={{ mb: 3, fontWeight: 600, color: "#1e293b" }}
-        >
+        <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
           Settings
         </Typography>
         <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
