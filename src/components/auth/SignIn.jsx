@@ -163,6 +163,7 @@ const SignIn = () => {
             mb: 2,
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
+              color: "#0f172a",
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
@@ -188,6 +189,7 @@ const SignIn = () => {
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
               borderRadius: 2,
+              color: "#0f172a",
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
