@@ -9,6 +9,7 @@ import {
   Toolbar,
   Box,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -32,6 +33,8 @@ const menuItems = [
 
 const EmployeeSidebar = ({ mobileOpen, onDrawerToggle }) => {
   const location = useLocation();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
 
   const isSelected = (path) => {
     return (
@@ -54,19 +57,24 @@ const EmployeeSidebar = ({ mobileOpen, onDrawerToggle }) => {
             borderRadius: 2,
             minHeight: 48,
             "&.Mui-selected": {
-              bgcolor: "#e8f5e8",
-              color: "#2e7d32",
-              "& .MuiListItemIcon-root": { color: "#2e7d32" },
+              bgcolor: isDark ? "rgba(59, 130, 246, 0.2)" : "#e3f2fd",
+              color: theme.palette.primary.main,
+              "& .MuiListItemIcon-root": { color: theme.palette.primary.main },
             },
             "&:hover": {
-              bgcolor: "#f5f5f5",
+              bgcolor: isDark ? "rgba(255, 255, 255, 0.08)" : "#f5f5f5",
               transform: "translateX(2px)",
               transition: "all 0.2s ease-in-out",
             },
           }}
         >
           <ListItemIcon
-            sx={{ minWidth: 40, color: selected ? "#2e7d32" : "#666" }}
+            sx={{
+              minWidth: 40,
+              color: selected
+                ? theme.palette.success.main
+                : theme.palette.text.secondary,
+            }}
           >
             <IconComponent />
           </ListItemIcon>
@@ -74,7 +82,10 @@ const EmployeeSidebar = ({ mobileOpen, onDrawerToggle }) => {
             primary={
               <Typography
                 variant="body2"
-                sx={{ fontWeight: selected ? 600 : 500 }}
+                sx={{
+                  fontWeight: selected ? 600 : 500,
+                  color: theme.palette.text.primary,
+                }}
               >
                 {item.text}
               </Typography>
@@ -88,7 +99,7 @@ const EmployeeSidebar = ({ mobileOpen, onDrawerToggle }) => {
   const drawer = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Header */}
-      <Toolbar sx={{ borderBottom: "1px solid #e0e0e0" }}>
+      <Toolbar sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box
             sx={{
@@ -105,7 +116,10 @@ const EmployeeSidebar = ({ mobileOpen, onDrawerToggle }) => {
               E
             </Typography>
           </Box>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 600, color: theme.palette.text.primary }}
+          >
             Employee Panel
           </Typography>
         </Box>
@@ -121,7 +135,13 @@ const EmployeeSidebar = ({ mobileOpen, onDrawerToggle }) => {
       </Box>
 
       {/* Footer */}
-      <Box sx={{ p: 2, borderTop: "1px solid #e0e0e0", textAlign: "center" }}>
+      <Box
+        sx={{
+          p: 2,
+          borderTop: `1px solid ${theme.palette.divider}`,
+          textAlign: "center",
+        }}
+      >
         <Typography variant="caption" color="text.secondary">
           Employee Dashboard v1.0.0
         </Typography>

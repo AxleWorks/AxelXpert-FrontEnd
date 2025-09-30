@@ -9,6 +9,7 @@ import {
   Toolbar,
   Box,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -50,6 +51,8 @@ const menuItems = [
 
 const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
   const location = useLocation();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
 
   const isSelected = (path) => {
     return (
@@ -72,19 +75,24 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
             borderRadius: 2,
             minHeight: 48,
             "&.Mui-selected": {
-              bgcolor: "#fce4ec",
-              color: "#c2185b",
-              "& .MuiListItemIcon-root": { color: "#c2185b" },
+              bgcolor: isDark ? "rgba(59, 130, 246, 0.2)" : "#e3f2fd",
+              color: theme.palette.primary.main,
+              "& .MuiListItemIcon-root": { color: theme.palette.primary.main },
             },
             "&:hover": {
-              bgcolor: "#f5f5f5",
+              bgcolor: isDark ? "rgba(255, 255, 255, 0.08)" : "#f5f5f5",
               transform: "translateX(2px)",
               transition: "all 0.2s ease-in-out",
             },
           }}
         >
           <ListItemIcon
-            sx={{ minWidth: 40, color: selected ? "#c2185b" : "#666" }}
+            sx={{
+              minWidth: 40,
+              color: selected
+                ? theme.palette.secondary.main
+                : theme.palette.text.secondary,
+            }}
           >
             <IconComponent />
           </ListItemIcon>
@@ -92,7 +100,10 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
             primary={
               <Typography
                 variant="body2"
-                sx={{ fontWeight: selected ? 600 : 500 }}
+                sx={{
+                  fontWeight: selected ? 600 : 500,
+                  color: theme.palette.text.primary,
+                }}
               >
                 {item.text}
               </Typography>
@@ -106,7 +117,7 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
   const drawer = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Header */}
-      <Toolbar sx={{ borderBottom: "1px solid #e0e0e0" }}>
+      <Toolbar sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box
             sx={{
@@ -123,7 +134,10 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
               M
             </Typography>
           </Box>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 600, color: theme.palette.text.primary }}
+          >
             Manager Panel
           </Typography>
         </Box>
@@ -139,7 +153,13 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
       </Box>
 
       {/* Footer */}
-      <Box sx={{ p: 2, borderTop: "1px solid #e0e0e0", textAlign: "center" }}>
+      <Box
+        sx={{
+          p: 2,
+          borderTop: `1px solid ${theme.palette.divider}`,
+          textAlign: "center",
+        }}
+      >
         <Typography variant="caption" color="text.secondary">
           Manager Dashboard v1.0.0
         </Typography>

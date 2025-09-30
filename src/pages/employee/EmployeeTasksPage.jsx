@@ -1,14 +1,16 @@
 import React from "react";
-import { Typography, Paper, Box } from "@mui/material";
+import { Typography, Paper, Box, useTheme } from "@mui/material";
 import EmployeeLayout from "../../layouts/employee/EmployeeLayout";
 
 const EmployeeTasksPage = () => {
+  const theme = useTheme();
+
   return (
     <EmployeeLayout>
       <Box>
         <Typography
           variant="h4"
-          sx={{ mb: 3, fontWeight: 600, color: "#1e293b" }}
+          sx={{ mb: 3, fontWeight: 600, color: theme.palette.text.primary }}
         >
           My Tasks
         </Typography>
