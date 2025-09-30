@@ -4,8 +4,8 @@ import { TrendingUp } from "@mui/icons-material";
 
 const StatCard = ({ title, value, icon, color, trend, onClick }) => {
   const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
-  
+  const isDark = theme.palette.mode === "dark";
+
   return (
     <Card
       elevation={0}
@@ -14,7 +14,7 @@ const StatCard = ({ title, value, icon, color, trend, onClick }) => {
         p: 3,
         borderRadius: 3,
         border: `1px solid ${theme.palette.divider}`,
-        background: isDark 
+        background: isDark
           ? "linear-gradient(145deg, #1e293b 0%, #334155 100%)"
           : "linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)",
         transition: "all 0.3s ease-in-out",
@@ -23,7 +23,7 @@ const StatCard = ({ title, value, icon, color, trend, onClick }) => {
         height: "auto",
         "&:hover": {
           transform: "translateY(-4px)",
-          boxShadow: isDark 
+          boxShadow: isDark
             ? "0 20px 40px -10px rgba(0, 0, 0, 0.4)"
             : "0 20px 40px -10px rgba(0, 0, 0, 0.15)",
           border: `1px solid ${color}`,
@@ -62,7 +62,13 @@ const StatCard = ({ title, value, icon, color, trend, onClick }) => {
           </Typography>
           {trend && (
             <Box sx={{ display: "flex", alignItems: "center", mt: 1.5 }}>
-              <TrendingUp sx={{ fontSize: 18, color: theme.palette.success.main, mr: 0.5 }} />
+              <TrendingUp
+                sx={{
+                  fontSize: 18,
+                  color: theme.palette.success.main,
+                  mr: 0.5,
+                }}
+              />
               <Typography
                 variant="body2"
                 sx={{ color: theme.palette.success.main, fontWeight: 700 }}

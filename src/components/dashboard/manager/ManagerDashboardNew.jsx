@@ -432,7 +432,10 @@ const ManagerDashboard = () => {
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={branchPerformance}>
-                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={theme.palette.divider}
+                />
                 <XAxis
                   dataKey="branch"
                   axisLine={false}
@@ -449,7 +452,7 @@ const ManagerDashboard = () => {
                     backgroundColor: theme.palette.background.paper,
                     border: `1px solid ${theme.palette.divider}`,
                     borderRadius: "8px",
-                    boxShadow: isDark 
+                    boxShadow: isDark
                       ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
                       : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                     color: theme.palette.text.primary,
@@ -551,11 +554,17 @@ const ManagerDashboard = () => {
                     <Box>
                       <Typography
                         variant="subtitle1"
-                        sx={{ fontWeight: 600, color: theme.palette.text.primary }}
+                        sx={{
+                          fontWeight: 600,
+                          color: theme.palette.text.primary,
+                        }}
                       >
                         {action.title}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: theme.palette.text.secondary }}
+                      >
                         {action.description}
                       </Typography>
                     </Box>

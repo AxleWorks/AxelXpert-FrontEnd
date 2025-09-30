@@ -17,7 +17,7 @@ import { Close } from "@mui/icons-material";
 
 const StatModal = ({ open, onClose, stat }) => {
   const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const isDark = theme.palette.mode === "dark";
 
   return (
     <Dialog
@@ -28,7 +28,7 @@ const StatModal = ({ open, onClose, stat }) => {
       PaperProps={{
         sx: {
           borderRadius: 3,
-          boxShadow: isDark 
+          boxShadow: isDark
             ? "0 25px 50px -12px rgba(0, 0, 0, 0.6)"
             : "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           backgroundColor: theme.palette.background.paper,
@@ -48,15 +48,25 @@ const StatModal = ({ open, onClose, stat }) => {
             {stat?.icon}
           </Avatar>
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 700, color: theme.palette.text.primary }}
+            >
               {stat?.title}
             </Typography>
-            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+            <Typography
+              variant="body2"
+              sx={{ color: theme.palette.text.secondary }}
+            >
               Detailed Analytics
             </Typography>
           </Box>
         </Box>
-        <IconButton onClick={onClose} size="small" sx={{ color: theme.palette.text.primary }}>
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{ color: theme.palette.text.primary }}
+        >
           <Close />
         </IconButton>
       </DialogTitle>
@@ -71,7 +81,10 @@ const StatModal = ({ open, onClose, stat }) => {
               >
                 {stat?.value}
               </Typography>
-              <Typography variant="h6" sx={{ color: theme.palette.text.secondary, mt: 1 }}>
+              <Typography
+                variant="h6"
+                sx={{ color: theme.palette.text.secondary, mt: 1 }}
+              >
                 Current {stat?.title}
               </Typography>
             </Box>
@@ -83,7 +96,9 @@ const StatModal = ({ open, onClose, stat }) => {
                   sx={{
                     textAlign: "center",
                     p: 2,
-                    backgroundColor: isDark ? theme.palette.background.default : "#f8fafc",
+                    backgroundColor: isDark
+                      ? theme.palette.background.default
+                      : "#f8fafc",
                     borderRadius: 2,
                     border: `1px solid ${theme.palette.divider}`,
                   }}
@@ -94,7 +109,10 @@ const StatModal = ({ open, onClose, stat }) => {
                   >
                     {detail.value}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: theme.palette.text.secondary }}
+                  >
                     {detail.label}
                   </Typography>
                 </Box>

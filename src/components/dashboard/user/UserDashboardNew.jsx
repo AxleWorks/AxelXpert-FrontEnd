@@ -52,7 +52,7 @@ const UserDashboard = () => {
   const [selectedStat, setSelectedStat] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const isDark = theme.palette.mode === "dark";
 
   const handleStatClick = (stat) => {
     setSelectedStat(stat);
@@ -328,7 +328,10 @@ const UserDashboard = () => {
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={theme.palette.divider}
+                />
                 <XAxis
                   dataKey="month"
                   axisLine={false}
@@ -345,7 +348,7 @@ const UserDashboard = () => {
                     backgroundColor: theme.palette.background.paper,
                     border: `1px solid ${theme.palette.divider}`,
                     borderRadius: "8px",
-                    boxShadow: isDark 
+                    boxShadow: isDark
                       ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
                       : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                     color: theme.palette.text.primary,
@@ -465,11 +468,17 @@ const UserDashboard = () => {
                     <Box>
                       <Typography
                         variant="subtitle1"
-                        sx={{ fontWeight: 600, color: theme.palette.text.primary }}
+                        sx={{
+                          fontWeight: 600,
+                          color: theme.palette.text.primary,
+                        }}
                       >
                         {action.title}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: theme.palette.text.secondary }}
+                      >
                         {action.description}
                       </Typography>
                     </Box>
@@ -520,9 +529,11 @@ const UserDashboard = () => {
               {recentTasks.map((task) => (
                 <ListItem
                   key={task.id}
-                  sx={{ 
-                    mb: 1, 
-                    bgcolor: isDark ? theme.palette.background.default : "#f8fafc", 
+                  sx={{
+                    mb: 1,
+                    bgcolor: isDark
+                      ? theme.palette.background.default
+                      : "#f8fafc",
                     borderRadius: 2,
                     border: `1px solid ${theme.palette.divider}`,
                   }}
@@ -612,9 +623,11 @@ const UserDashboard = () => {
               {upcomingServices.map((service, index) => (
                 <ListItem
                   key={index}
-                  sx={{ 
-                    mb: 2, 
-                    bgcolor: isDark ? theme.palette.background.default : "#f0f9ff", 
+                  sx={{
+                    mb: 2,
+                    bgcolor: isDark
+                      ? theme.palette.background.default
+                      : "#f0f9ff",
                     borderRadius: 2,
                     border: `1px solid ${theme.palette.divider}`,
                   }}
