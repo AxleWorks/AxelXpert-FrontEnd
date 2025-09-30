@@ -16,6 +16,7 @@ import {
   Container,
   Button,
   IconButton,
+  useTheme,
 } from "@mui/material";
 import {
   Assignment as AssignmentIcon,
@@ -50,6 +51,8 @@ import {
 const UserDashboard = () => {
   const [selectedStat, setSelectedStat] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
 
   const handleStatClick = (stat) => {
     setSelectedStat(stat);
@@ -256,7 +259,7 @@ const UserDashboard = () => {
           variant="h3"
           sx={{
             fontWeight: 800,
-            color: "#1e293b",
+            color: theme.palette.text.primary,
             mb: 1,
             fontSize: { xs: "2rem", md: "2.5rem" },
             background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
@@ -264,12 +267,12 @@ const UserDashboard = () => {
             WebkitTextFillColor: "transparent",
           }}
         >
-          Welcome Back! 👋
+          Welcome Back!
         </Typography>
         <Typography
           variant="h6"
           sx={{
-            color: "#64748b",
+            color: theme.palette.text.secondary,
             fontSize: "1.1rem",
             fontWeight: 400,
             mb: 2,
@@ -311,37 +314,41 @@ const UserDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
               height: "100%",
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, mb: 3, color: "#1e293b" }}
+              sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
             >
               Service History & Costs
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
                 <XAxis
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e2e8f0",
+                    backgroundColor: theme.palette.background.paper,
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    boxShadow: isDark 
+                      ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
+                      : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    color: theme.palette.text.primary,
                   }}
                 />
                 <Area
@@ -374,14 +381,15 @@ const UserDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
               height: "100%",
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, mb: 3, color: "#1e293b" }}
+              sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
             >
               Service Breakdown
             </Typography>
@@ -414,13 +422,14 @@ const UserDashboard = () => {
           elevation={0}
           sx={{
             borderRadius: 3,
-            border: "1px solid #e2e8f0",
+            border: `1px solid ${theme.palette.divider}`,
             p: 3,
+            backgroundColor: theme.palette.background.paper,
           }}
         >
           <Typography
             variant="h6"
-            sx={{ fontWeight: 700, mb: 3, color: "#1e293b" }}
+            sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
           >
             Quick Actions
           </Typography>
@@ -456,11 +465,11 @@ const UserDashboard = () => {
                     <Box>
                       <Typography
                         variant="subtitle1"
-                        sx={{ fontWeight: 600, color: "#1e293b" }}
+                        sx={{ fontWeight: 600, color: theme.palette.text.primary }}
                       >
                         {action.title}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: "#64748b" }}>
+                      <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                         {action.description}
                       </Typography>
                     </Box>
@@ -480,8 +489,9 @@ const UserDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Box
@@ -494,7 +504,7 @@ const UserDashboard = () => {
             >
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 700, color: "#1e293b" }}
+                sx={{ fontWeight: 700, color: theme.palette.text.primary }}
               >
                 Recent Tasks
               </Typography>
@@ -510,7 +520,12 @@ const UserDashboard = () => {
               {recentTasks.map((task) => (
                 <ListItem
                   key={task.id}
-                  sx={{ mb: 1, bgcolor: "#f8fafc", borderRadius: 2 }}
+                  sx={{ 
+                    mb: 1, 
+                    bgcolor: isDark ? theme.palette.background.default : "#f8fafc", 
+                    borderRadius: 2,
+                    border: `1px solid ${theme.palette.divider}`,
+                  }}
                 >
                   <ListItemIcon>
                     <Avatar sx={{ bgcolor: "#10b981", width: 40, height: 40 }}>
@@ -566,9 +581,10 @@ const UserDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
               height: "100%",
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Box
@@ -581,7 +597,7 @@ const UserDashboard = () => {
             >
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 700, color: "#1e293b" }}
+                sx={{ fontWeight: 700, color: theme.palette.text.primary }}
               >
                 Upcoming Services
               </Typography>
@@ -596,7 +612,12 @@ const UserDashboard = () => {
               {upcomingServices.map((service, index) => (
                 <ListItem
                   key={index}
-                  sx={{ mb: 2, bgcolor: "#f0f9ff", borderRadius: 2 }}
+                  sx={{ 
+                    mb: 2, 
+                    bgcolor: isDark ? theme.palette.background.default : "#f0f9ff", 
+                    borderRadius: 2,
+                    border: `1px solid ${theme.palette.divider}`,
+                  }}
                 >
                   <ListItemIcon>
                     <Avatar sx={{ bgcolor: "#3b82f6", width: 36, height: 36 }}>

@@ -15,6 +15,7 @@ import {
   Card,
   Button,
   IconButton,
+  useTheme,
 } from "@mui/material";
 import {
   DirectionsCar as DirectionsCarIcon,
@@ -47,6 +48,8 @@ import {
 const EmployeeDashboard = () => {
   const [selectedStat, setSelectedStat] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
 
   const handleStatClick = (stat) => {
     setSelectedStat(stat);
@@ -250,7 +253,7 @@ const EmployeeDashboard = () => {
           variant="h3"
           sx={{
             fontWeight: 800,
-            color: "#1e293b",
+            color: theme.palette.text.primary,
             mb: 1,
             fontSize: { xs: "2rem", md: "2.5rem" },
             background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
@@ -258,12 +261,12 @@ const EmployeeDashboard = () => {
             WebkitTextFillColor: "transparent",
           }}
         >
-          Good Morning! 🔧
+          Good Morning!
         </Typography>
         <Typography
           variant="h6"
           sx={{
-            color: "#64748b",
+            color: theme.palette.text.secondary,
             fontSize: "1.1rem",
             fontWeight: 400,
             mb: 2,
@@ -305,37 +308,44 @@ const EmployeeDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
               height: "100%",
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, mb: 3, color: "#1e293b" }}
+              sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
             >
               Today's Productivity
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={dailyProductivity}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={theme.palette.divider}
+                />
                 <XAxis
                   dataKey="hour"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e2e8f0",
+                    backgroundColor: theme.palette.background.paper,
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    boxShadow: isDark
+                      ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
+                      : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    color: theme.palette.text.primary,
                   }}
                 />
                 <Bar dataKey="services" fill="#f59e0b" radius={[4, 4, 0, 0]} />
@@ -350,14 +360,15 @@ const EmployeeDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
               height: "100%",
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, mb: 3, color: "#1e293b" }}
+              sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
             >
               Service Distribution
             </Typography>
@@ -392,8 +403,9 @@ const EmployeeDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Box
@@ -406,7 +418,7 @@ const EmployeeDashboard = () => {
             >
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 700, color: "#1e293b" }}
+                sx={{ fontWeight: 700, color: theme.palette.text.primary }}
               >
                 Today's Schedule
               </Typography>
@@ -422,7 +434,14 @@ const EmployeeDashboard = () => {
               {todayTasks.map((task) => (
                 <ListItem
                   key={task.id}
-                  sx={{ mb: 2, bgcolor: "#f8fafc", borderRadius: 2 }}
+                  sx={{
+                    mb: 2,
+                    bgcolor: isDark
+                      ? theme.palette.background.default
+                      : "#f8fafc",
+                    borderRadius: 2,
+                    border: `1px solid ${theme.palette.divider}`,
+                  }}
                 >
                   <Box sx={{ width: "100%" }}>
                     <Box
@@ -489,14 +508,15 @@ const EmployeeDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
               height: "100%",
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Typography
               variant="h6"
-              sx={{ mb: 3, fontWeight: 700, color: "#1e293b" }}
+              sx={{ mb: 3, fontWeight: 700, color: theme.palette.text.primary }}
             >
               Recent Activity
             </Typography>
@@ -504,7 +524,14 @@ const EmployeeDashboard = () => {
               {recentActivity.map((activity, index) => (
                 <ListItem
                   key={index}
-                  sx={{ mb: 2, bgcolor: "#f0f9ff", borderRadius: 2 }}
+                  sx={{
+                    mb: 2,
+                    bgcolor: isDark
+                      ? theme.palette.background.default
+                      : "#f0f9ff",
+                    borderRadius: 2,
+                    border: `1px solid ${theme.palette.divider}`,
+                  }}
                 >
                   <ListItemIcon>
                     <Avatar

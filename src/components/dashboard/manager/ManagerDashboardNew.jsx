@@ -20,6 +20,7 @@ import {
   Card,
   Button,
   IconButton,
+  useTheme,
 } from "@mui/material";
 import {
   People as PeopleIcon,
@@ -54,6 +55,8 @@ import {
 const ManagerDashboard = () => {
   const [selectedStat, setSelectedStat] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
 
   const handleStatClick = (stat) => {
     setSelectedStat(stat);
@@ -285,7 +288,7 @@ const ManagerDashboard = () => {
           variant="h3"
           sx={{
             fontWeight: 800,
-            color: "#1e293b",
+            color: theme.palette.text.primary,
             mb: 1,
             fontSize: { xs: "2rem", md: "2.5rem" },
             background: "linear-gradient(135deg, #e11d48 0%, #be185d 100%)",
@@ -293,12 +296,12 @@ const ManagerDashboard = () => {
             WebkitTextFillColor: "transparent",
           }}
         >
-          Management Overview 📊
+          Management Overview
         </Typography>
         <Typography
           variant="h6"
           sx={{
-            color: "#64748b",
+            color: theme.palette.text.secondary,
             fontSize: "1.1rem",
             fontWeight: 400,
             mb: 2,
@@ -344,36 +347,43 @@ const ManagerDashboard = () => {
           elevation={0}
           sx={{
             borderRadius: 3,
-            border: "1px solid #e2e8f0",
+            border: `1px solid ${theme.palette.divider}`,
             p: 3,
+            backgroundColor: theme.palette.background.paper,
           }}
         >
           <Typography
             variant="h6"
-            sx={{ fontWeight: 700, mb: 3, color: "#1e293b" }}
+            sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
           >
             Revenue & Performance Trends
           </Typography>
           <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={revenueData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={theme.palette.divider}
+              />
               <XAxis
                 dataKey="month"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#64748b", fontSize: 12 }}
+                tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#64748b", fontSize: 12 }}
+                tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "white",
-                  border: "1px solid #e2e8f0",
+                  backgroundColor: theme.palette.background.paper,
+                  border: `1px solid ${theme.palette.divider}`,
                   borderRadius: "8px",
-                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                  boxShadow: isDark
+                    ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
+                    : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                  color: theme.palette.text.primary,
                 }}
               />
               <Area
@@ -408,37 +418,41 @@ const ManagerDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
               height: "100%",
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, mb: 3, color: "#1e293b" }}
+              sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
             >
               Branch Performance
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={branchPerformance}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
                 <XAxis
                   dataKey="branch"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e2e8f0",
+                    backgroundColor: theme.palette.background.paper,
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    boxShadow: isDark 
+                      ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
+                      : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    color: theme.palette.text.primary,
                   }}
                 />
                 <Bar dataKey="services" fill="#e11d48" radius={[4, 4, 0, 0]} />
@@ -453,14 +467,15 @@ const ManagerDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
               height: "100%",
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, mb: 3, color: "#1e293b" }}
+              sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
             >
               Service Distribution
             </Typography>
@@ -493,13 +508,14 @@ const ManagerDashboard = () => {
           elevation={0}
           sx={{
             borderRadius: 3,
-            border: "1px solid #e2e8f0",
+            border: `1px solid ${theme.palette.divider}`,
             p: 3,
+            backgroundColor: theme.palette.background.paper,
           }}
         >
           <Typography
             variant="h6"
-            sx={{ fontWeight: 700, mb: 3, color: "#1e293b" }}
+            sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
           >
             Quick Actions
           </Typography>
@@ -535,11 +551,11 @@ const ManagerDashboard = () => {
                     <Box>
                       <Typography
                         variant="subtitle1"
-                        sx={{ fontWeight: 600, color: "#1e293b" }}
+                        sx={{ fontWeight: 600, color: theme.palette.text.primary }}
                       >
                         {action.title}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: "#64748b" }}>
+                      <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                         {action.description}
                       </Typography>
                     </Box>
@@ -558,8 +574,9 @@ const ManagerDashboard = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid #e2e8f0",
+              border: `1px solid ${theme.palette.divider}`,
               p: 3,
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Box
@@ -572,7 +589,7 @@ const ManagerDashboard = () => {
             >
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 700, color: "#1e293b" }}
+                sx={{ fontWeight: 700, color: theme.palette.text.primary }}
               >
                 Recent Bookings
               </Typography>
