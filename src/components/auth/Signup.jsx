@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -15,6 +15,10 @@ import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+// keep signup simple: call backend /api/auth/signup
 
 const SignUp = () => {
   const [loading, setLoading] = useState(false);
@@ -61,15 +65,31 @@ const SignUp = () => {
     }
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log("User registered:", { userName, email });
-      // Redirect to signin or dashboard
+      const res = await axios.post("http://localhost:8080/api/auth/signup", {
+        username: userName,
+        email,
+        password,
+      });
+
+      if (res.status === 200) {
+        setToast({
+          open: true,
+          message: "Account created. Check backend for activation link.",
+          severity: "success",
+        });
+        // redirect to sign in after a short delay
+        setTimeout(() => navigate("/signin"), 900);
+        return;
+      }
     } catch (err) {
-      setError("Registration failed. Please try again.");
+      if (err.response && err.response.data)
+        setError(String(err.response.data));
+      else setError("Registration failed. Please try again.");
       setToast({
         open: true,
-        message: "Registration failed. Please try again.",
+        message: String(
+          err?.response?.data || err.message || "Registration failed"
+        ),
         severity: "error",
       });
     } finally {
@@ -81,6 +101,19 @@ const SignUp = () => {
     if (reason === "clickaway") return;
     setToast((t) => ({ ...t, open: false }));
   };
+
+  useEffect(() => {
+    // small backend healthcheck
+    (async () => {
+      try {
+        await axios.get("/api/auth/status");
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, []);
+
+  const navigate = useNavigate();
 
   const validateEmail = (value) => {
     // simple email regex
