@@ -5,7 +5,6 @@ import {
   Button,
   Typography,
   Box,
-  Alert,
   Paper,
   IconButton,
   Stack,
@@ -197,11 +196,7 @@ const SignIn = () => {
           }}
         />
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+        {/* error is displayed at the top of AuthFormContainer; removed inline Alert to avoid duplication */}
 
         <Box sx={{ textAlign: "right", mb: 3 }}>
           <Link
