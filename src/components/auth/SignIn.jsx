@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   TextField,
   Button,
   Typography,
   Box,
-  Alert,
   Paper,
   IconButton,
   Stack,
@@ -14,6 +13,7 @@ import {
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import axios from "axios";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
@@ -24,7 +24,20 @@ const SignIn = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { setAuthUser } = useAuth();
+
+  useEffect(() => {
+    // quick backend status check
+    let mounted = true;
+    (async () => {
+      try {
+        await axios.get("http://localhost:8080/api/auth/status");
+      } catch (e) {
+        // ignore - used only for quick healthcheck
+      }
+    })();
+    return () => (mounted = false);
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -32,24 +45,53 @@ const SignIn = () => {
     setError(null);
 
     try {
-      const userData = await login(username, password);
+      // call backend login endpoint and expect LoginResponse {id, username, email, role}
+      const res = await axios.post("http://localhost:8080/api/auth/login", {
+        email: username,
+        password,
+      });
 
-      // Navigate based on role
-      switch (userData.role) {
-        case "user":
-          navigate("/user/dashboard");
-          break;
-        case "employee":
-          navigate("/employee/dashboard");
-          break;
-        case "manager":
-          navigate("/manager/dashboard");
-          break;
-        default:
-          navigate("/");
+      // If backend returns an object with user data, save it and update context/localStorage
+      const data = res && res.data;
+      if (data && typeof data === "object" && data.username) {
+        // normalize role to lowercase because ProtectedRoute expects 'user'|'employee'|'manager'
+        const role = String(data.role || "").toLowerCase();
+        const userData = {
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          role,
+        };
+
+        console.log("Login successful:", userData);
+
+        // save to localStorage
+        try {
+          localStorage.setItem("authUser", JSON.stringify(userData));
+        } catch (e) {
+          // ignore storage errors
+        }
+
+        if (setAuthUser) setAuthUser(userData);
+
+        const roleMap = {
+          user: "/user/dashboard",
+          employee: "/employee/dashboard",
+          manager: "/manager/dashboard",
+        };
+        const target = roleMap[role] || "/";
+        navigate(target);
+        return;
+      }
+
+      // If backend returned a plain message with 200, show it as info/error
+      if (res && res.status === 200) {
+        setError(String(res.data || "Login response received"));
       }
     } catch (err) {
-      setError(err.message);
+      if (err.response && err.response.data)
+        setError(String(err.response.data));
+      else setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -197,11 +239,7 @@ const SignIn = () => {
           }}
         />
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+        {/* error is displayed at the top of AuthFormContainer; removed inline Alert to avoid duplication */}
 
         <Box sx={{ textAlign: "right", mb: 3 }}>
           <Link
