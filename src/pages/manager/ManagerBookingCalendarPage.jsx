@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -43,12 +43,7 @@ import AppointmentPopup from "../../components/calendar/Booking_Manage/Appointme
 
 const branches = ["Downtown", "Westside", "North Branch", "South Branch"];
 
-const employees = [
-  { id: 1, name: "Michael Chen", role: "Senior Technician", available: true },
-  { id: 2, name: "Sarah Wilson", role: "Technician", available: true },
-  { id: 3, name: "David Martinez", role: "Technician", available: false },
-  { id: 4, name: "Emily Thompson", role: "Junior Technician", available: true },
-];
+// employees will be loaded from the API
 
 const initialAppointments = [
   {
@@ -132,19 +127,119 @@ function getStatusColor(mode, status) {
 const ManagerBookingCalendarPage = () => {
   const theme = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedBranch, setSelectedBranch] = useState("Downtown");
+  const [selectedBranch, setSelectedBranch] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [appointments, setAppointments] = useState(initialAppointments);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState("");
+  // selectedEmployee will be an employee object (or null)
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [employees, setEmployees] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
+
+  // fetch employees from backend on mount
+  useEffect(() => {
+    const ac = new AbortController();
+    async function load() {
+      try {
+        const res = await fetch("http://localhost:8080/api/users/employees", {
+          signal: ac.signal,
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        // map server shape to UI shape: {id, name, role, available}
+        const mapped = (data || []).map((u) => ({
+          id: u.id,
+          name: u.username || u.email || `emp-${u.id}`,
+          role: u.role || "employee",
+          available: !!u.is_Active && !u.is_Blocked,
+          phone: u.phoneNumber,
+        }));
+        setEmployees(mapped);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Failed to load employees", err);
+          setSnackbar({
+            open: true,
+            message: "Failed to load employees",
+            severity: "error",
+          });
+        }
+      }
+    }
+    load();
+    return () => ac.abort();
+  }, []);
+
+  // fetch bookings and map them to the appointment shape used by the calendar
+  useEffect(() => {
+    const ac = new AbortController();
+    async function loadBookings() {
+      try {
+        const res = await fetch("http://localhost:8080/api/bookings/all", {
+          signal: ac.signal,
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const mapped = (data || []).map((b) => {
+          const start = b.startAt ? new Date(b.startAt) : null;
+          const end = b.endAt ? new Date(b.endAt) : null;
+          const timeStr = start
+            ? start.toLocaleTimeString(undefined, {
+                hour: "numeric",
+                minute: "2-digit",
+              })
+            : "";
+          const status = (b.status || "").toLowerCase();
+          const prettyStatus =
+            status === "pending"
+              ? "Pending"
+              : status === "approved"
+              ? "Approved"
+              : status === "completed"
+              ? "Completed"
+              : status === "cancelled" || status === "canceled"
+              ? "Cancelled"
+              : b.status || "";
+
+          return {
+            id: b.id,
+            customer: b.customerName || b.customer || "—",
+            vehicle: b.vehicle,
+            service: b.serviceName || "",
+            date: start || new Date(),
+            time: timeStr,
+            status: prettyStatus,
+            branch: b.branchName || "",
+            phone: b.customerPhone || "",
+            assignedEmployee: b.assignedEmployeeName || "",
+            notes: b.notes || "",
+            raw: b,
+            startAt: b.startAt,
+            endAt: b.endAt,
+          };
+        });
+        setAppointments(mapped);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Failed to load bookings", err);
+          setSnackbar({
+            open: true,
+            message: "Failed to load bookings",
+            severity: "error",
+          });
+        }
+      }
+    }
+    loadBookings();
+    return () => ac.abort();
+  }, []);
 
   const filteredAppointments = useMemo(() => {
     return appointments.filter((apt) => {
@@ -248,19 +343,23 @@ const ManagerBookingCalendarPage = () => {
     setAppointments((prev) =>
       prev.map((a) =>
         a.id === selectedAppointment.id
-          ? { ...a, status: "Approved", assignedEmployee: selectedEmployee }
+          ? {
+              ...a,
+              status: "Approved",
+              assignedEmployee: selectedEmployee.name,
+            }
           : a
       )
     );
 
     setSnackbar({
       open: true,
-      message: `Assigned to ${selectedEmployee} and approved`,
+      message: `Assigned to ${selectedEmployee.name} and approved`,
       severity: "success",
     });
     setApproveDialogOpen(false);
     setDrawerOpen(false);
-    setSelectedEmployee("");
+    setSelectedEmployee(null);
   };
 
   const handleCancel = () => {
@@ -337,8 +436,8 @@ const ManagerBookingCalendarPage = () => {
           onClose={() => setSelectedAppointment(null)}
           appointment={selectedAppointment}
           employees={employees}
-          onApprove={(employeeName) => {
-            if (!employeeName) {
+          onApprove={(employee) => {
+            if (!employee) {
               setSnackbar({
                 open: true,
                 message: "Please select an employee",
@@ -349,13 +448,17 @@ const ManagerBookingCalendarPage = () => {
             setAppointments((prev) =>
               prev.map((a) =>
                 a.id === selectedAppointment.id
-                  ? { ...a, status: "Approved", assignedEmployee: employeeName }
+                  ? {
+                      ...a,
+                      status: "Approved",
+                      assignedEmployee: employee.name,
+                    }
                   : a
               )
             );
             setSnackbar({
               open: true,
-              message: `Assigned to ${employeeName} and approved`,
+              message: `Assigned to ${employee.name} and approved`,
               severity: "success",
             });
             setSelectedAppointment(null);
@@ -389,15 +492,19 @@ const ManagerBookingCalendarPage = () => {
             <Box sx={{ mt: 1 }}>
               <Select
                 fullWidth
-                value={selectedEmployee}
-                onChange={(e) => setSelectedEmployee(e.target.value)}
+                value={selectedEmployee ? selectedEmployee.id : ""}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  const emp = employees.find((x) => x.id === id) || null;
+                  setSelectedEmployee(emp);
+                }}
                 displayEmpty
               >
                 <MenuItem value="">Select employee</MenuItem>
                 {employees.map((emp) => (
                   <MenuItem
                     key={emp.id}
-                    value={emp.name}
+                    value={emp.id}
                     disabled={!emp.available}
                   >
                     {emp.name} — {emp.role} {emp.available ? "" : "(Busy)"}
