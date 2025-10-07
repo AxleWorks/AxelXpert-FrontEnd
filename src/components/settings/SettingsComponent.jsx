@@ -6,6 +6,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { toast } from '../ui/toast';
+import { ConfirmationDialog } from '../ui/dialog';
 import { Box, Typography, CircularProgress, IconButton } from '@mui/material';
 import { API_BASE } from '../../config/apiEndpoints';
 
@@ -30,6 +31,13 @@ const SettingsComponent = ({ role = 'user' }) => {
     current: false,
     new: false,
     confirm: false
+  });
+  const [confirmationDialog, setConfirmationDialog] = useState({
+    open: false,
+    type: 'warning',
+    title: '',
+    message: '',
+    onConfirm: null
   });
 
   // Get logged-in user data from localStorage
@@ -103,57 +111,66 @@ const SettingsComponent = ({ role = 'user' }) => {
     }));
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = () => {
     if (!userDetails) return;
 
-    setSaving(true);
-    try {
-      const response = await fetch(`${API_BASE}/api/users/${userDetails.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          phoneNumber: formData.phoneNumber,
-          address: formData.address,
-          // Don't update role and branchName as they might be restricted
-        })
-      });
+    setConfirmationDialog({
+      open: true,
+      type: 'info',
+      title: 'Save Profile Changes',
+      message: 'Are you sure you want to save these changes to your profile?',
+      onConfirm: async () => {
+        setConfirmationDialog(prev => ({ ...prev, open: false }));
+        setSaving(true);
+        try {
+          const response = await fetch(`${API_BASE}/api/users/${userDetails.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              username: formData.username,
+              email: formData.email,
+              phoneNumber: formData.phoneNumber,
+              address: formData.address,
+              // Don't update role and branchName as they might be restricted
+            })
+          });
 
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
+          if (!response.ok) {
+            throw new Error('Failed to update profile');
+          }
+
+          const updatedUser = await response.json();
+          setUserDetails(updatedUser);
+          
+          // Update localStorage if username or email changed
+          const authUser = getLoggedInUser();
+          if (authUser) {
+            const updatedAuthUser = {
+              ...authUser,
+              username: updatedUser.username,
+              email: updatedUser.email
+            };
+            localStorage.setItem('authUser', JSON.stringify(updatedAuthUser));
+          }
+
+          toast.success('Profile updated!', {
+            description: 'Your profile has been updated successfully.'
+          });
+        } catch (error) {
+          console.error('Error updating profile:', error);
+          toast.error('Failed to update profile', {
+            description: 'Please try again later'
+          });
+        } finally {
+          setSaving(false);
+        }
       }
-
-      const updatedUser = await response.json();
-      setUserDetails(updatedUser);
-      
-      // Update localStorage if username or email changed
-      const authUser = getLoggedInUser();
-      if (authUser) {
-        const updatedAuthUser = {
-          ...authUser,
-          username: updatedUser.username,
-          email: updatedUser.email
-        };
-        localStorage.setItem('authUser', JSON.stringify(updatedAuthUser));
-      }
-
-      toast.success('Profile updated!', {
-        description: 'Your profile has been updated successfully.'
-      });
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile', {
-        description: 'Please try again later'
-      });
-    } finally {
-      setSaving(false);
-    }
+    });
   };
 
-  const handleChangePassword = async () => {
+  const handleChangePassword = () => {
     if (!userDetails) return;
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -170,83 +187,95 @@ const SettingsComponent = ({ role = 'user' }) => {
       return;
     }
 
-    setSaving(true);
-    try {
-      const response = await fetch(`${API_BASE}/api/users/${userDetails.id}/password`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        })
-      });
+    setConfirmationDialog({
+      open: true,
+      type: 'warning',
+      title: 'Change Password',
+      message: 'Are you sure you want to change your password? You will need to use the new password for future logins.',
+      onConfirm: async () => {
+        setConfirmationDialog(prev => ({ ...prev, open: false }));
+        setSaving(true);
+        try {
+          const response = await fetch(`${API_BASE}/api/users/${userDetails.id}/password`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              currentPassword: passwordData.currentPassword,
+              newPassword: passwordData.newPassword
+            })
+          });
 
-      const text = await response.text();
-      if (!response.ok) {
-        throw new Error(text || 'Failed to change password');
+          const text = await response.text();
+          if (!response.ok) {
+            throw new Error(text || 'Failed to change password');
+          }
+
+          setPasswordData({
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          });
+
+          toast.success('Password changed!', {
+            description: text || 'Your password has been changed successfully.'
+          });
+        } catch (error) {
+          console.error('Error changing password:', error);
+          toast.error('Failed to change password', {
+            description: error.message || 'Please check your current password and try again'
+          });
+        } finally {
+          setSaving(false);
+        }
       }
-
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-
-      toast.success('Password changed!', {
-        description: text || 'Your password has been changed successfully.'
-      });
-    } catch (error) {
-      console.error('Error changing password:', error);
-      toast.error('Failed to change password', {
-        description: error.message || 'Please check your current password and try again'
-      });
-    } finally {
-      setSaving(false);
-    }
+    });
   };
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = () => {
     if (!userDetails) return;
 
-    const confirmed = window.confirm(
-      'Are you sure you want to delete your account? This action cannot be undone.'
-    );
+    setConfirmationDialog({
+      open: true,
+      type: 'danger',
+      title: 'Delete Account',
+      message: 'Are you absolutely sure you want to delete your account? This action cannot be undone and you will lose all your data permanently.',
+      onConfirm: async () => {
+        setConfirmationDialog(prev => ({ ...prev, open: false }));
+        setSaving(true);
+        try {
+          const response = await fetch(`${API_BASE}/api/users/${userDetails.id}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
 
-    if (!confirmed) return;
+          if (!response.ok) {
+            throw new Error('Failed to delete account');
+          }
 
-    setSaving(true);
-    try {
-      const response = await fetch(`${API_BASE}/api/users/${userDetails.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
+          // Clear localStorage and redirect to login
+          localStorage.removeItem('authUser');
+          toast.success('Account deleted', {
+            description: 'Your account has been successfully deleted.'
+          });
+          
+          // Redirect to login page after a delay
+          setTimeout(() => {
+            window.location.href = '/signin';
+          }, 2000);
+        } catch (error) {
+          console.error('Error deleting account:', error);
+          toast.error('Failed to delete account', {
+            description: 'Please try again later'
+          });
+        } finally {
+          setSaving(false);
         }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete account');
       }
-
-      // Clear localStorage and redirect to login
-      localStorage.removeItem('authUser');
-      toast.success('Account deleted', {
-        description: 'Your account has been successfully deleted.'
-      });
-      
-      // Redirect to login page after a delay
-      setTimeout(() => {
-        window.location.href = '/signin';
-      }, 2000);
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      toast.error('Failed to delete account', {
-        description: 'Please try again later'
-      });
-    } finally {
-      setSaving(false);
-    }
+    });
   };
 
   if (loading) {
@@ -538,6 +567,18 @@ const SettingsComponent = ({ role = 'user' }) => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={confirmationDialog.open}
+        onClose={() => setConfirmationDialog(prev => ({ ...prev, open: false }))}
+        onConfirm={confirmationDialog.onConfirm}
+        title={confirmationDialog.title}
+        message={confirmationDialog.message}
+        type={confirmationDialog.type}
+        loading={saving}
+        confirmText={confirmationDialog.type === 'danger' ? 'Delete' : 'Confirm'}
+      />
     </div>
   );
 };
