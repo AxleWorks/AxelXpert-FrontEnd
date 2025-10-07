@@ -1,19 +1,13 @@
 import React from "react";
-import { Typography, Paper, Box } from "@mui/material";
+import { Box } from "@mui/material";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
+import SettingsComponent from "../../components/settings/SettingsComponent";
 
 const ManagerSettingsPage = () => {
   return (
     <ManagerLayout>
-      <Box>
-        <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
-          Manager Settings
-        </Typography>
-        <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
-          <Typography variant="body1">
-            Manager settings and system preferences will be configured here.
-          </Typography>
-        </Paper>
+      <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <SettingsComponent role="manager" />
       </Box>
     </ManagerLayout>
   );
