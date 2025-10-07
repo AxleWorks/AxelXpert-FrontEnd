@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ToastProvider } from "./components/ui/toast";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // Auth Components
@@ -44,7 +45,8 @@ const App = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
+        <ToastProvider>
+          <Router>
           <Routes>
             {/* Auth routes */}
             <Route path="/signin" element={<SignIn />} />
@@ -225,6 +227,7 @@ const App = () => {
             <Route path="*" element={<Navigate to="/signin" replace />} />
           </Routes>
         </Router>
+        </ToastProvider>
       </AuthProvider>
     </ThemeProvider>
   );
