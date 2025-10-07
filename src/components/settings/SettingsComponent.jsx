@@ -300,18 +300,36 @@ const SettingsComponent = ({ role = 'user' }) => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="mb-8">
-        <Typography variant="h4" sx={{ fontWeight: 600, mb: 2 }}>
-          Settings
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage your account settings and preferences
-        </Typography>
-      </div>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: '100%',
+        minHeight: '100%',
+        py: { xs: 2, sm: 4, md: 6 },
+        px: { xs: 1, sm: 2 },
+        boxSizing: 'border-box',
+      }}
+    >
+      <Box
+        sx={{
+          width: '100%',
+          maxWidth: 800,
+          background: 'none',
+        }}
+      >
+        {/* Header */}
+        <div className="mb-8">
+          <Typography variant="h4" sx={{ fontWeight: 600, mb: 2 }}>
+            Settings
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage your account settings and preferences
+          </Typography>
+        </div>
 
-      <Tabs defaultValue="profile" className="w-full">
+        <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
           <TabsTrigger value="profile">
             <User className="h-4 w-4 mr-2" />
@@ -568,7 +586,8 @@ const SettingsComponent = ({ role = 'user' }) => {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </Box>
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog
@@ -581,7 +600,7 @@ const SettingsComponent = ({ role = 'user' }) => {
         loading={saving}
         confirmText={confirmationDialog.type === 'danger' ? 'Delete' : 'Confirm'}
       />
-    </div>
+    </Box>
   );
 };
 
