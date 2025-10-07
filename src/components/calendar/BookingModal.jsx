@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Modal,
   Button,
   TextField,
   FormControl,
@@ -22,6 +19,7 @@ import {
   CardContent,
   FormControlLabel,
   Checkbox,
+  Stack,
 } from '@mui/material';
 import {
   Close,
@@ -39,7 +37,8 @@ const BookingModal = ({
   selectedDate, 
   selectedTimeSlot, 
   onSubmit, 
-  branchId 
+  branchId,
+  dayTimeSlots = [] // optional: restrict to available times for selected day
 }) => {
   const [formData, setFormData] = useState({
     vehicleId: '',
@@ -75,7 +74,7 @@ const BookingModal = ({
     { id: 5, name: 'Engine Diagnostic', duration: 120, price: 150 },
   ]);
 
-  const [availableTimeSlots] = useState([
+  const [defaultTimeSlots] = useState([
     '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
     '12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM',
     '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM', '05:00 PM'
@@ -170,12 +169,32 @@ const BookingModal = ({
       return;
     }
 
+    // derive display fields that mirror what manager sees in AppointmentPopup
+    const selectedVehicle = !formData.useNewVehicle
+      ? existingVehicles.find(v => v.id === formData.vehicleId)
+      : formData.newVehicle;
+
+    const vehicleText = selectedVehicle
+      ? `${selectedVehicle.year || ''} ${selectedVehicle.make || ''} ${selectedVehicle.model || ''}`.trim()
+      : '';
+
+    const selectedServiceDef = serviceTypes.find(s => s.id === formData.serviceType);
+
     const bookingData = {
       ...formData,
       date: selectedDate,
       branchId,
-      status: 'PENDING',
-      createdAt: new Date().toISOString()
+      // Normalize to manager status casing
+      status: 'Pending',
+      createdAt: new Date().toISOString(),
+      // Manager-visible summary fields
+      customer: formData.customerInfo.name,
+      phone: formData.customerInfo.phone,
+      vehicle: vehicleText,
+      service: selectedServiceDef?.name || '',
+      time: formData.timeSlot,
+      branch: branchId, // replace with branch display name if available upstream
+      notes: formData.notes,
     };
 
     onSubmit(bookingData);
@@ -217,35 +236,46 @@ const BookingModal = ({
   };
 
   const selectedService = serviceTypes.find(s => s.id === formData.serviceType);
+  const paperStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 'min(92vw, 760px)',
+    maxHeight: '86vh',
+    overflowY: 'auto',
+    p: 3,
+    borderRadius: 2,
+    boxShadow: '0 12px 40px rgba(2,6,23,0.4)'
+  };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose} 
-      maxWidth="md" 
-      fullWidth
-      PaperProps={{
-        sx: { minHeight: '600px' }
+    <Modal
+      open={open}
+      onClose={handleClose}
+      closeAfterTransition
+      BackdropProps={{
+        sx: {
+          backdropFilter: 'blur(6px)',
+          backgroundColor: 'rgba(0,0,0,0.36)'
+        }
       }}
     >
-      <DialogTitle sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        pb: 1
-      }}>
-        <Box>
-          <Typography variant="h6">Book Appointment</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {formatDate(selectedDate)}
-          </Typography>
-        </Box>
-        <IconButton onClick={handleClose}>
-          <Close />
-        </IconButton>
-      </DialogTitle>
+      <Paper sx={paperStyle}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+          <Box>
+            <Typography variant="h6">Book Appointment</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {formatDate(selectedDate)}
+            </Typography>
+          </Box>
+          <IconButton onClick={handleClose} color="inherit">
+            <Close />
+          </IconButton>
+        </Stack>
 
-      <DialogContent dividers>
+        <Divider sx={{ mb: 2 }} />
+
         <Grid container spacing={3}>
           {/* Customer Information */}
           <Grid item xs={12}>
@@ -425,7 +455,7 @@ const BookingModal = ({
                     onChange={(e) => handleInputChange('timeSlot', e.target.value)}
                     label="Time Slot *"
                   >
-                    {availableTimeSlots.map((time) => (
+                    {(dayTimeSlots.length ? dayTimeSlots : defaultTimeSlots).map((time) => (
                       <MenuItem key={time} value={time}>
                         {time}
                       </MenuItem>
@@ -528,21 +558,21 @@ const BookingModal = ({
             </Typography>
           </Alert>
         )}
-      </DialogContent>
 
-      <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button onClick={handleClose} variant="outlined">
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained" 
-          disabled={!formData.serviceType || !formData.timeSlot}
-        >
-          Book Appointment
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <Stack direction="row" spacing={1} sx={{ p: 2, pt: 3 }}>
+          <Button onClick={handleClose} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            disabled={!formData.serviceType || !formData.timeSlot}
+          >
+            Book Appointment
+          </Button>
+        </Stack>
+      </Paper>
+    </Modal>
   );
 };
 
