@@ -300,19 +300,37 @@ const SettingsComponent = ({ role = 'user' }) => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-          Settings
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage your account settings and preferences
-        </Typography>
-      </div>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: '100%',
+        minHeight: '100%',
+        py: { xs: 2, sm: 4, md: 6 },
+        px: { xs: 1, sm: 2 },
+        boxSizing: 'border-box',
+      }}
+    >
+      <Box
+        sx={{
+          width: '100%',
+          maxWidth: 800,
+          background: 'none',
+        }}
+      >
+        {/* Header */}
+        <div className="mb-8">
+          <Typography variant="h4" sx={{ fontWeight: 600, mb: 2 }}>
+            Settings
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage your account settings and preferences
+          </Typography>
+        </div>
 
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
           <TabsTrigger value="profile">
             <User className="h-4 w-4 mr-2" />
             Profile
@@ -324,13 +342,13 @@ const SettingsComponent = ({ role = 'user' }) => {
         </TabsList>
 
         {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-6 mt-6">
+        <TabsContent value="profile" className="space-y-8 mt-6">
           <Card>
-            <CardHeader>
+            <CardHeader sx={{ pb: 3 }}>
               <CardTitle>Personal Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Username</Label>
                   <Input 
@@ -349,7 +367,7 @@ const SettingsComponent = ({ role = 'user' }) => {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label>Email Address</Label>
                 <Input
                   type="email"
@@ -359,7 +377,7 @@ const SettingsComponent = ({ role = 'user' }) => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label>Contact Number</Label>
                 <Input
                   type="tel"
@@ -369,7 +387,7 @@ const SettingsComponent = ({ role = 'user' }) => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label>Address</Label>
                 <Input
                   placeholder="Enter your address"
@@ -379,7 +397,7 @@ const SettingsComponent = ({ role = 'user' }) => {
               </div>
 
               {(role === 'manager' || role === 'employee') && formData.branchName && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Branch</Label>
                   <Input 
                     value={formData.branchName} 
@@ -389,7 +407,7 @@ const SettingsComponent = ({ role = 'user' }) => {
                 </div>
               )}
 
-              <Box sx={{ display: 'flex', gap: 2, pt: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, pt: 4 }}>
                 <Button 
                   onClick={handleSaveProfile} 
                   disabled={saving}
@@ -404,11 +422,11 @@ const SettingsComponent = ({ role = 'user' }) => {
 
           {/* Account Status Card */}
           <Card>
-            <CardHeader>
+            <CardHeader sx={{ pb: 3 }}>
               <CardTitle>Account Status</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Account Status</Label>
                   <Input 
@@ -431,7 +449,7 @@ const SettingsComponent = ({ role = 'user' }) => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Created Date</Label>
                   <Input 
@@ -454,13 +472,13 @@ const SettingsComponent = ({ role = 'user' }) => {
         </TabsContent>
 
         {/* Security Tab */}
-        <TabsContent value="security" className="space-y-6 mt-6">
+        <TabsContent value="security" className="space-y-8 mt-6">
           <Card>
-            <CardHeader>
+            <CardHeader sx={{ pb: 3 }}>
               <CardTitle>Change Password</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
                 <Label>Current Password</Label>
                 <Box sx={{ position: 'relative' }}>
                   <Input 
@@ -480,7 +498,7 @@ const SettingsComponent = ({ role = 'user' }) => {
                 </Box>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label>New Password</Label>
                 <Box sx={{ position: 'relative' }}>
                   <Input 
@@ -500,7 +518,7 @@ const SettingsComponent = ({ role = 'user' }) => {
                 </Box>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label>Confirm New Password</Label>
                 <Box sx={{ position: 'relative' }}>
                   <Input 
@@ -520,23 +538,25 @@ const SettingsComponent = ({ role = 'user' }) => {
                 </Box>
               </div>
 
-              <Button 
-                onClick={handleChangePassword} 
-                disabled={saving || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-                sx={{ minWidth: 160 }}
-              >
-                {saving ? <CircularProgress size={20} sx={{ mr: 1 }} /> : <Lock size={16} style={{ marginRight: 8 }} />}
-                {saving ? 'Changing...' : 'Change Password'}
-              </Button>
+              <Box sx={{ pt: 2 }}>
+                <Button 
+                  onClick={handleChangePassword} 
+                  disabled={saving || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                  sx={{ minWidth: 160 }}
+                >
+                  {saving ? <CircularProgress size={20} sx={{ mr: 1 }} /> : <Lock size={16} style={{ marginRight: 8 }} />}
+                  {saving ? 'Changing...' : 'Change Password'}
+                </Button>
+              </Box>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader sx={{ pb: 3 }}>
               <CardTitle>Two-Factor Authentication</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Typography variant="body2" color="text.secondary">
+            <CardContent className="space-y-6">
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Add an extra layer of security to your account by enabling two-factor authentication.
               </Typography>
               <Button variant="outlined" disabled>
@@ -546,11 +566,11 @@ const SettingsComponent = ({ role = 'user' }) => {
           </Card>
 
           <Card sx={{ borderColor: 'error.main' }}>
-            <CardHeader>
+            <CardHeader sx={{ pb: 3 }}>
               <CardTitle sx={{ color: 'error.main' }}>Danger Zone</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Typography variant="body2" color="text.secondary">
+            <CardContent className="space-y-6">
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Once you delete your account, there is no going back. Please be certain.
               </Typography>
               <Button 
@@ -566,7 +586,8 @@ const SettingsComponent = ({ role = 'user' }) => {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </Box>
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog
@@ -579,7 +600,7 @@ const SettingsComponent = ({ role = 'user' }) => {
         loading={saving}
         confirmText={confirmationDialog.type === 'danger' ? 'Delete' : 'Confirm'}
       />
-    </div>
+    </Box>
   );
 };
 

@@ -221,10 +221,10 @@ const Header = ({ onMenuClick }) => {
                     fontWeight: 600,
                   }}
                 >
-                  {user.name?.charAt(0).toUpperCase()}
+                  {user.username?.charAt(0).toUpperCase()}
                 </Avatar>
                 <Typography variant="body2" sx={{ ml: 1 }}>
-                  {user.name}
+                  {user.username}
                 </Typography>
               </IconButton>
             </Tooltip>
@@ -345,7 +345,7 @@ const Header = ({ onMenuClick }) => {
               </Avatar>
               <Box>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  {user?.name || "John Doe"}
+                  {user?.username || "Default User"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {user?.email || "jhondoe@gmail.com"}
