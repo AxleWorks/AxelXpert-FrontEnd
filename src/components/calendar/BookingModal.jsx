@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Button,
@@ -20,233 +20,213 @@ import {
   FormControlLabel,
   Checkbox,
   Stack,
-} from '@mui/material';
-import {
-  Close,
-  Add,
-  DirectionsCar,
-  Build,
-  AccessTime,
-  AttachFile,
-  PhotoCamera,
-} from '@mui/icons-material';
+} from "@mui/material";
+import { Close, DirectionsCar, Build, PhotoCamera } from "@mui/icons-material";
 
-const BookingModal = ({ 
-  open, 
-  onClose, 
-  selectedDate, 
-  selectedTimeSlot, 
-  onSubmit, 
+const BookingModal = ({
+  open,
+  onClose,
+  selectedDate,
+  selectedTimeSlot,
+  onSubmit,
   branchId,
-  dayTimeSlots = [] // optional: restrict to available times for selected day
+  dayTimeSlots = [],
+  services,
+  vehicles,
 }) => {
-  const [formData, setFormData] = useState({
-    vehicleId: '',
-    newVehicle: {
-      make: '',
-      model: '',
-      year: '',
-      licensePlate: '',
-      vin: ''
+  // Fallback demo data if props are not provided
+  const defaultVehicles = [
+    {
+      id: 1,
+      type: "Car",
+      year: 2018,
+      make: "Toyota",
+      model: "Corolla",
+      plateNumber: "PLT-1001",
+      chassisNumber: "CHASSIS1001",
     },
-    serviceType: '',
-    timeSlot: '',
-    notes: '',
-    images: [],
-    useNewVehicle: false,
-    customerInfo: {
-      name: '',
-      phone: '',
-      email: ''
-    }
+    {
+      id: 2,
+      type: "Car",
+      year: 2020,
+      make: "Honda",
+      model: "Civic",
+      plateNumber: "PLT-1002",
+      chassisNumber: "CHASSIS1002",
+    },
+  ];
+
+  const defaultServices = [
+    { id: 1, name: "Oil Change", price: 29.99, durationMinutes: 30 },
+    { id: 2, name: "Tire Rotation", price: 49.99, durationMinutes: 45 },
+    { id: 3, name: "Brake Inspection", price: 79.99, durationMinutes: 60 },
+    { id: 4, name: "Battery Replacement", price: 119.99, durationMinutes: 30 },
+    { id: 5, name: "Full Service", price: 249.99, durationMinutes: 180 },
+    { id: 6, name: "AC Service", price: 99.99, durationMinutes: 60 },
+  ];
+
+  // Normalize vehicles/services input
+  const [existingVehicles] = useState(() => {
+    const src = Array.isArray(vehicles) && vehicles.length ? vehicles : defaultVehicles;
+    return src.map((v) => ({
+      id: v.id,
+      make: v.make,
+      model: v.model,
+      year: v.year,
+      licensePlate: v.plateNumber || v.licensePlate,
+      vin: v.chassisNumber || v.vin,
+    }));
   });
 
-  const [existingVehicles] = useState([
-    { id: 1, make: 'Toyota', model: 'Camry', year: 2020, licensePlate: 'ABC123' },
-    { id: 2, make: 'Honda', model: 'Civic', year: 2019, licensePlate: 'XYZ789' },
-  ]);
-
-  const [serviceTypes] = useState([
-    { id: 1, name: 'Oil Change', duration: 30, price: 50 },
-    { id: 2, name: 'Brake Service', duration: 60, price: 120 },
-    { id: 3, name: 'Tire Rotation', duration: 45, price: 40 },
-    { id: 4, name: 'General Inspection', duration: 90, price: 80 },
-    { id: 5, name: 'Engine Diagnostic', duration: 120, price: 150 },
-  ]);
+  const [serviceTypes] = useState(() => {
+    const src = Array.isArray(services) && services.length ? services : defaultServices;
+    return src.map((s) => ({
+      id: s.id,
+      name: s.name,
+      price: s.price,
+      duration: s.durationMinutes ?? s.duration,
+    }));
+  });
 
   const [defaultTimeSlots] = useState([
-    '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
-    '12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM',
-    '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM', '05:00 PM'
+    "09:00 AM",
+    "09:30 AM",
+    "10:00 AM",
+    "10:30 AM",
+    "11:00 AM",
+    "11:30 AM",
+    "12:00 PM",
+    "12:30 PM",
+    "01:00 PM",
+    "01:30 PM",
+    "02:00 PM",
+    "02:30 PM",
+    "03:00 PM",
+    "03:30 PM",
+    "04:00 PM",
+    "04:30 PM",
+    "05:00 PM",
   ]);
 
+  const [formData, setFormData] = useState({
+    vehicleId: "",
+    newVehicle: { make: "", model: "", year: "", licensePlate: "", vin: "" },
+    serviceType: "",
+    timeSlot: "",
+    notes: "",
+    images: [],
+    useNewVehicle: false,
+    customerInfo: { name: "", phone: "", email: "" },
+  });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (selectedTimeSlot) {
-      setFormData(prev => ({
-        ...prev,
-        timeSlot: selectedTimeSlot.time || ''
-      }));
+    if (selectedTimeSlot?.time) {
+      setFormData((p) => ({ ...p, timeSlot: selectedTimeSlot.time }));
     }
   }, [selectedTimeSlot]);
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const handleNestedInputChange = (parent, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [parent]: {
-        ...prev[parent],
-        [field]: value
-      }
-    }));
-  };
+  const handleNestedInputChange = (parent, field, value) =>
+    setFormData((prev) => ({ ...prev, [parent]: { ...prev[parent], [field]: value } }));
 
-  const handleImageUpload = (event) => {
-    const files = Array.from(event.target.files);
-    setFormData(prev => ({
+  const handleImageUpload = (e) =>
+    setFormData((prev) => ({
       ...prev,
-      images: [...prev.images, ...files]
+      images: [...prev.images, ...Array.from(e.target.files || [])],
     }));
-  };
 
-  const removeImage = (index) => {
-    setFormData(prev => ({
+  const removeImage = (index) =>
+    setFormData((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      images: prev.images.filter((_, i) => i !== index),
     }));
-  };
 
   const validateForm = () => {
     const newErrors = {};
-
-    // Vehicle validation
-    if (!formData.useNewVehicle && !formData.vehicleId) {
-      newErrors.vehicleId = 'Please select a vehicle';
-    }
-
+    if (!formData.useNewVehicle && !formData.vehicleId) newErrors.vehicleId = "Please select a vehicle";
     if (formData.useNewVehicle) {
-      if (!formData.newVehicle.make) newErrors.make = 'Make is required';
-      if (!formData.newVehicle.model) newErrors.model = 'Model is required';
-      if (!formData.newVehicle.year) newErrors.year = 'Year is required';
-      if (!formData.newVehicle.licensePlate) newErrors.licensePlate = 'License plate is required';
+      if (!formData.newVehicle.make) newErrors.make = "Make is required";
+      if (!formData.newVehicle.model) newErrors.model = "Model is required";
+      if (!formData.newVehicle.year) newErrors.year = "Year is required";
+      if (!formData.newVehicle.licensePlate) newErrors.licensePlate = "License plate is required";
     }
-
-    // Service validation
-    if (!formData.serviceType) {
-      newErrors.serviceType = 'Please select a service type';
-    }
-
-    // Time slot validation
-    if (!formData.timeSlot) {
-      newErrors.timeSlot = 'Please select a time slot';
-    }
-
-    // Customer info validation
-    if (!formData.customerInfo.name) newErrors.customerName = 'Name is required';
-    if (!formData.customerInfo.phone) newErrors.customerPhone = 'Phone is required';
-
+    if (!formData.serviceType) newErrors.serviceType = "Please select a service type";
+    if (!formData.timeSlot) newErrors.timeSlot = "Please select a time slot";
+    if (!formData.customerInfo.name) newErrors.customerName = "Name is required";
+    if (!formData.customerInfo.phone) newErrors.customerPhone = "Phone is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    // derive display fields that mirror what manager sees in AppointmentPopup
+    if (!validateForm()) return;
     const selectedVehicle = !formData.useNewVehicle
-      ? existingVehicles.find(v => v.id === formData.vehicleId)
+      ? existingVehicles.find((v) => v.id === formData.vehicleId)
       : formData.newVehicle;
-
     const vehicleText = selectedVehicle
-      ? `${selectedVehicle.year || ''} ${selectedVehicle.make || ''} ${selectedVehicle.model || ''}`.trim()
-      : '';
-
-    const selectedServiceDef = serviceTypes.find(s => s.id === formData.serviceType);
-
+      ? `${selectedVehicle.year || ""} ${selectedVehicle.make || ""} ${selectedVehicle.model || ""}`.trim()
+      : "";
+    const selectedServiceDef = serviceTypes.find((s) => s.id === formData.serviceType);
     const bookingData = {
       ...formData,
       date: selectedDate,
       branchId,
-      // Normalize to manager status casing
-      status: 'Pending',
+      status: "Pending",
       createdAt: new Date().toISOString(),
-      // Manager-visible summary fields
       customer: formData.customerInfo.name,
       phone: formData.customerInfo.phone,
       vehicle: vehicleText,
-      service: selectedServiceDef?.name || '',
+      service: selectedServiceDef?.name || "",
       time: formData.timeSlot,
-      branch: branchId, // replace with branch display name if available upstream
+      branch: branchId,
       notes: formData.notes,
     };
-
-    onSubmit(bookingData);
+    onSubmit?.(bookingData);
   };
 
   const handleClose = () => {
     setFormData({
-      vehicleId: '',
-      newVehicle: {
-        make: '',
-        model: '',
-        year: '',
-        licensePlate: '',
-        vin: ''
-      },
-      serviceType: '',
-      timeSlot: '',
-      notes: '',
+      vehicleId: "",
+      newVehicle: { make: "", model: "", year: "", licensePlate: "", vin: "" },
+      serviceType: "",
+      timeSlot: "",
+      notes: "",
       images: [],
       useNewVehicle: false,
-      customerInfo: {
-        name: '',
-        phone: '',
-        email: ''
-      }
+      customerInfo: { name: "", phone: "", email: "" },
     });
     setErrors({});
-    onClose();
+    onClose?.();
   };
 
-  const formatDate = (date) => {
-    if (!date) return '';
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  const formatDate = (date) =>
+    !date
+      ? ""
+      : date.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
 
-  const selectedService = serviceTypes.find(s => s.id === formData.serviceType);
+  const selectedService = serviceTypes.find((s) => s.id === formData.serviceType);
+
   const paperStyle = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 'min(92vw, 760px)',
-    maxHeight: '86vh',
-    overflowY: 'auto',
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: "min(92vw, 520px)",
+    maxHeight: "86vh",
+    overflowY: "auto",
     p: 3,
     borderRadius: 2,
-    boxShadow: '0 12px 40px rgba(2,6,23,0.4)'
+    boxShadow: "0 12px 40px rgba(2,6,23,0.4)",
   };
 
   return (
@@ -255,10 +235,7 @@ const BookingModal = ({
       onClose={handleClose}
       closeAfterTransition
       BackdropProps={{
-        sx: {
-          backdropFilter: 'blur(6px)',
-          backgroundColor: 'rgba(0,0,0,0.36)'
-        }
+        sx: { backdropFilter: "blur(6px)", backgroundColor: "rgba(0,0,0,0.36)" },
       }}
     >
       <Paper sx={paperStyle}>
@@ -273,13 +250,15 @@ const BookingModal = ({
             <Close />
           </IconButton>
         </Stack>
-
         <Divider sx={{ mb: 2 }} />
 
         <Grid container spacing={3}>
-          {/* Customer Information */}
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
               <DirectionsCar /> Customer Information
             </Typography>
             <Grid container spacing={2}>
@@ -288,7 +267,7 @@ const BookingModal = ({
                   fullWidth
                   label="Full Name *"
                   value={formData.customerInfo.name}
-                  onChange={(e) => handleNestedInputChange('customerInfo', 'name', e.target.value)}
+                  onChange={(e) => handleNestedInputChange("customerInfo", "name", e.target.value)}
                   error={!!errors.customerName}
                   helperText={errors.customerName}
                 />
@@ -298,7 +277,7 @@ const BookingModal = ({
                   fullWidth
                   label="Phone Number *"
                   value={formData.customerInfo.phone}
-                  onChange={(e) => handleNestedInputChange('customerInfo', 'phone', e.target.value)}
+                  onChange={(e) => handleNestedInputChange("customerInfo", "phone", e.target.value)}
                   error={!!errors.customerPhone}
                   helperText={errors.customerPhone}
                 />
@@ -309,7 +288,7 @@ const BookingModal = ({
                   label="Email"
                   type="email"
                   value={formData.customerInfo.email}
-                  onChange={(e) => handleNestedInputChange('customerInfo', 'email', e.target.value)}
+                  onChange={(e) => handleNestedInputChange("customerInfo", "email", e.target.value)}
                 />
               </Grid>
             </Grid>
@@ -319,29 +298,30 @@ const BookingModal = ({
             <Divider />
           </Grid>
 
-          {/* Vehicle Selection */}
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
               <DirectionsCar /> Vehicle Information
             </Typography>
-            
             <FormControlLabel
               control={
                 <Checkbox
                   checked={formData.useNewVehicle}
-                  onChange={(e) => handleInputChange('useNewVehicle', e.target.checked)}
+                  onChange={(e) => handleInputChange("useNewVehicle", e.target.checked)}
                 />
               }
               label="Add new vehicle"
               sx={{ mb: 2 }}
             />
-
             {!formData.useNewVehicle ? (
               <FormControl fullWidth error={!!errors.vehicleId}>
                 <InputLabel>Select Vehicle</InputLabel>
                 <Select
                   value={formData.vehicleId}
-                  onChange={(e) => handleInputChange('vehicleId', e.target.value)}
+                  onChange={(e) => handleInputChange("vehicleId", e.target.value)}
                   label="Select Vehicle"
                 >
                   {existingVehicles.map((vehicle) => (
@@ -363,7 +343,7 @@ const BookingModal = ({
                     fullWidth
                     label="Make *"
                     value={formData.newVehicle.make}
-                    onChange={(e) => handleNestedInputChange('newVehicle', 'make', e.target.value)}
+                    onChange={(e) => handleNestedInputChange("newVehicle", "make", e.target.value)}
                     error={!!errors.make}
                     helperText={errors.make}
                   />
@@ -373,7 +353,7 @@ const BookingModal = ({
                     fullWidth
                     label="Model *"
                     value={formData.newVehicle.model}
-                    onChange={(e) => handleNestedInputChange('newVehicle', 'model', e.target.value)}
+                    onChange={(e) => handleNestedInputChange("newVehicle", "model", e.target.value)}
                     error={!!errors.model}
                     helperText={errors.model}
                   />
@@ -384,7 +364,7 @@ const BookingModal = ({
                     label="Year *"
                     type="number"
                     value={formData.newVehicle.year}
-                    onChange={(e) => handleNestedInputChange('newVehicle', 'year', e.target.value)}
+                    onChange={(e) => handleNestedInputChange("newVehicle", "year", e.target.value)}
                     error={!!errors.year}
                     helperText={errors.year}
                   />
@@ -394,7 +374,9 @@ const BookingModal = ({
                     fullWidth
                     label="License Plate *"
                     value={formData.newVehicle.licensePlate}
-                    onChange={(e) => handleNestedInputChange('newVehicle', 'licensePlate', e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      handleNestedInputChange("newVehicle", "licensePlate", e.target.value.toUpperCase())
+                    }
                     error={!!errors.licensePlate}
                     helperText={errors.licensePlate}
                   />
@@ -404,7 +386,9 @@ const BookingModal = ({
                     fullWidth
                     label="VIN"
                     value={formData.newVehicle.vin}
-                    onChange={(e) => handleNestedInputChange('newVehicle', 'vin', e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      handleNestedInputChange("newVehicle", "vin", e.target.value.toUpperCase())
+                    }
                   />
                 </Grid>
               </Grid>
@@ -415,24 +399,28 @@ const BookingModal = ({
             <Divider />
           </Grid>
 
-          {/* Service Selection */}
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
               <Build /> Service Information
             </Typography>
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={!!errors.serviceType}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ width: "100%" }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <FormControl fullWidth error={!!errors.serviceType} sx={{ width: "100%" }}>
                   <InputLabel>Service Type *</InputLabel>
                   <Select
+                    fullWidth
                     value={formData.serviceType}
-                    onChange={(e) => handleInputChange('serviceType', e.target.value)}
+                    onChange={(e) => handleInputChange("serviceType", e.target.value)}
                     label="Service Type *"
+                    sx={{ width: "100%" }}
                   >
                     {serviceTypes.map((service) => (
                       <MenuItem key={service.id} value={service.id}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
                           <span>{service.name}</span>
                           <span>${service.price}</span>
                         </Box>
@@ -445,15 +433,16 @@ const BookingModal = ({
                     </Typography>
                   )}
                 </FormControl>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={!!errors.timeSlot}>
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <FormControl fullWidth error={!!errors.timeSlot} sx={{ width: "100%" }}>
                   <InputLabel>Time Slot *</InputLabel>
                   <Select
+                    fullWidth
                     value={formData.timeSlot}
-                    onChange={(e) => handleInputChange('timeSlot', e.target.value)}
+                    onChange={(e) => handleInputChange("timeSlot", e.target.value)}
                     label="Time Slot *"
+                    sx={{ width: "100%" }}
                   >
                     {(dayTimeSlots.length ? dayTimeSlots : defaultTimeSlots).map((time) => (
                       <MenuItem key={time} value={time}>
@@ -467,23 +456,21 @@ const BookingModal = ({
                     </Typography>
                   )}
                 </FormControl>
-              </Grid>
-            </Grid>
-
+              </Box>
+            </Stack>
             {selectedService && (
-              <Card sx={{ mt: 2, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+              <Card sx={{ mt: 2, bgcolor: "primary.light", color: "primary.contrastText" }}>
                 <CardContent sx={{ py: 1.5 }}>
                   <Typography variant="body2">
-                    <strong>Service Details:</strong> {selectedService.name} - 
-                    Duration: {selectedService.duration} mins - 
-                    Price: ${selectedService.price}
+                    <strong>Service Details:</strong> {selectedService.name} - Duration: {selectedService.duration} mins - Price: ${
+                      selectedService.price
+                    }
                   </Typography>
                 </CardContent>
               </Card>
             )}
           </Grid>
 
-          {/* Notes and Images */}
           <Grid item xs={12}>
             <Divider />
           </Grid>
@@ -492,52 +479,37 @@ const BookingModal = ({
             <Typography variant="h6" gutterBottom>
               Additional Information
             </Typography>
-            
             <TextField
               fullWidth
               multiline
               rows={3}
               label="Notes or Special Instructions"
               value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
+              onChange={(e) => handleInputChange("notes", e.target.value)}
               placeholder="Describe any specific issues, concerns, or special requests..."
               sx={{ mb: 2 }}
             />
-
-            {/* Image Upload */}
             <Box sx={{ mb: 2 }}>
               <Typography variant="subtitle2" gutterBottom>
                 Attach Images (optional)
               </Typography>
               <input
                 accept="image/*"
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 id="image-upload"
                 multiple
                 type="file"
                 onChange={handleImageUpload}
               />
               <label htmlFor="image-upload">
-                <Button
-                  variant="outlined"
-                  component="span"
-                  startIcon={<PhotoCamera />}
-                  sx={{ mr: 1 }}
-                >
+                <Button variant="outlined" component="span" startIcon={<PhotoCamera />} sx={{ mr: 1 }}>
                   Upload Images
                 </Button>
               </label>
-
               {formData.images.length > 0 && (
-                <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
                   {formData.images.map((image, index) => (
-                    <Chip
-                      key={index}
-                      label={image.name}
-                      onDelete={() => removeImage(index)}
-                      color="primary"
-                      variant="outlined"
-                    />
+                    <Chip key={index} label={image.name} onDelete={() => removeImage(index)} color="primary" variant="outlined" />
                   ))}
                 </Box>
               )}
@@ -545,15 +517,19 @@ const BookingModal = ({
           </Grid>
         </Grid>
 
-        {/* Booking Summary */}
-        {(formData.serviceType && formData.timeSlot) && (
+        {formData.serviceType && formData.timeSlot && (
           <Alert severity="info" sx={{ mt: 2 }}>
             <Typography variant="body2">
-              <strong>Booking Summary:</strong><br />
-              Date: {formatDate(selectedDate)}<br />
-              Time: {formData.timeSlot}<br />
-              Service: {selectedService?.name}<br />
-              Estimated Duration: {selectedService?.duration} minutes<br />
+              <strong>Booking Summary:</strong>
+              <br />
+              Date: {formatDate(selectedDate)}
+              <br />
+              Time: {formData.timeSlot}
+              <br />
+              Service: {selectedService?.name}
+              <br />
+              Estimated Duration: {selectedService?.duration} minutes
+              <br />
               Price: ${selectedService?.price}
             </Typography>
           </Alert>
@@ -563,11 +539,7 @@ const BookingModal = ({
           <Button onClick={handleClose} variant="outlined">
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            disabled={!formData.serviceType || !formData.timeSlot}
-          >
+          <Button onClick={handleSubmit} variant="contained" disabled={!formData.serviceType || !formData.timeSlot}>
             Book Appointment
           </Button>
         </Stack>

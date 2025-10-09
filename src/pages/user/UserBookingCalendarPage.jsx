@@ -3,10 +3,12 @@ import { Typography, Paper, Box, Container, useTheme } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
 import CalendarHeader from "../../components/calendar/Booking_Manage/CalendarHeader";
 import CalendarGrid from "../../components/calendar/Booking_Manage/CalendarGrid";
-import BookingModal from "../../components/calendar/BookingModal";
+import CustomerBookingModal from "../../components/calendar/CustomerBookingModal";
+import { useAuth } from "../../contexts/AuthContext";
 
 const UserBookingCalendarPage = () => {
   const theme = useTheme();
+  const { user } = useAuth?.() || { user: null };
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedBranch, setSelectedBranch] = useState("Downtown");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -24,6 +26,34 @@ const UserBookingCalendarPage = () => {
   const [bookings, setBookings] = useState([]);
 
   const branches = ["Downtown", "Westside", "North Branch", "South Branch"]; // demo
+
+  // Provided services and vehicles (can move to API later)
+  const SERVICES = [
+    { id: 1, name: "Oil Change", price: 29.99, durationMinutes: 30 },
+    { id: 2, name: "Tire Rotation", price: 49.99, durationMinutes: 45 },
+    { id: 3, name: "Brake Inspection", price: 79.99, durationMinutes: 60 },
+    { id: 4, name: "Battery Replacement", price: 119.99, durationMinutes: 30 },
+    { id: 5, name: "Full Service", price: 249.99, durationMinutes: 180 },
+    { id: 6, name: "AC Service", price: 99.99, durationMinutes: 60 },
+  ];
+
+  const VEHICLES = [
+    { id: 1, type: "Car", year: 2018, make: "Toyota", model: "Corolla", fuelType: "petrol", plateNumber: "PLT-1001", chassisNumber: "CHASSIS1001", lastServiceDate: "2024-08-01", userId: 1 },
+    { id: 2, type: "Car", year: 2020, make: "Honda", model: "Civic", fuelType: "petrol", plateNumber: "PLT-1002", chassisNumber: "CHASSIS1002", lastServiceDate: "2025-02-05", userId: 2 },
+    { id: 3, type: "Truck", year: 2015, make: "Ford", model: "F-150", fuelType: "diesel", plateNumber: "PLT-1003", chassisNumber: "CHASSIS1003", lastServiceDate: "2024-12-10", userId: 3 },
+    { id: 4, type: "Car", year: 2019, make: "Nissan", model: "Altima", fuelType: "petrol", plateNumber: "PLT-1004", chassisNumber: "CHASSIS1004", lastServiceDate: "2025-01-15", userId: 4 },
+    { id: 5, type: "SUV", year: 2021, make: "Mazda", model: "CX-5", fuelType: "petrol", plateNumber: "PLT-1005", chassisNumber: "CHASSIS1005", lastServiceDate: "2025-04-20", userId: 5 },
+    { id: 6, type: "Car", year: 2017, make: "Kia", model: "Rio", fuelType: "petrol", plateNumber: "PLT-1006", chassisNumber: "CHASSIS1006", lastServiceDate: "2024-06-11", userId: 6 },
+    { id: 7, type: "Car", year: 2016, make: "Hyundai", model: "Elantra", fuelType: "petrol", plateNumber: "PLT-1007", chassisNumber: "CHASSIS1007", lastServiceDate: "2024-03-30", userId: 7 },
+    { id: 8, type: "SUV", year: 2022, make: "Subaru", model: "Forester", fuelType: "petrol", plateNumber: "PLT-1008", chassisNumber: "CHASSIS1008", lastServiceDate: "2025-06-02", userId: 8 },
+    { id: 9, type: "Van", year: 2014, make: "Mercedes", model: "Vito", fuelType: "diesel", plateNumber: "PLT-1009", chassisNumber: "CHASSIS1009", lastServiceDate: "2024-11-20", userId: 9 },
+    { id: 10, type: "Car", year: 2023, make: "Tesla", model: "Model 3", fuelType: "electric", plateNumber: "PLT-1010", chassisNumber: "CHASSIS1010", lastServiceDate: "2025-08-01", userId: 10 },
+  ];
+
+  const availableVehicles = useMemo(() => {
+    if (user?.id) return VEHICLES.filter(v => v.userId === user.id);
+    return VEHICLES;
+  }, [user]);
 
   const filteredAppointments = useMemo(() => {
     // Filter ONLY this user's bookings (already isolated in `bookings` state)
@@ -200,7 +230,7 @@ const UserBookingCalendarPage = () => {
           </Box>
         </Paper>
 
-        <BookingModal
+        <CustomerBookingModal
           open={isBookingModalOpen}
           onClose={() => {
             setIsBookingModalOpen(false);
@@ -213,6 +243,8 @@ const UserBookingCalendarPage = () => {
           branchId={selectedBranch}
           // pass only today's available slot times (defaults minus any bookings)
           dayTimeSlots={selectedDate ? getAvailableTimesForDate(selectedDate) : []}
+          services={SERVICES}
+          vehicles={availableVehicles}
         />
       </Container>
     </UserLayout>
