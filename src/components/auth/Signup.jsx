@@ -1,17 +1,42 @@
-import React, { useState } from "react";
-import { TextField, Button, Typography, Box } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import {
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Snackbar,
+  Alert,
+  InputAdornment,
+  IconButton,
+} from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+// keep signup simple: call backend /api/auth/signup
 
 const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Snackbar state
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "info",
+  });
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -26,19 +51,131 @@ const SignUp = () => {
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters long");
+      setFieldErrors((p) => ({
+        ...p,
+        password: "Password must be at least 8 characters",
+      }));
+      setToast({
+        open: true,
+        message: "Password must be at least 8 characters long",
+        severity: "error",
+      });
       setLoading(false);
       return;
     }
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log("User registered:", { userName, email });
-      // Redirect to signin or dashboard
+      const res = await axios.post("http://localhost:8080/api/auth/signup", {
+        username: userName,
+        email,
+        password,
+      });
+
+      if (res.status === 200) {
+        setToast({
+          open: true,
+          message: "Account created. Check backend for activation link.",
+          severity: "success",
+        });
+        // redirect to sign in after a short delay
+        setTimeout(() => navigate("/signin"), 900);
+        return;
+      }
     } catch (err) {
-      setError("Registration failed. Please try again.");
+      if (err.response && err.response.data)
+        setError(String(err.response.data));
+      else setError("Registration failed. Please try again.");
+      setToast({
+        open: true,
+        message: String(
+          err?.response?.data || err.message || "Registration failed"
+        ),
+        severity: "error",
+      });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCloseToast = (event, reason) => {
+    if (reason === "clickaway") return;
+    setToast((t) => ({ ...t, open: false }));
+  };
+
+  useEffect(() => {
+    // small backend healthcheck
+    (async () => {
+      try {
+        await axios.get("/api/auth/status");
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, []);
+
+  const navigate = useNavigate();
+
+  const validateEmail = (value) => {
+    // simple email regex
+    return /^\S+@\S+\.\S+$/.test(value);
+  };
+
+  const handleBlur = (field) => {
+    // Validate on blur and show toasts for invalid input
+    if (field === "email") {
+      if (!validateEmail(email)) {
+        setFieldErrors((p) => ({
+          ...p,
+          email: "Please enter a valid email address",
+        }));
+        setToast({
+          open: true,
+          message: "Please enter a valid email address",
+          severity: "error",
+        });
+      } else {
+        setFieldErrors((p) => ({ ...p, email: null }));
+      }
+    }
+
+    if (field === "password") {
+      if (password.length > 0 && password.length < 8) {
+        setFieldErrors((p) => ({
+          ...p,
+          password: "Password must be at least 8 characters",
+        }));
+        setToast({
+          open: true,
+          message: "Password must be at least 8 characters long",
+          severity: "error",
+        });
+      } else {
+        setFieldErrors((p) => ({ ...p, password: null }));
+      }
+    }
+
+    if (field === "confirmPassword") {
+      if (confirmPassword && confirmPassword !== password) {
+        setFieldErrors((p) => ({
+          ...p,
+          confirmPassword: "Passwords do not match",
+        }));
+        setToast({
+          open: true,
+          message: "Passwords do not match",
+          severity: "error",
+        });
+      } else {
+        setFieldErrors((p) => ({ ...p, confirmPassword: null }));
+      }
+    }
+
+    if (field === "userName") {
+      if (!userName || userName.trim().length < 2) {
+        setFieldErrors((p) => ({ ...p, userName: "Please enter your name" }));
+      } else {
+        setFieldErrors((p) => ({ ...p, userName: null }));
+      }
     }
   };
 
@@ -57,7 +194,10 @@ const SignUp = () => {
           margin="normal"
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
+          onBlur={() => handleBlur("userName")}
           required
+          error={!!fieldErrors.userName}
+          helperText={fieldErrors.userName}
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
@@ -66,6 +206,7 @@ const SignUp = () => {
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
+              color: "#0f172a",
             },
           }}
         />
@@ -81,15 +222,20 @@ const SignUp = () => {
           margin="normal"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onBlur={() => handleBlur("email")}
           required
+          error={!!fieldErrors.email}
+          helperText={fieldErrors.email}
           sx={{
             mb: 2,
+
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
+              color: "#0f172a",
             },
           }}
         />
@@ -99,21 +245,39 @@ const SignUp = () => {
         </Typography>
         <TextField
           placeholder="At least 8 characters"
-          type="password"
+          type={showPassword ? "text" : "password"}
           variant="outlined"
           fullWidth
           margin="normal"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onBlur={() => handleBlur("password")}
           required
+          error={!!fieldErrors.password}
+          helperText={fieldErrors.password}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={() => setShowPassword((s) => !s)}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
           sx={{
             mb: 2,
+
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
+              color: "#0f172a",
             },
           }}
         />
@@ -123,21 +287,39 @@ const SignUp = () => {
         </Typography>
         <TextField
           placeholder="Confirm your password"
-          type="password"
+          type={showConfirmPassword ? "text" : "password"}
           variant="outlined"
           fullWidth
           margin="normal"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          onBlur={() => handleBlur("confirmPassword")}
           required
+          error={!!fieldErrors.confirmPassword}
+          helperText={fieldErrors.confirmPassword}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle confirm password visibility"
+                  onClick={() => setShowConfirmPassword((s) => !s)}
+                  edge="end"
+                >
+                  {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
           sx={{
             mb: 2,
+
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
+              color: "#0f172a",
             },
           }}
         />
@@ -169,6 +351,22 @@ const SignUp = () => {
           {loading ? "Creating Account..." : "Create Account"}
         </Button>
 
+        {/* Toast notifications */}
+        <Snackbar
+          open={toast.open}
+          autoHideDuration={4000}
+          onClose={handleCloseToast}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            onClose={handleCloseToast}
+            severity={toast.severity}
+            sx={{ width: "100%" }}
+          >
+            {toast.message}
+          </Alert>
+        </Snackbar>
+
         <Box sx={{ textAlign: "center" }}>
           <Typography variant="body2" sx={{ color: "#64748b" }}>
             Already have an account?{" "}
@@ -188,7 +386,7 @@ const SignUp = () => {
     <AuthLayout
       leftContent={leftContent}
       rightContent={rightContent}
-      backgroundImage="/images/signup-bg.png"
+      backgroundImage="https://images.unsplash.com/photo-1727893332539-95e491ba4d90?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     />
   );
 };

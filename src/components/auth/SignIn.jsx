@@ -1,39 +1,97 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { TextField, Button, Typography, Box } from "@mui/material";
-
+import {
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Paper,
+  IconButton,
+  Stack,
+  Tooltip,
+} from "@mui/material";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import axios from "axios";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
 
-const loginUser = async (email, password) => {
-  // Placeholder for login logic
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (email === "test@example.com" && password === "password123") {
-        resolve("Login successful");
-      } else {
-        reject(new Error("Invalid credentials"));
-      }
-    }, 1000);
-  });
-};
-
 const SignIn = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const { setAuthUser } = useAuth();
+
+  useEffect(() => {
+    // quick backend status check
+    let mounted = true;
+    (async () => {
+      try {
+        await axios.get("http://localhost:8080/api/auth/status");
+      } catch (e) {
+        // ignore - used only for quick healthcheck
+      }
+    })();
+    return () => (mounted = false);
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
+
     try {
-      const response = await loginUser(email, password);
-      console.log(response);
+      // call backend login endpoint and expect LoginResponse {id, username, email, role}
+      const res = await axios.post("http://localhost:8080/api/auth/login", {
+        email: username,
+        password,
+      });
+
+      // If backend returns an object with user data, save it and update context/localStorage
+      const data = res && res.data;
+      if (data && typeof data === "object" && data.username) {
+        // normalize role to lowercase because ProtectedRoute expects 'user'|'employee'|'manager'
+        const role = String(data.role || "").toLowerCase();
+        const userData = {
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          role,
+        };
+
+        console.log("Login successful:", userData);
+
+        // save to localStorage
+        try {
+          localStorage.setItem("authUser", JSON.stringify(userData));
+        } catch (e) {
+          // ignore storage errors
+        }
+
+        if (setAuthUser) setAuthUser(userData);
+
+        const roleMap = {
+          user: "/user/dashboard",
+          employee: "/employee/dashboard",
+          manager: "/manager/dashboard",
+        };
+        const target = roleMap[role] || "/";
+        navigate(target);
+        return;
+      }
+
+      // If backend returned a plain message with 200, show it as info/error
+      if (res && res.status === 200) {
+        setError(String(res.data || "Login response received"));
+      }
     } catch (err) {
-      setError(err.message);
+      if (err.response && err.response.data)
+        setError(String(err.response.data));
+      else setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -43,23 +101,25 @@ const SignIn = () => {
 
   const rightContent = (
     <AuthFormContainer title="Sign In" error={error}>
+
       <form onSubmit={handleSubmit} noValidate>
         <Typography variant="body2" sx={{ mb: 1, color: "#64748b" }}>
-          Email
+          Username
         </Typography>
         <TextField
-          placeholder="example@email.com"
-          type="email"
+          placeholder="Enter your username"
+          type="text"
           variant="outlined"
           fullWidth
           margin="normal"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
+              color: "#0f172a",
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
@@ -85,12 +145,15 @@ const SignIn = () => {
             "& .MuiOutlinedInput-root": {
               backgroundColor: "#f8fafc",
               borderRadius: 2,
+              color: "#0f172a",
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
             },
           }}
         />
+
+        {/* error is displayed at the top of AuthFormContainer; removed inline Alert to avoid duplication */}
 
         <Box sx={{ textAlign: "right", mb: 3 }}>
           <Link
@@ -147,7 +210,7 @@ const SignIn = () => {
     <AuthLayout
       leftContent={leftContent}
       rightContent={rightContent}
-      backgroundImage="/images/signin-bg.png"
+      backgroundImage="https://images.unsplash.com/photo-1727893304219-063d142ce6f3?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     />
   );
 };
