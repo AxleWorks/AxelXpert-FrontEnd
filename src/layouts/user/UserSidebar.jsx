@@ -35,7 +35,7 @@ const menuItems = [
     path: "/user/booking-calendar",
   },
   { text: "Settings", icon: SettingsIcon, path: "/user/settings" },
-  // { text: "Branches", icon: StoreIcon, path: "/user/branches" },
+  { text: "Branches", icon: StoreIcon, path: "/user/branches" },
   {
     text: "Progress Tracking",
     icon: TrackChangesIcon,
