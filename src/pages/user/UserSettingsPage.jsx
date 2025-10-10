@@ -6,7 +6,7 @@ import SettingsComponent from "../../components/settings/SettingsComponent";
 const UserSettingsPage = () => {
   return (
     <UserLayout>
-      <Box sx={{ p: { xs: 2, sm: 3 } }}>
+      <Box>
         <SettingsComponent role="user" />
       </Box>
     </UserLayout>

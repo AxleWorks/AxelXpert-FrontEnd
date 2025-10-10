@@ -7,6 +7,7 @@ import { Label } from '../ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { toast } from '../ui/toast';
 import { ConfirmationDialog } from '../ui/dialog';
+import ProfilePhotoManager from '../ui/ProfilePhotoManager';
 import { Box, Typography, CircularProgress, IconButton } from '@mui/material';
 import { API_BASE } from '../../config/apiEndpoints';
 
@@ -310,6 +311,11 @@ const SettingsComponent = ({ role = 'user' }) => {
         py: { xs: 2, sm: 4, md: 6 },
         px: { xs: 1, sm: 2 },
         boxSizing: 'border-box',
+        bgcolor: 'background.default',
+        backgroundImage: (theme) => 
+          theme.palette.mode === 'light' 
+            ? 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+            : 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
       }}
     >
       <Box
@@ -320,34 +326,129 @@ const SettingsComponent = ({ role = 'user' }) => {
         }}
       >
         {/* Header */}
-        <div className="mb-8">
-          <Typography variant="h4" sx={{ fontWeight: 600, mb: 2 }}>
+        <Box sx={{ mb: 2, textAlign: 'center' }}>
+          <Typography variant="h3" sx={{ 
+            fontWeight: 700, 
+            mb: 0.5, 
+            color: (theme) => theme.palette.mode === 'light' ? '#000000' : '#ffffff',
+            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.2rem' }
+          }}>
             Settings
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant="h6" color="text.secondary" sx={{ 
+            fontWeight: 400,
+            fontSize: '1rem',
+            opacity: 0.8,
+            mt: 0.5
+          }}>
             Manage your account settings and preferences
           </Typography>
-        </div>
+        </Box>
 
         <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
-          <TabsTrigger value="profile">
-            <User className="h-4 w-4 mr-2" />
-            Profile
-          </TabsTrigger>
-          <TabsTrigger value="security">
-            <Lock className="h-4 w-4 mr-2" />
-            Security
-          </TabsTrigger>
-        </TabsList>
+          <TabsList 
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              mb: 4,
+              bgcolor: (theme) => theme.palette.mode === 'light' ? 'white' : 'grey.900',
+              borderRadius: 3,
+              p: 0.5,
+              boxShadow: (theme) => theme.palette.mode === 'light' 
+                ? '0 8px 32px rgba(0, 0, 0, 0.1)'
+                : '0 8px 32px rgba(0, 0, 0, 0.3)',
+              border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#e2e8f0' : '#374151'}`,
+              maxWidth: 400,
+              mx: 'auto',
+              '& .MuiTabs-flexContainer': {
+                justifyContent: 'center'
+              },
+              '& .MuiTab-root': {
+                minWidth: 180,
+                flex: 1
+              }
+            }}
+          >
+            <TabsTrigger value="profile">
+              <User className="h-4 w-4 mr-2" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="security">
+              <Lock className="h-4 w-4 mr-2" />
+              Security
+            </TabsTrigger>
+          </TabsList>
 
         {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-8 mt-6">
-          <Card>
+        <TabsContent value="profile" className="mt-6" sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <Card sx={{ 
+            boxShadow: (theme) => theme.palette.mode === 'light' 
+              ? '0 8px 32px rgba(0, 0, 0, 0.1)'
+              : '0 8px 32px rgba(0, 0, 0, 0.3)',
+            borderRadius: 3,
+            border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#e2e8f0' : '#374151'}`,
+            bgcolor: 'background.paper'
+          }}>
             <CardHeader sx={{ pb: 3 }}>
-              <CardTitle>Personal Information</CardTitle>
+              <CardTitle sx={{ 
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: 'text.primary',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <Box sx={{ 
+                  width: 8, 
+                  height: 8, 
+                  borderRadius: '50%', 
+                  background: (theme) => theme.palette.mode === 'light'
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    : 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)'
+                }} />
+                Personal Information
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Profile Photo Section - Centered */}
+              <Box sx={{ 
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                mb: 2,
+                py: 1.5
+              }}>
+                <Box sx={{ 
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 1
+                }}>
+                  <ProfilePhotoManager
+                    currentImageUrl={userDetails?.profileImageUrl || userDetails?.profilePhotoUrl}
+                    userId={userDetails?.id}
+                    onImageUpdate={(newImageUrl, updatedUser) => {
+                      setUserDetails(prev => ({
+                        ...prev,
+                        profileImageUrl: newImageUrl,
+                        profilePhotoUrl: newImageUrl
+                      }));
+                    }}
+                    size={150}
+                    editable={true}
+                  />
+                  <Typography variant="h6" sx={{ 
+                    textAlign: 'center',
+                    color: 'text.secondary',
+                    fontWeight: 500,
+                    mt: 0.5,
+                    fontSize: '1rem'
+                  }}>
+                    Profile Picture
+                  </Typography>
+                </Box>
+              </Box>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Username</Label>
@@ -407,75 +508,266 @@ const SettingsComponent = ({ role = 'user' }) => {
                 </div>
               )}
 
-              <Box sx={{ display: 'flex', gap: 2, pt: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', pt: 4, mb: 3 }}>
                 <Button 
                   onClick={handleSaveProfile} 
                   disabled={saving}
-                  sx={{ minWidth: 140 }}
+                  variant="contained"
+                  sx={{ 
+                    minWidth: 180,
+                    py: 1.5,
+                    borderRadius: 2,
+                    background: (theme) => theme.palette.mode === 'light'
+                      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      : 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
+                    '&:hover': {
+                      background: (theme) => theme.palette.mode === 'light'
+                        ? 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)'
+                        : 'linear-gradient(135deg, #3b82f6 0%, #9333ea 100%)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: (theme) => theme.palette.mode === 'light'
+                        ? '0 8px 25px rgba(102, 126, 234, 0.3)'
+                        : '0 8px 25px rgba(96, 165, 250, 0.3)'
+                    },
+                    transition: 'all 0.3s ease',
+                    boxShadow: (theme) => theme.palette.mode === 'light'
+                      ? '0 4px 15px rgba(102, 126, 234, 0.2)'
+                      : '0 4px 15px rgba(96, 165, 250, 0.2)'
+                  }}
                 >
-                  {saving ? <CircularProgress size={20} sx={{ mr: 1 }} /> : <Save size={16} style={{ marginRight: 8 }} />}
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} /> : <Save size={16} style={{ marginRight: 8 }} />}
+                  {saving ? 'Saving Changes...' : 'Save Changes'}
                 </Button>
               </Box>
             </CardContent>
           </Card>
 
           {/* Account Status Card */}
-          <Card>
+          <Card sx={{ 
+            background: (theme) => theme.palette.mode === 'light' 
+              ? 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+              : 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
+            border: 'none',
+            boxShadow: (theme) => theme.palette.mode === 'light'
+              ? '0 8px 32px rgba(0, 0, 0, 0.1)'
+              : '0 8px 32px rgba(0, 0, 0, 0.3)',
+            borderRadius: 3
+          }}>
             <CardHeader sx={{ pb: 3 }}>
-              <CardTitle>Account Status</CardTitle>
+              <CardTitle sx={{ 
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: 'text.primary',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <Box sx={{ 
+                  width: 8, 
+                  height: 8, 
+                  borderRadius: '50%', 
+                  background: (theme) => theme.palette.mode === 'light'
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    : 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)'
+                }} />
+                Account Information
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Account Status</Label>
-                  <Input 
-                    value={userDetails.isActive ? 'Active' : 'Inactive'}
-                    disabled={true}
-                    sx={{ 
-                      '& .MuiInputBase-input.Mui-disabled': { 
-                        color: userDetails.isActive ? 'success.main' : 'error.main'
-                      } 
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Account ID</Label>
-                  <Input 
-                    value={userDetails.id}
-                    disabled={true}
-                    sx={{ '& .MuiInputBase-input.Mui-disabled': { color: 'text.secondary' } }}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Created Date</Label>
-                  <Input 
-                    value={new Date(userDetails.createdAt).toLocaleDateString()}
-                    disabled={true}
-                    sx={{ '& .MuiInputBase-input.Mui-disabled': { color: 'text.secondary' } }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Last Updated</Label>
-                  <Input 
-                    value={new Date(userDetails.updatedAt).toLocaleDateString()}
-                    disabled={true}
-                    sx={{ '& .MuiInputBase-input.Mui-disabled': { color: 'text.secondary' } }}
-                  />
-                </div>
-              </div>
+            <CardContent>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
+                {/* Account Status */}
+                <Box sx={{
+                  p: 3,
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                  boxShadow: (theme) => theme.palette.mode === 'light'
+                    ? '0 2px 10px rgba(0, 0, 0, 0.05)'
+                    : '0 2px 10px rgba(0, 0, 0, 0.2)',
+                  border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#e2e8f0' : '#374151'}`,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: (theme) => theme.palette.mode === 'light'
+                      ? '0 8px 25px rgba(0, 0, 0, 0.1)'
+                      : '0 8px 25px rgba(0, 0, 0, 0.3)'
+                  }
+                }}>
+                  <Typography variant="caption" sx={{ 
+                    color: 'text.secondary', 
+                    fontWeight: 500,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    fontSize: '0.75rem'
+                  }}>
+                    Account Status
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                    <Box sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      backgroundColor: userDetails.isActive ? '#10b981' : '#ef4444'
+                    }} />
+                    <Typography variant="h6" sx={{ 
+                      color: userDetails.isActive ? '#10b981' : '#ef4444',
+                      fontWeight: 600,
+                      fontSize: '1.1rem'
+                    }}>
+                      {userDetails.isActive ? 'Active' : 'Inactive'}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Account ID */}
+                <Box sx={{
+                  p: 3,
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                  boxShadow: (theme) => theme.palette.mode === 'light'
+                    ? '0 2px 10px rgba(0, 0, 0, 0.05)'
+                    : '0 2px 10px rgba(0, 0, 0, 0.2)',
+                  border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#e2e8f0' : '#374151'}`,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: (theme) => theme.palette.mode === 'light'
+                      ? '0 8px 25px rgba(0, 0, 0, 0.1)'
+                      : '0 8px 25px rgba(0, 0, 0, 0.3)'
+                  }
+                }}>
+                  <Typography variant="caption" sx={{ 
+                    color: 'text.secondary', 
+                    fontWeight: 500,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    fontSize: '0.75rem'
+                  }}>
+                    Account ID
+                  </Typography>
+                  <Typography variant="h6" sx={{ 
+                    color: 'text.primary',
+                    fontWeight: 600,
+                    fontSize: '1.1rem',
+                    mt: 1,
+                    fontFamily: 'monospace'
+                  }}>
+                    #{userDetails.id}
+                  </Typography>
+                </Box>
+
+                {/* Created Date */}
+                <Box sx={{
+                  p: 3,
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                  boxShadow: (theme) => theme.palette.mode === 'light'
+                    ? '0 2px 10px rgba(0, 0, 0, 0.05)'
+                    : '0 2px 10px rgba(0, 0, 0, 0.2)',
+                  border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#e2e8f0' : '#374151'}`,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: (theme) => theme.palette.mode === 'light'
+                      ? '0 8px 25px rgba(0, 0, 0, 0.1)'
+                      : '0 8px 25px rgba(0, 0, 0, 0.3)'
+                  }
+                }}>
+                  <Typography variant="caption" sx={{ 
+                    color: 'text.secondary', 
+                    fontWeight: 500,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    fontSize: '0.75rem'
+                  }}>
+                    Member Since
+                  </Typography>
+                  <Typography variant="h6" sx={{ 
+                    color: 'text.primary',
+                    fontWeight: 600,
+                    fontSize: '1.1rem',
+                    mt: 1
+                  }}>
+                    {new Date(userDetails.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </Typography>
+                </Box>
+
+                {/* Last Updated */}
+                <Box sx={{
+                  p: 3,
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                  boxShadow: (theme) => theme.palette.mode === 'light'
+                    ? '0 2px 10px rgba(0, 0, 0, 0.05)'
+                    : '0 2px 10px rgba(0, 0, 0, 0.2)',
+                  border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#e2e8f0' : '#374151'}`,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: (theme) => theme.palette.mode === 'light'
+                      ? '0 8px 25px rgba(0, 0, 0, 0.1)'
+                      : '0 8px 25px rgba(0, 0, 0, 0.3)'
+                  }
+                }}>
+                  <Typography variant="caption" sx={{ 
+                    color: 'text.secondary', 
+                    fontWeight: 500,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    fontSize: '0.75rem'
+                  }}>
+                    Last Updated
+                  </Typography>
+                  <Typography variant="h6" sx={{ 
+                    color: 'text.primary',
+                    fontWeight: 600,
+                    fontSize: '1.1rem',
+                    mt: 1
+                  }}>
+                    {new Date(userDetails.updatedAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </Typography>
+                </Box>
+              </Box>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Security Tab */}
-        <TabsContent value="security" className="space-y-8 mt-6">
-          <Card>
+        <TabsContent value="security" sx={{ display: 'flex', flexDirection: 'column', gap: 4, mt: 6 }}>
+          <Card sx={{ 
+            boxShadow: (theme) => theme.palette.mode === 'light' 
+              ? '0 8px 32px rgba(0, 0, 0, 0.1)'
+              : '0 8px 32px rgba(0, 0, 0, 0.3)',
+            borderRadius: 3,
+            border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#e2e8f0' : '#374151'}`,
+            bgcolor: 'background.paper'
+          }}>
             <CardHeader sx={{ pb: 3 }}>
-              <CardTitle>Change Password</CardTitle>
+              <CardTitle sx={{ 
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: 'text.primary',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <Box sx={{ 
+                  width: 8, 
+                  height: 8, 
+                  borderRadius: '50%', 
+                  background: (theme) => theme.palette.mode === 'light'
+                    ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+                    : 'linear-gradient(135deg, #ec4899 0%, #ef4444 100%)'
+                }} />
+                Change Password
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
@@ -538,51 +830,166 @@ const SettingsComponent = ({ role = 'user' }) => {
                 </Box>
               </div>
 
-              <Box sx={{ pt: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', pt: 3 }}>
                 <Button 
                   onClick={handleChangePassword} 
                   disabled={saving || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-                  sx={{ minWidth: 160 }}
+                  variant="contained"
+                  sx={{ 
+                    minWidth: 180,
+                    py: 1.5,
+                    borderRadius: 2,
+                    background: (theme) => theme.palette.mode === 'light'
+                      ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+                      : 'linear-gradient(135deg, #ec4899 0%, #ef4444 100%)',
+                    '&:hover': {
+                      background: (theme) => theme.palette.mode === 'light'
+                        ? 'linear-gradient(135deg, #ee82f0 0%, #f24561 100%)'
+                        : 'linear-gradient(135deg, #db2777 0%, #dc2626 100%)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: (theme) => theme.palette.mode === 'light'
+                        ? '0 8px 25px rgba(240, 147, 251, 0.3)'
+                        : '0 8px 25px rgba(236, 72, 153, 0.3)'
+                    },
+                    '&:disabled': {
+                      background: (theme) => theme.palette.mode === 'light'
+                        ? 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%)'
+                        : 'linear-gradient(135deg, #4b5563 0%, #374151 100%)',
+                      color: 'text.disabled',
+                      transform: 'none',
+                      boxShadow: 'none'
+                    },
+                    transition: 'all 0.3s ease',
+                    boxShadow: (theme) => theme.palette.mode === 'light'
+                      ? '0 4px 15px rgba(240, 147, 251, 0.2)'
+                      : '0 4px 15px rgba(236, 72, 153, 0.2)'
+                  }}
                 >
-                  {saving ? <CircularProgress size={20} sx={{ mr: 1 }} /> : <Lock size={16} style={{ marginRight: 8 }} />}
-                  {saving ? 'Changing...' : 'Change Password'}
+                  {saving ? <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} /> : <Lock size={16} style={{ marginRight: 8 }} />}
+                  {saving ? 'Updating Password...' : 'Change Password'}
                 </Button>
               </Box>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card sx={{ 
+            boxShadow: (theme) => theme.palette.mode === 'light' 
+              ? '0 8px 32px rgba(0, 0, 0, 0.1)'
+              : '0 8px 32px rgba(0, 0, 0, 0.3)',
+            borderRadius: 3,
+            border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#e2e8f0' : '#374151'}`,
+            bgcolor: 'background.paper'
+          }}>
             <CardHeader sx={{ pb: 3 }}>
-              <CardTitle>Two-Factor Authentication</CardTitle>
+              <CardTitle sx={{ 
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: 'text.primary',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <Box sx={{ 
+                  width: 8, 
+                  height: 8, 
+                  borderRadius: '50%', 
+                  background: (theme) => theme.palette.mode === 'light'
+                    ? 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                    : 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                }} />
+                Two-Factor Authentication
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontSize: '0.95rem' }}>
                 Add an extra layer of security to your account by enabling two-factor authentication.
               </Typography>
-              <Button variant="outlined" disabled>
-                Enable 2FA (Coming Soon)
-              </Button>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Button 
+                  variant="outlined" 
+                  disabled
+                  sx={{ 
+                    minWidth: 180,
+                    py: 1.5,
+                    borderRadius: 2,
+                    borderColor: (theme) => theme.palette.mode === 'light' ? '#cbd5e0' : '#4b5563',
+                    color: 'text.disabled',
+                    '&:disabled': {
+                      borderColor: (theme) => theme.palette.mode === 'light' ? '#e2e8f0' : '#374151',
+                      color: 'text.disabled'
+                    }
+                  }}
+                >
+                  Enable 2FA (Coming Soon)
+                </Button>
+              </Box>
             </CardContent>
           </Card>
 
-          <Card sx={{ borderColor: 'error.main' }}>
+          <Card sx={{ 
+            borderColor: '#ef4444',
+            border: (theme) => theme.palette.mode === 'light' 
+              ? '2px solid #fecaca'
+              : '2px solid #7f1d1d',
+            background: (theme) => theme.palette.mode === 'light' 
+              ? 'linear-gradient(135deg, #fef2f2 0%, #fde8e8 100%)'
+              : 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)',
+            boxShadow: (theme) => theme.palette.mode === 'light'
+              ? '0 8px 32px rgba(239, 68, 68, 0.1)'
+              : '0 8px 32px rgba(239, 68, 68, 0.2)',
+            borderRadius: 3
+          }}>
             <CardHeader sx={{ pb: 3 }}>
-              <CardTitle sx={{ color: 'error.main' }}>Danger Zone</CardTitle>
+              <CardTitle sx={{ 
+                color: '#dc2626',
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <Box sx={{ 
+                  width: 8, 
+                  height: 8, 
+                  borderRadius: '50%', 
+                  backgroundColor: '#ef4444' 
+                }} />
+                Danger Zone
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontSize: '0.95rem' }}>
                 Once you delete your account, there is no going back. Please be certain.
               </Typography>
-              <Button 
-                variant="outlined" 
-                color="error"
-                onClick={handleDeleteAccount}
-                disabled={saving}
-                sx={{ minWidth: 140 }}
-              >
-                {saving ? <CircularProgress size={20} sx={{ mr: 1 }} /> : null}
-                {saving ? 'Deleting...' : 'Delete Account'}
-              </Button>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Button 
+                  variant="contained"
+                  onClick={handleDeleteAccount}
+                  disabled={saving}
+                  sx={{ 
+                    minWidth: 180,
+                    py: 1.5,
+                    borderRadius: 2,
+                    backgroundColor: '#ef4444',
+                    '&:hover': {
+                      backgroundColor: '#dc2626',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 8px 25px rgba(239, 68, 68, 0.3)'
+                    },
+                    '&:disabled': {
+                      backgroundColor: (theme) => theme.palette.mode === 'light' ? '#fca5a5' : '#7f1d1d',
+                      color: (theme) => theme.palette.mode === 'light' ? '#991b1b' : '#fca5a5',
+                      transform: 'none',
+                      boxShadow: 'none'
+                    },
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 15px rgba(239, 68, 68, 0.2)'
+                  }}
+                >
+                  {saving ? <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} /> : null}
+                  {saving ? 'Deleting Account...' : 'Delete Account'}
+                </Button>
+              </Box>
             </CardContent>
           </Card>
         </TabsContent>
