@@ -28,6 +28,7 @@ import {
 } from "@mui/icons-material";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme as useCustomTheme } from "../contexts/ThemeContext";
+import { API_BASE } from "../config/apiEndpoints";
 
 const Header = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -93,6 +94,13 @@ const Header = ({ onMenuClick }) => {
       manager: "#f59e0b",
     };
     return colors[role] || colors.user;
+  };
+
+  // Helper function to get full image URL
+  const getProfileImageUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    if (imageUrl.startsWith('http')) return imageUrl;
+    return `${API_BASE}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
   };
 
   const mockNotifications = [
@@ -213,6 +221,7 @@ const Header = ({ onMenuClick }) => {
                 }}
               >
                 <Avatar
+                  src={getProfileImageUrl(user.profileImageUrl || user.profilePhotoUrl)}
                   sx={{
                     width: 40,
                     height: 40,
@@ -221,7 +230,7 @@ const Header = ({ onMenuClick }) => {
                     fontWeight: 600,
                   }}
                 >
-                  {user.username?.charAt(0).toUpperCase()}
+                  {!(user.profileImageUrl || user.profilePhotoUrl) && user.username?.charAt(0).toUpperCase()}
                 </Avatar>
                 <Typography variant="body2" sx={{ ml: 1 }}>
                   {user.username}
@@ -333,6 +342,7 @@ const Header = ({ onMenuClick }) => {
           <Box sx={{ p: 3, borderBottom: 1, borderColor: "divider" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Avatar
+                src={getProfileImageUrl(user?.profileImageUrl || user?.profilePhotoUrl)}
                 sx={{
                   width: 50,
                   height: 50,
@@ -341,7 +351,7 @@ const Header = ({ onMenuClick }) => {
                   fontWeight: 600,
                 }}
               >
-                {user?.name?.charAt(0).toUpperCase()}
+                {!(user?.profileImageUrl || user?.profilePhotoUrl) && (user?.name?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase())}
               </Avatar>
               <Box>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
