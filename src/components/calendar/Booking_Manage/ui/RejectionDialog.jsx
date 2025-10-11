@@ -8,7 +8,7 @@ import {
   TextField,
   Typography,
   Box,
-  IconButton
+  IconButton,
 } from "@mui/material";
 import { Close, HighlightOff } from "@mui/icons-material";
 
@@ -16,7 +16,7 @@ export default function RejectionDialog({
   open,
   onClose,
   onConfirm,
-  loading = false
+  loading = false,
 }) {
   const [reason, setReason] = useState("Rejected by manager");
 
@@ -44,27 +44,36 @@ export default function RejectionDialog({
       PaperProps={{
         sx: {
           borderRadius: 2,
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-        }
+          boxShadow:
+            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        },
       }}
     >
-      <Box sx={{ position: 'relative', p: 2 }}>
+      <Box sx={{ position: "relative", p: 2 }}>
         <IconButton
           onClick={handleClose}
           sx={{
-            position: 'absolute',
+            position: "absolute",
             right: 8,
             top: 8,
-            color: 'grey.500'
+            color: "grey.500",
           }}
           size="small"
         >
           <Close size={20} />
         </IconButton>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', mt: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            mt: 2,
+          }}
+        >
           <Box sx={{ mb: 2 }}>
-            <HighlightOff sx={{ fontSize: 48, color: 'error.main' }} />
+            <HighlightOff sx={{ fontSize: 48, color: "error.main" }} />
           </Box>
 
           <DialogTitle sx={{ p: 0, mb: 1 }}>
@@ -73,9 +82,13 @@ export default function RejectionDialog({
             </Typography>
           </DialogTitle>
 
-          <DialogContent sx={{ p: 0, mb: 3, width: '100%' }}>
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.95rem', mb: 3 }}>
-              Please provide a reason for rejecting this appointment. This will help the customer understand the decision.
+          <DialogContent sx={{ p: 0, mb: 3, width: "100%" }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "text.secondary", fontSize: "0.95rem", mb: 3 }}
+            >
+              Please provide a reason for rejecting this appointment. This will
+              help the customer understand the decision.
             </Typography>
 
             <TextField
@@ -91,7 +104,9 @@ export default function RejectionDialog({
             />
           </DialogContent>
 
-          <DialogActions sx={{ p: 0, gap: 1, width: '100%', justifyContent: 'center' }}>
+          <DialogActions
+            sx={{ p: 0, gap: 1, width: "100%", justifyContent: "center" }}
+          >
             <Button
               onClick={handleClose}
               variant="outlined"
@@ -107,7 +122,7 @@ export default function RejectionDialog({
               disabled={loading || !reason.trim()}
               sx={{ minWidth: 100 }}
             >
-              {loading ? 'Rejecting...' : 'Reject'}
+              {loading ? "Rejecting..." : "Reject"}
             </Button>
           </DialogActions>
         </Box>

@@ -108,7 +108,7 @@ export default function AppointmentPopup({
   // Handle rejection with custom reason
   const handleConfirmReject = async (reason) => {
     if (!appointment) return;
-    
+
     setIsRejecting(true);
     try {
       const res = await fetch(`${apiBase}/bookings/${appointment.id}/reject`, {
