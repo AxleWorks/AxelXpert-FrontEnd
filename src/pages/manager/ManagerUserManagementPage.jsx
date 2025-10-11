@@ -22,49 +22,13 @@ import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
+import {} from "@mui/material";
+import EmployeeProfileModal from "../../components/manager/EmployeeProfileModal";
+import AddEmployeeModal from "../../components/manager/AddEmployeeModal";
+import AssignedTasksModal from "../../components/manager/AssignedTasksModal";
+import { employees as mockEmployees, getTasksByIds } from '../../data/mockData';
 
-const employees = [
-  {
-    id: 1,
-    name: "Michael Chen",
-    email: "michael.chen@axlexpert.com",
-    role: "Senior Technician",
-    branch: "Downtown",
-    status: "Active",
-    tasksCompleted: 145,
-    rating: 4.8,
-  },
-  {
-    id: 2,
-    name: "Sarah Wilson",
-    email: "sarah.wilson@axlexpert.com",
-    role: "Technician",
-    branch: "Downtown",
-    status: "Active",
-    tasksCompleted: 98,
-    rating: 4.6,
-  },
-  {
-    id: 3,
-    name: "David Martinez",
-    email: "david.martinez@axlexpert.com",
-    role: "Junior Technician",
-    branch: "Downtown",
-    status: "On Leave",
-    tasksCompleted: 54,
-    rating: 4.5,
-  },
-  {
-    id: 4,
-    name: "Emily Thompson",
-    email: "emily.thompson@axlexpert.com",
-    role: "Technician",
-    branch: "Downtown",
-    status: "Active",
-    tasksCompleted: 112,
-    rating: 4.9,
-  },
-];
+const initialEmployees = mockEmployees;
 
 const StatCard = ({ title, value, Icon, iconBg = "#f3f8ff", iconColor = "#0b75d9" }) => (
   <Card sx={{ borderRadius: 3, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 140, width: '100%' }}>
@@ -108,9 +72,23 @@ const Avatar = ({ name }) => (
   </MuiAvatar>
 );
 
+
+
 const ManagerUserManagementPage = () => {
+  const [employees, setEmployees] = React.useState(initialEmployees);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [menuId, setMenuId] = React.useState(null);
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [modalMode, setModalMode] = React.useState('view');
+  const [selectedEmployee, setSelectedEmployee] = React.useState(null);
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [tasksOpen, setTasksOpen] = React.useState(false);
+
+  const handleOpenAdd = () => {
+    // helpful console log for debugging in browser
+    console.log('Add Employee button clicked - opening modal');
+    setAddOpen(true);
+  };
 
   const handleOpenMenu = (event, id) => {
     setAnchorEl(event.currentTarget);
@@ -121,6 +99,27 @@ const ManagerUserManagementPage = () => {
     setAnchorEl(null);
     setMenuId(null);
   };
+
+  const openView = (employee) => {
+    setSelectedEmployee(employee);
+    setModalMode('view');
+    setModalOpen(true);
+  };
+
+  const openEdit = (employee) => {
+    setSelectedEmployee(employee);
+    setModalMode('edit');
+    setModalOpen(true);
+  };
+
+  const openTasks = (employee) => {
+    // resolve taskIds to actual task objects for the modal
+    const assigned = getTasksByIds(employee.taskIds || []);
+    setSelectedEmployee({ ...employee, assignedTasks: assigned });
+    setTasksOpen(true);
+  };
+
+  // edits are handled by EmployeeProfileModal's onSave handler
 
   return (
     <ManagerLayout>
@@ -143,6 +142,7 @@ const ManagerUserManagementPage = () => {
               boxShadow: "none",
               '&:hover': { backgroundColor: "#0765b6" },
             }}
+            onClick={handleOpenAdd}
           >
             Add Employee
           </Button>
@@ -231,9 +231,30 @@ const ManagerUserManagementPage = () => {
                           <MoreVertIcon />
                         </IconButton>
                         <Menu anchorEl={anchorEl} open={menuId === employee.id} onClose={handleCloseMenu}>
-                          <MenuItem onClick={handleCloseMenu}>View Profile</MenuItem>
-                          <MenuItem onClick={handleCloseMenu}>Edit Details</MenuItem>
-                          <MenuItem onClick={handleCloseMenu}>Assign Tasks</MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              openView(employee);
+                              handleCloseMenu();
+                            }}
+                          >
+                            View Profile
+                          </MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              openEdit(employee);
+                              handleCloseMenu();
+                            }}
+                          >
+                            Edit Details
+                          </MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              openTasks(employee);
+                              handleCloseMenu();
+                            }}
+                          >
+                            Assign Tasks
+                          </MenuItem>
                           <MenuItem onClick={handleCloseMenu} sx={{ color: "error.main" }}>
                             Deactivate
                           </MenuItem>
@@ -246,6 +267,38 @@ const ManagerUserManagementPage = () => {
             </TableContainer>
           </CardContent>
         </Card>
+        <EmployeeProfileModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          employee={selectedEmployee}
+          mode={modalMode}
+          onSave={(updated) => {
+            // normalize and save
+            const normalized = {
+              ...updated,
+              name: updated.name || updated.fullName || selectedEmployee?.name,
+              role: updated.role,
+              branch: updated.branch,
+              phone: updated.phone,
+              address: updated.address,
+              hired_at: updated.hiredAt ?? updated.hired_at ?? selectedEmployee?.hired_at,
+              status: updated.status || selectedEmployee?.status,
+            };
+            setEmployees((prev) => prev.map((e) => (e.id === normalized.id ? { ...e, ...normalized } : e)));
+            setModalOpen(false);
+            setSelectedEmployee(null);
+          }}
+        />
+        <AddEmployeeModal
+          open={addOpen}
+          onClose={() => setAddOpen(false)}
+          onCreate={(newEmployee) => {
+            const id = Math.max(0, ...employees.map((e) => e.id)) + 1;
+            setEmployees((prev) => [...prev, { id, ...newEmployee }]);
+            setAddOpen(false);
+          }}
+        />
+        <AssignedTasksModal open={tasksOpen} onClose={() => { setTasksOpen(false); setSelectedEmployee(null); }} employee={selectedEmployee} />
       </Box>
     </ManagerLayout>
   );
