@@ -20,6 +20,7 @@ import AppointmentHeader from "./ui/AppointmentHeader";
 import AppointmentDetails from "./ui/AppointmentDetails";
 import AssignEmployeeSection from "./ui/AssignEmployeeSection";
 import AppointmentActions from "./ui/AppointmentActions";
+import RejectionDialog from "./ui/RejectionDialog";
 
 const style = {
   position: "absolute",
@@ -65,6 +66,8 @@ export default function AppointmentPopup({
   apiBase = "http://localhost:8080/api",
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   // Approve and assign an employee by calling backend, then notify parent
   const handleApproveClick = async (employee) => {
@@ -97,14 +100,21 @@ export default function AppointmentPopup({
     }
   };
 
-  // Reject the booking by calling backend, then notify parent
-  const handleRejectClick = async () => {
+  // Open rejection dialog
+  const handleRejectClick = () => {
+    setRejectionDialogOpen(true);
+  };
+
+  // Handle rejection with custom reason
+  const handleConfirmReject = async (reason) => {
     if (!appointment) return;
+    
+    setIsRejecting(true);
     try {
       const res = await fetch(`${apiBase}/bookings/${appointment.id}/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: "Rejected by manager" }),
+        body: JSON.stringify({ reason: reason.trim() }),
       });
 
       if (!res.ok) {
@@ -115,15 +125,25 @@ export default function AppointmentPopup({
 
       const updated = await res.json();
       onReject && onReject(updated);
+      setRejectionDialogOpen(false);
       onClose && onClose();
     } catch (err) {
       console.error("Reject error:", err);
+    } finally {
+      setIsRejecting(false);
     }
+  };
+
+  // Handle rejection dialog close
+  const handleRejectDialogClose = () => {
+    setRejectionDialogOpen(false);
   };
 
   useEffect(() => {
     if (!open) {
       setSearchTerm("");
+      setRejectionDialogOpen(false);
+      setIsRejecting(false);
       // optionally: clear selection when modal closes
       // setSelectedEmployee && setSelectedEmployee(null);
     }
@@ -171,6 +191,14 @@ export default function AppointmentPopup({
             />
           </Box>
         ) : null}
+
+        {/* Rejection Dialog */}
+        <RejectionDialog
+          open={rejectionDialogOpen}
+          onClose={handleRejectDialogClose}
+          onConfirm={handleConfirmReject}
+          loading={isRejecting}
+        />
       </Paper>
     </Modal>
   );
