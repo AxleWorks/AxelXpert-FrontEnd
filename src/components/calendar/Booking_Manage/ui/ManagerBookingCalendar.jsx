@@ -1,68 +1,48 @@
 import React, { useMemo, useState, useEffect } from "react";
 import {
   Box,
-  Typography,
   Paper,
-  Select,
-  MenuItem,
-  TextField,
-  IconButton,
-  Button,
-  Drawer,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
+  Select,
+  MenuItem,
+  Button,
   Snackbar,
   Alert,
-  Chip,
-  Stack,
-  Badge,
 } from "@mui/material";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Today as TodayIcon,
-  Search as SearchIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
-} from "@mui/icons-material";
-import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import { useTheme } from "@mui/material/styles";
-import ManagerBookingCalendar from "../../components/calendar/Booking_Manage/ui/ManagerBookingCalendar";
+import CalendarHeader from "../CalendarHeader";
+import CalendarGrid from "../CalendarGrid";
+import AppointmentPopup from "../AppointmentPopup";
 
 function getStatusColor(mode, status) {
-  // return background color for chip based on MUI mode
   const dark = mode === "dark";
   switch (status) {
     case "Pending":
-      return dark ? "#d97706" : "#f59e0b"; // amber
+      return dark ? "#d97706" : "#f59e0b";
     case "Approved":
-      return dark ? "#15803d" : "#16a34a"; // green
+      return dark ? "#15803d" : "#16a34a";
     case "Completed":
-      return dark ? "#1e3a8a" : "#2563eb"; // blue
+      return dark ? "#1e3a8a" : "#2563eb";
     case "Cancelled":
-      return dark ? "#b91c1c" : "#dc2626"; // red
+      return dark ? "#b91c1c" : "#dc2626";
     default:
-      return dark ? "#374151" : "#6b7280"; // gray
+      return dark ? "#374151" : "#6b7280";
   }
 }
 
-const ManagerBookingCalendarPage = () => {
+export default function ManagerBookingCalendar({
+  apiBase = "http://localhost:8080/api",
+}) {
   const theme = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedBranch, setSelectedBranch] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  // appointments will be loaded from the bookings API on mount
   const [appointments, setAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
-  // selectedEmployee will be an employee object (or null)
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -71,17 +51,16 @@ const ManagerBookingCalendarPage = () => {
     message: "",
     severity: "success",
   });
-  // fetch branches from backend on mount
+
   useEffect(() => {
     const ac = new AbortController();
     async function loadBranches() {
       try {
-        const res = await fetch("http://localhost:8080/api/branches/all", {
+        const res = await fetch(`${apiBase}/branches/all`, {
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        // map server shape to UI shape: branch name
         const mapped = (data || []).map((b) => b.branchName || b.name || "");
         setBranches(mapped);
       } catch (err) {
@@ -97,19 +76,17 @@ const ManagerBookingCalendarPage = () => {
     }
     loadBranches();
     return () => ac.abort();
-  }, []);
+  }, [apiBase]);
 
-  // fetch employees from backend on mount
   useEffect(() => {
     const ac = new AbortController();
-    async function load() {
+    async function loadEmployees() {
       try {
-        const res = await fetch("http://localhost:8080/api/users/employees", {
+        const res = await fetch(`${apiBase}/users/employees`, {
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        // map server shape to UI shape: {id, name, role, available}
         const mapped = (data || []).map((u) => ({
           id: u.id,
           name: u.username || u.email || `emp-${u.id}`,
@@ -129,34 +106,27 @@ const ManagerBookingCalendarPage = () => {
         }
       }
     }
-    load();
+    loadEmployees();
     return () => ac.abort();
-  }, []);
+  }, [apiBase]);
 
-  // fetch bookings and map them to the appointment shape used by the calendar
   useEffect(() => {
     const ac = new AbortController();
     async function loadBookings() {
       try {
-        const res = await fetch("http://localhost:8080/api/bookings/all", {
+        const res = await fetch(`${apiBase}/bookings/all`, {
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        console.log("API Response - Bookings:", data);
         const mapped = (data || []).map((b) => {
           const start = b.startAt ? new Date(b.startAt) : null;
-          const end = b.endAt ? new Date(b.endAt) : null;
           const timeStr = start
             ? start.toLocaleTimeString(undefined, {
                 hour: "numeric",
                 minute: "2-digit",
               })
             : "";
-
-          console.log(
-            `Processing appointment ${b.id}, Branch: ${b.branchName}, Date: ${b.startAt}, Parsed: ${start}`
-          );
           const status = (b.status || "").toLowerCase();
           const prettyStatus =
             status === "pending"
@@ -166,14 +136,6 @@ const ManagerBookingCalendarPage = () => {
               : status === "completed"
               ? "Completed"
               : status === "cancelled" || status === "canceled"
-              ? "Cancelled"
-              : b.status === "PENDING"
-              ? "Pending"
-              : b.status === "APPROVED"
-              ? "Approved"
-              : b.status === "COMPLETED"
-              ? "Completed"
-              : b.status === "CANCELLED" || b.status === "CANCELED"
               ? "Cancelled"
               : b.status || "";
 
@@ -192,7 +154,6 @@ const ManagerBookingCalendarPage = () => {
             raw: b,
             startAt: b.startAt,
             endAt: b.endAt,
-            // Log for debugging
             branchId: b.branchId,
           };
         });
@@ -210,7 +171,7 @@ const ManagerBookingCalendarPage = () => {
     }
     loadBookings();
     return () => ac.abort();
-  }, []);
+  }, [apiBase]);
 
   const filteredAppointments = useMemo(() => {
     return appointments.filter((apt) => {
@@ -223,7 +184,6 @@ const ManagerBookingCalendarPage = () => {
       const matchesSearch = apt.customer
         ?.toLowerCase()
         .includes((searchQuery || "").toLowerCase());
-
       return matchesBranch && matchesStatus && matchesSearch;
     });
   }, [appointments, selectedBranch, statusFilter, searchQuery]);
@@ -237,8 +197,6 @@ const ManagerBookingCalendarPage = () => {
     const startingDayOfWeek = firstDay.getDay();
 
     const days = [];
-
-    // previous month
     const prevMonthLastDay = new Date(year, month, 0).getDate();
     for (let i = startingDayOfWeek - 1; i >= 0; i--) {
       const dayDate = new Date(year, month - 1, prevMonthLastDay - i);
@@ -250,12 +208,9 @@ const ManagerBookingCalendarPage = () => {
       });
     }
 
-    // current month
-    const today = new Date();
     for (let i = 1; i <= daysInMonth; i++) {
       const dayDate = new Date(year, month, i);
       const dayAppointments = filteredAppointments.filter((apt) => {
-        // Handle both Date objects and ISO strings
         const aptDate =
           apt.date instanceof Date ? apt.date : new Date(apt.date);
         return (
@@ -273,7 +228,6 @@ const ManagerBookingCalendarPage = () => {
       });
     }
 
-    // next month to fill 42 cells
     const remaining = 42 - days.length;
     for (let i = 1; i <= remaining; i++) {
       const dayDate = new Date(year, month + 1, i);
@@ -305,89 +259,115 @@ const ManagerBookingCalendarPage = () => {
 
   const handleAppointmentClick = (apt) => {
     setSelectedAppointment(apt);
-    setDrawerOpen(true);
   };
 
-  const handleApprove = () => {
-    if (!selectedEmployee) {
-      setSnackbar({
-        open: true,
-        message: "Please select an employee",
-        severity: "error",
-      });
-      return;
-    }
-
-    setAppointments((prev) =>
-      prev.map((a) =>
-        a.id === selectedAppointment.id
-          ? {
-              ...a,
-              status: "Approved",
-              assignedEmployee: selectedEmployee.name,
-            }
-          : a
-      )
-    );
-
-    setSnackbar({
-      open: true,
-      message: `Assigned to ${selectedEmployee.name} and approved`,
-      severity: "success",
-    });
-    setApproveDialogOpen(false);
-    setDrawerOpen(false);
-    setSelectedEmployee(null);
-  };
-
-  const handleCancel = () => {
-    setAppointments((prev) =>
-      prev.map((a) =>
-        a.id === selectedAppointment.id ? { ...a, status: "Cancelled" } : a
-      )
-    );
-    setSnackbar({
-      open: true,
-      message: "Appointment cancelled",
-      severity: "info",
-    });
-    setDrawerOpen(false);
-  };
-
-  const handleReschedule = () => {
-    setSnackbar({
-      open: true,
-      message: "Reschedule requested (demo)",
-      severity: "success",
-    });
-    setDrawerOpen(false);
-  };
-
-  const getMonthYear = (date) =>
-    date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-
-  const counts = useMemo(() => {
-    return {
+  const counts = useMemo(
+    () => ({
       pending: filteredAppointments.filter((a) => a.status === "Pending")
         .length,
       approved: filteredAppointments.filter((a) => a.status === "Approved")
         .length,
       completed: filteredAppointments.filter((a) => a.status === "Completed")
         .length,
-    };
-  }, [filteredAppointments]);
+    }),
+    [filteredAppointments]
+  );
 
   return (
-    <ManagerLayout>
-      <Box sx={{ pb: 3 }}>
-        <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
-          Branch Booking Calendar
-        </Typography>
+    <Box sx={{ pb: 3 }}>
+      <CalendarHeader
+        currentDate={currentDate}
+        onPrev={previousMonth}
+        onNext={nextMonth}
+        onToday={goToToday}
+        selectedBranch={selectedBranch}
+        setSelectedBranch={setSelectedBranch}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        counts={counts}
+        branches={branches}
+      />
 
-        <ManagerBookingCalendar />
-      </Box>
-    </ManagerLayout>
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Box sx={{ mb: 1 }}>
+          <CalendarGrid
+            days={days}
+            onAppointmentClick={handleAppointmentClick}
+            themeMode={theme.palette.mode}
+          />
+        </Box>
+      </Paper>
+
+      <AppointmentPopup
+        open={!!selectedAppointment}
+        onClose={() => setSelectedAppointment(null)}
+        appointment={selectedAppointment}
+        employees={employees}
+        onApprove={(employee) => {
+          if (!employee) {
+            setSnackbar({
+              open: true,
+              message: "Please select an employee",
+              severity: "error",
+            });
+            return;
+          }
+          setAppointments((prev) =>
+            prev.map((a) =>
+              a.id === selectedAppointment.id
+                ? { ...a, status: "Approved", assignedEmployee: employee.name }
+                : a
+            )
+          );
+          setSnackbar({
+            open: true,
+            message: `Assigned to ${employee.name} and approved`,
+            severity: "success",
+          });
+          setSelectedAppointment(null);
+        }}
+        onReject={() => {
+          setAppointments((prev) =>
+            prev.map((a) =>
+              a.id === selectedAppointment.id
+                ? { ...a, status: "Cancelled" }
+                : a
+            )
+          );
+          setSnackbar({
+            open: true,
+            message: "Appointment rejected",
+            severity: "info",
+          });
+          setSelectedAppointment(null);
+        }}
+        selectedEmployee={selectedEmployee}
+        setSelectedEmployee={setSelectedEmployee}
+      />
+
+      <Dialog open={false} onClose={() => {}}>
+        <DialogTitle>Placeholder</DialogTitle>
+        <DialogContent />
+        <DialogActions>
+          <Button>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+      >
+        <Alert
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
-};
-
-export default ManagerBookingCalendarPage;
+}
