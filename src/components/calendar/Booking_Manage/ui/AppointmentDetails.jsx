@@ -51,6 +51,11 @@ export default function AppointmentDetails({ appointment }) {
           {appointment.phone || "—"}
         </Typography>
 
+        <Typography variant="subtitle2">Assigned Employee</Typography>
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          {appointment.assignedEmployee || appointment.assignedEmployeeName || "No Assignee"}
+        </Typography>
+
         {appointment.notes && (
           <>
             <Typography variant="subtitle2">Customer Notes</Typography>

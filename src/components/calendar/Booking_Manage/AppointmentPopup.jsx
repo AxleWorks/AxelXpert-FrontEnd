@@ -62,8 +62,64 @@ export default function AppointmentPopup({
   onReject,
   selectedEmployee,
   setSelectedEmployee,
+  apiBase = "http://localhost:8080/api",
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Approve and assign an employee by calling backend, then notify parent
+  const handleApproveClick = async (employee) => {
+    if (!appointment) return;
+    if (!employee) {
+      // guard - UI already disables button, but double-check
+      console.warn("No employee selected for approval");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${apiBase}/bookings/${appointment.id}/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeId: employee.id }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Assign failed:", errText);
+        return;
+      }
+
+      const updated = await res.json();
+      // let parent update its local state
+      onApprove && onApprove(employee, updated);
+      onClose && onClose();
+    } catch (err) {
+      console.error("Assign error:", err);
+    }
+  };
+
+  // Reject the booking by calling backend, then notify parent
+  const handleRejectClick = async () => {
+    if (!appointment) return;
+    try {
+      const res = await fetch(`${apiBase}/bookings/${appointment.id}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "Rejected by manager" }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Reject failed:", errText);
+        return;
+      }
+
+      const updated = await res.json();
+      onReject && onReject(updated);
+      onClose && onClose();
+    } catch (err) {
+      console.error("Reject error:", err);
+    }
+  };
 
   useEffect(() => {
     if (!open) {
@@ -108,8 +164,8 @@ export default function AppointmentPopup({
             />
 
             <AppointmentActions
-              onApprove={onApprove}
-              onReject={onReject}
+              onApprove={() => handleApproveClick(selectedEmployee)}
+              onReject={() => handleRejectClick()}
               onClose={onClose}
               selectedEmployee={selectedEmployee}
             />
