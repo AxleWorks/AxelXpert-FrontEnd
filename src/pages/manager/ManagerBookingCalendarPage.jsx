@@ -36,12 +36,7 @@ import CalendarHeader from "../../components/calendar/Booking_Manage/CalendarHea
 import CalendarGrid from "../../components/calendar/Booking_Manage/CalendarGrid";
 import AppointmentPopup from "../../components/calendar/Booking_Manage/AppointmentPopup";
 
-// Small contract
-// - Inputs: none (demo data inside). Branch & filters control displayed appointments.
-// - Outputs: UI to inspect, approve (assign employee), reschedule (demo), cancel appointments.
-// - Error modes: none external; UI-only state updates.
-
-const branches = ["Downtown", "Westside", "North Branch", "South Branch"];
+// Branches will be loaded from the API
 
 // employees will be loaded from the API
 
@@ -137,11 +132,39 @@ const ManagerBookingCalendarPage = () => {
   // selectedEmployee will be an employee object (or null)
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employees, setEmployees] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
+  // fetch branches from backend on mount
+  useEffect(() => {
+    const ac = new AbortController();
+    async function loadBranches() {
+      try {
+        const res = await fetch("http://localhost:8080/api/branches/all", {
+          signal: ac.signal,
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        // map server shape to UI shape: branch name
+        const mapped = (data || []).map((b) => b.branchName || b.name || "");
+        setBranches(mapped);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Failed to load branches", err);
+          setSnackbar({
+            open: true,
+            message: "Failed to load branches",
+            severity: "error",
+          });
+        }
+      }
+    }
+    loadBranches();
+    return () => ac.abort();
+  }, []);
 
   // fetch employees from backend on mount
   useEffect(() => {
@@ -187,6 +210,7 @@ const ManagerBookingCalendarPage = () => {
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
+        console.log("API Response - Bookings:", data);
         const mapped = (data || []).map((b) => {
           const start = b.startAt ? new Date(b.startAt) : null;
           const end = b.endAt ? new Date(b.endAt) : null;
@@ -196,6 +220,10 @@ const ManagerBookingCalendarPage = () => {
                 minute: "2-digit",
               })
             : "";
+
+          console.log(
+            `Processing appointment ${b.id}, Branch: ${b.branchName}, Date: ${b.startAt}, Parsed: ${start}`
+          );
           const status = (b.status || "").toLowerCase();
           const prettyStatus =
             status === "pending"
@@ -205,6 +233,14 @@ const ManagerBookingCalendarPage = () => {
               : status === "completed"
               ? "Completed"
               : status === "cancelled" || status === "canceled"
+              ? "Cancelled"
+              : b.status === "PENDING"
+              ? "Pending"
+              : b.status === "APPROVED"
+              ? "Approved"
+              : b.status === "COMPLETED"
+              ? "Completed"
+              : b.status === "CANCELLED" || b.status === "CANCELED"
               ? "Cancelled"
               : b.status || "";
 
@@ -223,6 +259,8 @@ const ManagerBookingCalendarPage = () => {
             raw: b,
             startAt: b.startAt,
             endAt: b.endAt,
+            // Log for debugging
+            branchId: b.branchId,
           };
         });
         setAppointments(mapped);
@@ -246,10 +284,13 @@ const ManagerBookingCalendarPage = () => {
       const matchesBranch =
         selectedBranch === "All" || apt.branch === selectedBranch;
       const matchesStatus =
-        statusFilter === "All" || apt.status === statusFilter;
+        statusFilter === "All" ||
+        apt.status === statusFilter ||
+        apt.status?.toUpperCase() === statusFilter?.toUpperCase();
       const matchesSearch = apt.customer
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+        ?.toLowerCase()
+        .includes((searchQuery || "").toLowerCase());
+
       return matchesBranch && matchesStatus && matchesSearch;
     });
   }, [appointments, selectedBranch, statusFilter, searchQuery]);
@@ -280,12 +321,16 @@ const ManagerBookingCalendarPage = () => {
     const today = new Date();
     for (let i = 1; i <= daysInMonth; i++) {
       const dayDate = new Date(year, month, i);
-      const dayAppointments = filteredAppointments.filter(
-        (apt) =>
-          apt.date.getDate() === i &&
-          apt.date.getMonth() === month &&
-          apt.date.getFullYear() === year
-      );
+      const dayAppointments = filteredAppointments.filter((apt) => {
+        // Handle both Date objects and ISO strings
+        const aptDate =
+          apt.date instanceof Date ? apt.date : new Date(apt.date);
+        return (
+          aptDate.getDate() === i &&
+          aptDate.getMonth() === month &&
+          aptDate.getFullYear() === year
+        );
+      });
       days.push({
         date: dayDate,
         dayNumber: i,
