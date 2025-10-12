@@ -17,6 +17,21 @@ const AuthFormContainer = ({ title, error, children }) => {
         border: "1px solid #e2e8f0",
       }}
     >
+      {/* Mobile-only app name above the form title */}
+      <Typography
+        variant="h5"
+        sx={{
+          display: { xs: "block", md: "none" },
+          fontWeight: 800,
+          mb: 1,
+          textAlign: "center",
+          color: "#1e293b",
+          fontSize: { xs: "1.5rem" },
+        }}
+      >
+        <span style={{ color: "#3b82f6" }}>Axle</span>Xpert
+      </Typography>
+
       <Typography
         variant="h4"
         sx={{

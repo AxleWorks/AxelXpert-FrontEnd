@@ -16,11 +16,11 @@ import {
   ListItemAvatar,
   ListItemText,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import SearchIcon from "@mui/icons-material/Search";
-import EmployeeSearchList from "./EmployeeSearchList";
+import AppointmentHeader from "./ui/AppointmentHeader";
+import AppointmentDetails from "./ui/AppointmentDetails";
+import AssignEmployeeSection from "./ui/AssignEmployeeSection";
+import AppointmentActions from "./ui/AppointmentActions";
+import RejectionDialog from "./ui/RejectionDialog";
 
 const style = {
   position: "absolute",
@@ -63,12 +63,87 @@ export default function AppointmentPopup({
   onReject,
   selectedEmployee,
   setSelectedEmployee,
+  apiBase = "http://localhost:8080/api",
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+
+  // Approve and assign an employee by calling backend, then notify parent
+  const handleApproveClick = async (employee) => {
+    if (!appointment) return;
+    if (!employee) {
+      // guard - UI already disables button, but double-check
+      console.warn("No employee selected for approval");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${apiBase}/bookings/${appointment.id}/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeId: employee.id }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Assign failed:", errText);
+        return;
+      }
+
+      const updated = await res.json();
+      // let parent update its local state
+      onApprove && onApprove(employee, updated);
+      onClose && onClose();
+    } catch (err) {
+      console.error("Assign error:", err);
+    }
+  };
+
+  // Open rejection dialog
+  const handleRejectClick = () => {
+    setRejectionDialogOpen(true);
+  };
+
+  // Handle rejection with custom reason
+  const handleConfirmReject = async (reason) => {
+    if (!appointment) return;
+
+    setIsRejecting(true);
+    try {
+      const res = await fetch(`${apiBase}/bookings/${appointment.id}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reason.trim() }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Reject failed:", errText);
+        return;
+      }
+
+      const updated = await res.json();
+      onReject && onReject(updated);
+      setRejectionDialogOpen(false);
+      onClose && onClose();
+    } catch (err) {
+      console.error("Reject error:", err);
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  // Handle rejection dialog close
+  const handleRejectDialogClose = () => {
+    setRejectionDialogOpen(false);
+  };
 
   useEffect(() => {
     if (!open) {
       setSearchTerm("");
+      setRejectionDialogOpen(false);
+      setIsRejecting(false);
       // optionally: clear selection when modal closes
       // setSelectedEmployee && setSelectedEmployee(null);
     }
@@ -87,131 +162,43 @@ export default function AppointmentPopup({
       }}
     >
       <Paper sx={style}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ mb: 1 }}
-        >
-          <Box>
-            <Typography variant="h6">Slot Details</Typography>
-            <Typography variant="caption" color="text.secondary">
-              Review and assign an employee or reject the request
-            </Typography>
-          </Box>
-          <IconButton onClick={onClose} color="inherit">
-            <CloseIcon />
-          </IconButton>
-        </Stack>
+        <AppointmentHeader
+          title="Slot Details"
+          subtitle="Review and assign an employee or reject the request"
+          onClose={onClose}
+        />
 
         <Divider sx={{ mb: 2 }} />
 
         {appointment ? (
           <Box>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
-                {initials(appointment.customer)}
-              </Avatar>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle1">
-                  {appointment.customer}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {appointment.vehicle} • {appointment.service}
-                </Typography>
-                <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
-                  <Chip label={appointment.time} size="small" />
-                  <Chip
-                    label={appointment.branch}
-                    size="small"
-                    variant="outlined"
-                  />
-                  <Chip
-                    label={appointment.status}
-                    size="small"
-                    color={
-                      appointment.status === "Pending"
-                        ? "warning"
-                        : appointment.status === "Approved"
-                        ? "success"
-                        : appointment.status === "Completed"
-                        ? "primary"
-                        : "default"
-                    }
-                  />
-                </Stack>
-              </Box>
-            </Stack>
+            <AppointmentDetails appointment={appointment} />
 
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="subtitle2">Contact</Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                {appointment.phone || "—"}
-              </Typography>
+            <Typography variant="subtitle2">Assign Employee</Typography>
+            <AssignEmployeeSection
+              employees={employees}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              selectedEmployee={selectedEmployee}
+              setSelectedEmployee={setSelectedEmployee}
+            />
 
-              {appointment.notes && (
-                <>
-                  <Typography variant="subtitle2">Customer Notes</Typography>
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    {appointment.notes}
-                  </Typography>
-                </>
-              )}
-
-              <Divider sx={{ my: 2 }} />
-
-              <Typography variant="subtitle2">Assign Employee</Typography>
-
-              <Stack
-                direction="row"
-                spacing={1}
-                alignItems="center"
-                sx={{ mt: 1, mb: 1 }}
-              >
-                <SearchIcon color="action" />
-                <TextField
-                  size="small"
-                  placeholder="Search employees by name or role"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  sx={{ ml: 1 }}
-                  fullWidth
-                />
-              </Stack>
-
-              <EmployeeSearchList
-                employees={employees}
-                searchTerm={searchTerm}
-                selectedEmployee={selectedEmployee}
-                setSelectedEmployee={setSelectedEmployee}
-              />
-
-              <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-                <Button
-                  startIcon={<CheckCircleIcon />}
-                  variant="contained"
-                  color="success"
-                  onClick={() => onApprove(selectedEmployee)}
-                  disabled={!selectedEmployee}
-                >
-                  Approve & Assign
-                </Button>
-
-                <Button
-                  startIcon={<HighlightOffIcon />}
-                  variant="outlined"
-                  color="error"
-                  onClick={() => onReject()}
-                >
-                  Reject
-                </Button>
-
-                <Box sx={{ flexGrow: 1 }} />
-                <Button onClick={onClose}>Close</Button>
-              </Stack>
-            </Box>
+            <AppointmentActions
+              onApprove={() => handleApproveClick(selectedEmployee)}
+              onReject={() => handleRejectClick()}
+              onClose={onClose}
+              selectedEmployee={selectedEmployee}
+            />
           </Box>
         ) : null}
+
+        {/* Rejection Dialog */}
+        <RejectionDialog
+          open={rejectionDialogOpen}
+          onClose={handleRejectDialogClose}
+          onConfirm={handleConfirmReject}
+          loading={isRejecting}
+        />
       </Paper>
     </Modal>
   );
