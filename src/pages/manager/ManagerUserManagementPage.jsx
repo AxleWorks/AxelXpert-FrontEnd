@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Grid,
@@ -12,28 +12,59 @@ import {
   Avatar as MuiAvatar,
   IconButton,
   Paper,
-  Menu,
-  MenuItem,
+  Tooltip,
 } from "@mui/material";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import AddIcon from "@mui/icons-material/Add";
 import { UserCheck, User, UserX } from "lucide-react";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
-import {} from "@mui/material";
-import EmployeeProfileModal from "../../components/manager/EmployeeProfileModal";
-import AddEmployeeModal from "../../components/manager/AddEmployeeModal";
-import AssignedTasksModal from "../../components/manager/AssignedTasksModal";
-import { employees as mockEmployees, getTasksByIds } from '../../data/mockData';
+import EmployeeProfileModal from "../../components/userManagement/EmployeeProfileModal";
+import AddEmployeeModal from "../../components/userManagement/AddEmployeeModal";
+import axios from "axios";
+import { Visibility, Edit, Delete, Block } from "@mui/icons-material";
 
-const initialEmployees = mockEmployees;
-
-const StatCard = ({ title, value, Icon, iconBg = "#f3f8ff", iconColor = "#0b75d9" }) => (
-  <Card sx={{ borderRadius: 3, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 140, width: '100%' }}>
-    <CardContent sx={{ p: 3, flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, width: '100%' }}>
+const StatCard = ({
+  title,
+  value,
+  Icon,
+  iconBg = "#f3f8ff",
+  iconColor = "#0b75d9",
+}) => (
+  <Card
+    sx={{
+      borderRadius: 3,
+      display: "flex",
+      flexDirection: "column",
+      flex: 1,
+      minHeight: 140,
+      width: "100%",
+    }}
+  >
+    <CardContent
+      sx={{
+        p: 3,
+        flexGrow: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 2,
+          width: "100%",
+        }}
+      >
         <Box>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             {title}
@@ -62,53 +93,67 @@ const StatCard = ({ title, value, Icon, iconBg = "#f3f8ff", iconColor = "#0b75d9
   </Card>
 );
 
-const Avatar = ({ name }) => (
-  <MuiAvatar sx={{ bgcolor: "grey.100", color: "text.primary" }}>
-    {name
-      .split(" ")
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join("")}
-  </MuiAvatar>
-);
+const Avatar = ({ name, profileImageUrl }) => {
+  const defaultImageUrl =
+    "https://cdn-icons-png.flaticon.com/512/9684/9684441.png";
 
-
+  return (
+    <MuiAvatar
+      src={profileImageUrl || defaultImageUrl}
+      sx={{ bgcolor: "grey.100", color: "text.primary" }}
+    >
+      {!profileImageUrl && name
+        ? name
+            .split(" ")
+            .map((n) => n[0])
+            .slice(0, 2)
+            .join("")
+        : null}
+    </MuiAvatar>
+  );
+};
 
 const ManagerUserManagementPage = () => {
-  const [employees, setEmployees] = React.useState(initialEmployees);
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const [menuId, setMenuId] = React.useState(null);
+  const [employees, setEmployees] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
   const [modalOpen, setModalOpen] = React.useState(false);
-  const [modalMode, setModalMode] = React.useState('view');
+  const [modalMode, setModalMode] = React.useState("view");
   const [selectedEmployee, setSelectedEmployee] = React.useState(null);
   const [addOpen, setAddOpen] = React.useState(false);
   const [tasksOpen, setTasksOpen] = React.useState(false);
 
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/api/users/all");
+        setEmployees(response.data);
+      } catch (err) {
+        console.error("Failed to fetch employees:", err);
+        setError("Failed to load employees. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
   const handleOpenAdd = () => {
     // helpful console log for debugging in browser
-    console.log('Add Employee button clicked - opening modal');
+    console.log("Add Employee button clicked - opening modal");
     setAddOpen(true);
-  };
-
-  const handleOpenMenu = (event, id) => {
-    setAnchorEl(event.currentTarget);
-    setMenuId(id);
-  };
-
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-    setMenuId(null);
   };
 
   const openView = (employee) => {
     setSelectedEmployee(employee);
-    setModalMode('view');
+    setModalMode("view");
     setModalOpen(true);
   };
 
   const openEdit = (employee) => {
     setSelectedEmployee(employee);
-    setModalMode('edit');
+    setModalMode("edit");
     setModalOpen(true);
   };
 
@@ -119,17 +164,42 @@ const ManagerUserManagementPage = () => {
     setTasksOpen(true);
   };
 
+  const handleDelete = (employeeId) => {
+    console.log("Delete employee with ID:", employeeId);
+  };
+
+  const handleBan = (employeeId) => {
+    console.log("Ban employee with ID:", employeeId);
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
   // edits are handled by EmployeeProfileModal's onSave handler
 
   return (
     <ManagerLayout>
       <Box sx={{ pb: 4 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
           <div>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               User Management
             </Typography>
-            <Typography color="text.secondary">Manage employees and their assignments</Typography>
+            <Typography color="text.secondary">
+              Manage employees and their assignments
+            </Typography>
           </div>
           <Button
             startIcon={<AddIcon />}
@@ -140,7 +210,7 @@ const ManagerUserManagementPage = () => {
               padding: "8px 16px",
               textTransform: "none",
               boxShadow: "none",
-              '&:hover': { backgroundColor: "#0765b6" },
+              "&:hover": { backgroundColor: "#0765b6" },
             }}
             onClick={handleOpenAdd}
           >
@@ -148,15 +218,67 @@ const ManagerUserManagementPage = () => {
           </Button>
         </Box>
 
-        <Grid container spacing={3} sx={{ mb: 3, alignItems: 'stretch', width: '100%' }}>
-          <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'stretch', flex: 1, minWidth: 0 }}>
-            <StatCard title="Total Employees" value={8} Icon={User} iconBg="#eaf3ff" iconColor="#0b75d9" />
+        <Grid
+          container
+          spacing={3}
+          sx={{ mb: 3, alignItems: "stretch", width: "100%" }}
+        >
+          <Grid
+            item
+            xs={12}
+            md={4}
+            sx={{
+              display: "flex",
+              alignItems: "stretch",
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            <StatCard
+              title="Total Employees"
+              value={8}
+              Icon={User}
+              iconBg="#eaf3ff"
+              iconColor="#0b75d9"
+            />
           </Grid>
-          <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'stretch', flex: 1, minWidth: 0 }}>
-            <StatCard title="Active" value={6} Icon={UserCheck} iconBg="#e9fbf0" iconColor="#10b981" />
+          <Grid
+            item
+            xs={12}
+            md={4}
+            sx={{
+              display: "flex",
+              alignItems: "stretch",
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            <StatCard
+              title="Active"
+              value={6}
+              Icon={UserCheck}
+              iconBg="#e9fbf0"
+              iconColor="#10b981"
+            />
           </Grid>
-          <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'stretch', flex: 1, minWidth: 0 }}>
-            <StatCard title="On Leave" value={2} Icon={UserX} iconBg="#fff6ea" iconColor="#f59e0b" />
+          <Grid
+            item
+            xs={12}
+            md={4}
+            sx={{
+              display: "flex",
+              alignItems: "stretch",
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            <StatCard
+              title="On Leave"
+              value={2}
+              Icon={UserX}
+              iconBg="#fff6ea"
+              iconColor="#f59e0b"
+            />
           </Grid>
         </Grid>
 
@@ -168,18 +290,24 @@ const ManagerUserManagementPage = () => {
             <TableContainer
               component={Paper}
               variant="outlined"
-              sx={{ borderRadius: 3, boxShadow: "none", border: "1px solid rgba(0,0,0,0.06)" }}
+              sx={{
+                borderRadius: 3,
+                boxShadow: "none",
+                border: "1px solid rgba(0,0,0,0.06)",
+              }}
             >
               <Table>
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 600 }}>Employee</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>User Name</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Role</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Branch</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Tasks Completed</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Rating</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Phone Number</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                    <TableCell sx={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }} />
+                    <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>
+                      Actions
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -187,31 +315,40 @@ const ManagerUserManagementPage = () => {
                     <TableRow
                       key={employee.id}
                       sx={{
-                        cursor: 'pointer',
-                        transition: 'background-color 150ms ease',
-                        '&:hover': {
-                          backgroundColor: 'action.hover',
+                        cursor: "pointer",
+                        transition: "background-color 150ms ease",
+                        "&:hover": {
+                          backgroundColor: "action.hover",
                         },
                       }}
                     >
                       <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                          <Avatar name={employee.name} />
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                        >
+                          <Avatar
+                            name={employee.name}
+                            profileImageUrl={employee.profileImageUrl}
+                          />
                           <Box>
-                            <Typography sx={{ fontWeight: 600 }}>{employee.name}</Typography>
+                            <Typography sx={{ fontWeight: 600 }}>
+                              {employee.name}
+                            </Typography>
                             <Typography color="text.secondary" variant="body2">
                               {employee.email}
                             </Typography>
                           </Box>
                         </Box>
                       </TableCell>
+                      <TableCell>{employee.username}</TableCell>
                       <TableCell>{employee.role}</TableCell>
-                      <TableCell>{employee.branch}</TableCell>
-                      <TableCell>{employee.tasksCompleted}</TableCell>
+                      <TableCell>{employee.branch || "No Branch"}</TableCell>
                       <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <Box sx={{ color: "#f6c84c", fontSize: 18 }}>★</Box>
-                          <Typography>{employee.rating}</Typography>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Box sx={{ color: "#f6c84c", fontSize: 18 }}></Box>
+                          <Typography>{employee.phoneNumber}</Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
@@ -219,46 +356,57 @@ const ManagerUserManagementPage = () => {
                           sx={{
                             borderRadius: 8,
                             padding: "4px 10px",
-                            backgroundColor: employee.status === "Active" ? "#10b981" : "#f59e0b",
+                            backgroundColor: employee.isBlocked
+                              ? "#ef4444" // Red for blocked
+                              : employee.isActive
+                              ? "#10b981" // Green for active
+                              : "#f59e0b", // Orange for inactive
                             color: "white",
                           }}
                         >
-                          {employee.status}
+                          {employee.isBlocked ? (
+                            <Typography>Blocked</Typography>
+                          ) : employee.isActive ? (
+                            <Typography>Active</Typography>
+                          ) : (
+                            <Typography>Inactive</Typography>
+                          )}
                         </Badge>
                       </TableCell>
-                      <TableCell align="right">
-                        <IconButton onClick={(e) => handleOpenMenu(e, employee.id)}>
-                          <MoreVertIcon />
-                        </IconButton>
-                        <Menu anchorEl={anchorEl} open={menuId === employee.id} onClose={handleCloseMenu}>
-                          <MenuItem
-                            onClick={() => {
-                              openView(employee);
-                              handleCloseMenu();
-                            }}
+
+                      <TableCell align="center">
+                        <Tooltip title="View">
+                          <IconButton
+                            onClick={() => openView(employee)}
+                            style={{ color: "#4caf50" }}
                           >
-                            View Profile
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              openEdit(employee);
-                              handleCloseMenu();
-                            }}
+                            <Visibility />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Edit">
+                          <IconButton
+                            onClick={() => openEdit(employee)}
+                            style={{ color: "#0b75d9" }}
                           >
-                            Edit Details
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              openTasks(employee);
-                              handleCloseMenu();
-                            }}
+                            <Edit />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton
+                            onClick={() => handleDelete(employee.id)}
+                            style={{ color: "#f44336" }}
                           >
-                            Assign Tasks
-                          </MenuItem>
-                          <MenuItem onClick={handleCloseMenu} sx={{ color: "error.main" }}>
-                            Deactivate
-                          </MenuItem>
-                        </Menu>
+                            <Delete />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Ban">
+                          <IconButton
+                            onClick={() => handleBan(employee.id)}
+                            style={{ color: "#ff9800" }}
+                          >
+                            <Block />
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -281,10 +429,17 @@ const ManagerUserManagementPage = () => {
               branch: updated.branch,
               phone: updated.phone,
               address: updated.address,
-              hired_at: updated.hiredAt ?? updated.hired_at ?? selectedEmployee?.hired_at,
+              hired_at:
+                updated.hiredAt ??
+                updated.hired_at ??
+                selectedEmployee?.hired_at,
               status: updated.status || selectedEmployee?.status,
             };
-            setEmployees((prev) => prev.map((e) => (e.id === normalized.id ? { ...e, ...normalized } : e)));
+            setEmployees((prev) =>
+              prev.map((e) =>
+                e.id === normalized.id ? { ...e, ...normalized } : e
+              )
+            );
             setModalOpen(false);
             setSelectedEmployee(null);
           }}
@@ -298,7 +453,6 @@ const ManagerUserManagementPage = () => {
             setAddOpen(false);
           }}
         />
-        <AssignedTasksModal open={tasksOpen} onClose={() => { setTasksOpen(false); setSelectedEmployee(null); }} employee={selectedEmployee} />
       </Box>
     </ManagerLayout>
   );
