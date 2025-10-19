@@ -33,6 +33,11 @@ import {
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import { useTheme } from "@mui/material/styles";
 import ManagerBookingCalendar from "../../components/calendar/Booking_Manage/ui/ManagerBookingCalendar";
+import {
+  BRANCHES_URL,
+  EMPLOYEES_URL,
+  BOOKINGS_URL,
+} from "../../config/apiEndpoints";
 
 function getStatusColor(mode, status) {
   // return background color for chip based on MUI mode
@@ -76,7 +81,7 @@ const ManagerBookingCalendarPage = () => {
     const ac = new AbortController();
     async function loadBranches() {
       try {
-        const res = await fetch("http://localhost:8080/api/branches/all", {
+        const res = await fetch(`${BRANCHES_URL}/all`, {
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -104,7 +109,7 @@ const ManagerBookingCalendarPage = () => {
     const ac = new AbortController();
     async function load() {
       try {
-        const res = await fetch("http://localhost:8080/api/users/employees", {
+        const res = await fetch(EMPLOYEES_URL, {
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -138,7 +143,7 @@ const ManagerBookingCalendarPage = () => {
     const ac = new AbortController();
     async function loadBookings() {
       try {
-        const res = await fetch("http://localhost:8080/api/bookings/all", {
+        const res = await fetch(BOOKINGS_URL, {
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

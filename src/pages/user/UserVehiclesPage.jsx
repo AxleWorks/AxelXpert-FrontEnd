@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Typography, Box, Grid, Button } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
 import axios from "axios";
+import { VEHICLES_URL } from "../../config/apiEndpoints";
 import VehicleCard from "../../components/vehicles/VehicleCard";
 import VehicleForm from "../../components/vehicles/VehicleForm";
 
@@ -22,10 +23,14 @@ const UserVehiclesPage = () => {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const userId = 1; // Replace with actual user ID logic
-        const response = await axios.get(
-          `http://localhost:8080/api/vehicles/user/${userId}`
-        );
+        const authUser = JSON.parse(localStorage.getItem("authUser"));
+        const userId = authUser?.id;
+        if (!userId) {
+          console.error("User ID not found in local storage");
+          setVehicles([]);
+          return;
+        }
+        const response = await axios.get(`${VEHICLES_URL}/user/${userId}`);
         setVehicles(Array.isArray(response.data) ? response.data : []); // Ensure vehicles is always an array
       } catch (error) {
         console.error("Error fetching vehicles:", error);
@@ -58,25 +63,26 @@ const UserVehiclesPage = () => {
 
   const handleSave = async () => {
     try {
+      const authUser = JSON.parse(localStorage.getItem("authUser"));
+      const userId = authUser?.id;
+      if (!userId) {
+        console.error("User ID not found in local storage");
+        return;
+      }
+
       if (formData.id) {
         // Update vehicle
-        await axios.put(
-          `http://localhost:8080/api/vehicles/${formData.id}`,
-          formData
-        );
+        await axios.put(`${VEHICLES_URL}/${formData.id}`, formData);
       } else {
         // Create new vehicle
-        await axios.post(`http://localhost:8080/api/vehicles`, {
+        await axios.post(VEHICLES_URL, {
           ...formData,
-          userId: 1,
+          userId: userId,
         });
       }
       handleCloseDialog();
-      const userId = 1; // Replace with actual user ID logic
-      const response = await axios.get(
-        `http://localhost:8080/api/vehicles/user/${userId}`
-      );
-      setVehicles(response.data);
+      const response = await axios.get(`${VEHICLES_URL}/user/${userId}`);
+      setVehicles(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error saving vehicle:", error);
     }
@@ -84,7 +90,7 @@ const UserVehiclesPage = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8080/api/vehicles/${id}`);
+      await axios.delete(`${VEHICLES_URL}/${id}`);
       setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id));
     } catch (error) {
       console.error("Error deleting vehicle:", error);

@@ -17,6 +17,7 @@ import AuthFormContainer from "./AuthFormContainer";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../../config/apiEndpoints";
 
 // keep signup simple: call backend /api/auth/signup
 
@@ -65,7 +66,7 @@ const SignUp = () => {
     }
 
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/signup", {
+      const res = await axios.post(`${API_BASE}/api/auth/signup`, {
         username: userName,
         email,
         password,

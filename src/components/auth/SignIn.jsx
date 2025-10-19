@@ -17,6 +17,7 @@ import axios from "axios";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
+import { API_BASE } from "../../config/apiEndpoints";
 
 const SignIn = () => {
   const [error, setError] = useState(null);
@@ -31,7 +32,7 @@ const SignIn = () => {
     let mounted = true;
     (async () => {
       try {
-        await axios.get("http://localhost:8080/api/auth/status");
+        await axios.get(`${API_BASE}/api/auth/status`);
       } catch (e) {
         // ignore - used only for quick healthcheck
       }
@@ -46,7 +47,7 @@ const SignIn = () => {
 
     try {
       // call backend login endpoint and expect LoginResponse {id, username, email, role}
-      const res = await axios.post("http://localhost:8080/api/auth/login", {
+      const res = await axios.post(`${API_BASE}/api/auth/login`, {
         email: username,
         password,
       });
@@ -101,7 +102,6 @@ const SignIn = () => {
 
   const rightContent = (
     <AuthFormContainer title="Sign In" error={error}>
-
       <form onSubmit={handleSubmit} noValidate>
         <Typography variant="body2" sx={{ mb: 1, color: "#64748b" }}>
           Username
