@@ -30,6 +30,8 @@ export default function BranchesComponent({
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [currentBranch, setCurrentBranch] = useState(null);
   const [managers, setManagers] = useState([]);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     if (isManager) {
@@ -60,11 +62,39 @@ export default function BranchesComponent({
     setCurrentBranch(null);
   };
 
-  const handleSave = async () => {
-    if (currentBranch) {
-      await onEdit(currentBranch);
+  const handleConfirm = async () => {
+    if (confirmAction) {
+      await confirmAction();
     }
-    handleDialogClose();
+    setConfirmDialogOpen(false);
+    setConfirmAction(null);
+  };
+
+  const handleDeleteClick = (branchId) => {
+    setConfirmAction(() => () => onDelete(branchId));
+    setConfirmDialogOpen(true);
+  };
+
+  const handleAddSave = async () => {
+    setConfirmAction(() => async () => {
+      if (currentBranch) {
+        await onAdd(currentBranch);
+      }
+      setAddDialogOpen(false);
+      setCurrentBranch(null);
+    });
+    setConfirmDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    setConfirmAction(() => async () => {
+      if (currentBranch) {
+        await onEdit(currentBranch);
+      }
+      setEditDialogOpen(false);
+      setCurrentBranch(null);
+    });
+    setConfirmDialogOpen(true);
   };
 
   const handleAddClick = () => {
@@ -78,14 +108,6 @@ export default function BranchesComponent({
       locationLink: "",
     });
     setAddDialogOpen(true);
-  };
-
-  const handleAddSave = async () => {
-    if (currentBranch) {
-      await onAdd(currentBranch);
-    }
-    setAddDialogOpen(false);
-    setCurrentBranch(null);
   };
 
   const handleAddDialogClose = () => {
@@ -278,7 +300,7 @@ export default function BranchesComponent({
                     variant="outline"
                     size="sm"
                     color="error"
-                    onClick={() => onDelete(branch.id)}
+                    onClick={() => handleDeleteClick(branch.id)}
                   >
                     <Trash2Icon />
                     Delete
@@ -289,6 +311,29 @@ export default function BranchesComponent({
           </Card>
         ))}
       </Box>
+
+      {/* Confirm Dialog */}
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+        fullWidth
+        sx={{
+          "& .MuiBackdrop-root": {
+            backdropFilter: "blur(4px)",
+          },
+        }}
+      >
+        <DialogTitle>Confirm Action</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to proceed?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleConfirm} variant="contained" color="primary">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Add Dialog */}
       <Dialog
