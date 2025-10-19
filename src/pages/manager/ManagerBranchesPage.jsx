@@ -36,7 +36,11 @@ const ManagerBranchesPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newBranch),
+        body: JSON.stringify({
+          ...newBranch,
+          openHours: newBranch.openHours,
+          closeHours: newBranch.closeHours,
+        }),
       });
 
       if (!response.ok) {
@@ -57,7 +61,11 @@ const ManagerBranchesPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedBranch),
+        body: JSON.stringify({
+          ...updatedBranch,
+          openHours: updatedBranch.openHours,
+          closeHours: updatedBranch.closeHours,
+        }),
       });
 
       if (!response.ok) {

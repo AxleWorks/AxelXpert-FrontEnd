@@ -71,7 +71,8 @@ export default function BranchesComponent({
     setCurrentBranch({
       name: "",
       address: "",
-      hours: "",
+      openHours: "",
+      closeHours: "",
       managerId: "",
       phone: "",
       locationLink: "",
@@ -165,8 +166,16 @@ export default function BranchesComponent({
               }
               subheader={<CardTitle>{branch.name}</CardTitle>}
             />
+
             <CardContent>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Open At: {branch.openHours || "N/A"}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Close At: {branch.closeHours || "N/A"}
+                </Typography>
+
                 <Box
                   sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
                 >
@@ -180,23 +189,6 @@ export default function BranchesComponent({
                   />
                   <Typography variant="body2" color="text.secondary">
                     {branch.address}
-                  </Typography>
-                </Box>
-
-                <Box
-                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
-                >
-                  <AccessTimeIcon
-                    sx={{
-                      color: "text.secondary",
-                      fontSize: 18,
-                      mt: 0.5,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    {branch.hours ||
-                      "Mon-Fri: 8:00 AM - 6:00 PM, Sat: 9:00 AM - 3:00 PM"}
                   </Typography>
                 </Box>
 
@@ -331,11 +323,22 @@ export default function BranchesComponent({
           />
           <TextField
             label="Open Hours"
+            type="time"
             fullWidth
             margin="normal"
-            value={currentBranch?.hours || ""}
+            value={currentBranch?.openHours || ""}
             onChange={(e) =>
-              setCurrentBranch({ ...currentBranch, hours: e.target.value })
+              setCurrentBranch({ ...currentBranch, openHours: e.target.value })
+            }
+          />
+          <TextField
+            label="Close Hours"
+            type="time"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.closeHours || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, closeHours: e.target.value })
             }
           />
           <TextField
@@ -426,11 +429,22 @@ export default function BranchesComponent({
           />
           <TextField
             label="Open Hours"
+            type="time"
             fullWidth
             margin="normal"
-            value={currentBranch?.hours || ""}
+            value={currentBranch?.openHours || ""}
             onChange={(e) =>
-              setCurrentBranch({ ...currentBranch, hours: e.target.value })
+              setCurrentBranch({ ...currentBranch, openHours: e.target.value })
+            }
+          />
+          <TextField
+            label="Close Hours"
+            type="time"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.closeHours || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, closeHours: e.target.value })
             }
           />
           <TextField

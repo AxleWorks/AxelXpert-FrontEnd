@@ -62,10 +62,8 @@ const UserBranchesPage = () => {
         <BranchesComponent
           branches={branches.map((branch) => ({
             ...branch,
-            openHoursWeekdays: branch.openHoursWeekdays || "N/A",
-            closeHoursWeekdays: branch.closeHoursWeekdays || "N/A",
-            openHoursWeekends: branch.openHoursWeekends || "N/A",
-            closeHoursWeekends: branch.closeHoursWeekends || "N/A",
+            openHours: branch.openHours || "N/A",
+            closeHours: branch.closeHours || "N/A",
           }))}
           isManager={false}
         />
