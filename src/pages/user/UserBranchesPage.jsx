@@ -12,7 +12,7 @@ const UserBranchesPage = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch(BRANCHES_URL);
+        const response = await fetch(`${BRANCHES_URL}/all`);
         if (!response.ok) {
           throw new Error(`Failed to fetch branches: ${response.status}`);
         }
@@ -59,7 +59,16 @@ const UserBranchesPage = () => {
   return (
     <UserLayout>
       <Box sx={{ p: 2 }}>
-        <BranchesComponent branches={branches} />
+        <BranchesComponent
+          branches={branches.map((branch) => ({
+            ...branch,
+            openHoursWeekdays: branch.openHoursWeekdays || "N/A",
+            closeHoursWeekdays: branch.closeHoursWeekdays || "N/A",
+            openHoursWeekends: branch.openHoursWeekends || "N/A",
+            closeHoursWeekends: branch.closeHoursWeekends || "N/A",
+          }))}
+          isManager={false}
+        />
       </Box>
     </UserLayout>
   );

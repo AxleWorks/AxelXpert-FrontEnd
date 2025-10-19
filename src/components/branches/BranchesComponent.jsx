@@ -1,5 +1,14 @@
-import React from "react";
-import { Box, Typography } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  MenuItem,
+} from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -8,20 +17,110 @@ import EmailIcon from "@mui/icons-material/Email";
 import { Card, CardHeader, CardContent, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { EditIcon, Trash2, Trash2Icon } from "lucide-react";
 
-export default function BranchesComponent({ branches }) {
-  const defaultHours = "Mon-Fri: 8:00 AM - 6:00 PM, Sat: 9:00 AM - 3:00 PM";
+export default function BranchesComponent({
+  branches,
+  isManager,
+  onAdd,
+  onEdit,
+  onDelete,
+}) {
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [currentBranch, setCurrentBranch] = useState(null);
+  const [managers, setManagers] = useState([]);
+
+  useEffect(() => {
+    if (isManager) {
+      const fetchManagers = async () => {
+        try {
+          const response = await fetch(
+            "http://localhost:8080/api/users/managers"
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setManagers(data);
+          }
+        } catch (error) {
+          console.error("Error fetching managers:", error);
+        }
+      };
+      fetchManagers();
+    }
+  }, [isManager]);
+
+  const handleEditClick = (branch) => {
+    setCurrentBranch(branch);
+    setEditDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setEditDialogOpen(false);
+    setCurrentBranch(null);
+  };
+
+  const handleSave = async () => {
+    if (currentBranch) {
+      await onEdit(currentBranch);
+    }
+    handleDialogClose();
+  };
+
+  const handleAddClick = () => {
+    setCurrentBranch({
+      name: "",
+      address: "",
+      hours: "",
+      managerId: "",
+      phone: "",
+      locationLink: "",
+    });
+    setAddDialogOpen(true);
+  };
+
+  const handleAddSave = async () => {
+    if (currentBranch) {
+      await onAdd(currentBranch);
+    }
+    setAddDialogOpen(false);
+    setCurrentBranch(null);
+  };
+
+  const handleAddDialogClose = () => {
+    setAddDialogOpen(false);
+    setCurrentBranch(null);
+  };
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {/* Header */}
-      <Box>
-        <Typography variant="h4" sx={{ fontWeight: 600 }}>
-          Service Centers
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Find a service center near you
-        </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+            Service Centers
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Find a service center near you
+          </Typography>
+        </Box>
+
+        {isManager && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleAddClick}
+            sx={{ borderRadius: 2 }}
+          >
+            Add New Branch
+          </Button>
+        )}
       </Box>
 
       {/* Branches Grid */}
@@ -45,7 +144,7 @@ export default function BranchesComponent({ branches }) {
                     display: "flex",
                     alignItems: "flex-start",
                     justifyContent: "space-between",
-                    mb: 2,
+                    mb: 1,
                   }}
                 >
                   <Box
@@ -59,9 +158,7 @@ export default function BranchesComponent({ branches }) {
                       justifyContent: "center",
                     }}
                   >
-                    <LocationOnIcon
-                      sx={{ color: "primary.main", fontSize: 28 }}
-                    />
+                    <LocationOnIcon sx={{ color: "white", fontSize: 28 }} />
                   </Box>
                   <Badge>Open</Badge>
                 </Box>
@@ -98,7 +195,8 @@ export default function BranchesComponent({ branches }) {
                     }}
                   />
                   <Typography variant="body2" color="text.secondary">
-                    {defaultHours}
+                    {branch.hours ||
+                      "Mon-Fri: 8:00 AM - 6:00 PM, Sat: 9:00 AM - 3:00 PM"}
                   </Typography>
                 </Box>
 
@@ -137,37 +235,258 @@ export default function BranchesComponent({ branches }) {
                     }}
                   />
                   <Typography variant="body2" color="text.secondary">
-                    {`${branch.name.toLowerCase()}@axlexpert.com`}
+                    {`${branch.email || " Not Provided"}`}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <LocationOnIcon
+                    sx={{
+                      color: "text.secondary",
+                      fontSize: 18,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    color="primary"
+                    component="a"
+                    href={branch.mapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View Location
                   </Typography>
                 </Box>
               </Box>
 
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
-                  gap: 1,
-                  pt: 2,
-                  mt: 2,
-                  borderTop: "1px solid",
-                  borderColor: "divider",
-                }}
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  startIcon={<LocationOnIcon fontSize="small" />}
+              {isManager && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignContent: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    pt: 2,
+                    mt: 2,
+                    borderTop: "1px solid",
+                    borderColor: "divider",
+                  }}
                 >
-                  View Map
-                </Button>
-                <Button size="sm" startIcon={<PhoneIcon fontSize="small" />}>
-                  Contact
-                </Button>
-              </Box>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditClick(branch)}
+                  >
+                    <EditIcon />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    color="error"
+                    onClick={() => onDelete(branch.id)}
+                  >
+                    <Trash2Icon />
+                    Delete
+                  </Button>
+                </Box>
+              )}
             </CardContent>
           </Card>
         ))}
       </Box>
+
+      {/* Add Dialog */}
+      <Dialog
+        open={addDialogOpen}
+        onClose={handleAddDialogClose}
+        fullWidth
+        sx={{
+          "& .MuiBackdrop-root": {
+            backdropFilter: "blur(4px)",
+          },
+        }}
+      >
+        <DialogTitle>Add New Branch</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Branch Name"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.name || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, name: e.target.value })
+            }
+          />
+          <TextField
+            label="Address"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.address || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, address: e.target.value })
+            }
+          />
+          <TextField
+            label="Open Hours"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.hours || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, hours: e.target.value })
+            }
+          />
+          <TextField
+            label="Manager"
+            select
+            fullWidth
+            margin="normal"
+            value={currentBranch?.managerId || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, managerId: e.target.value })
+            }
+          >
+            {managers.map((manager) => (
+              <MenuItem key={manager.id} value={manager.id}>
+                {manager.name}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            label="Phone"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.phone || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, phone: e.target.value })
+            }
+          />
+          <TextField
+            label="Email"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.email || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, email: e.target.value })
+            }
+          />
+          <TextField
+            label="Map Link"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.mapLink || ""}
+            onChange={(e) =>
+              setCurrentBranch({
+                ...currentBranch,
+                mapLink: e.target.value,
+              })
+            }
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleAddDialogClose}>Cancel</Button>
+          <Button onClick={handleAddSave} variant="contained" color="primary">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={handleDialogClose}
+        fullWidth
+        sx={{
+          "& .MuiBackdrop-root": {
+            backdropFilter: "blur(4px)",
+          },
+        }}
+      >
+        <DialogTitle>Edit Branch</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Branch Name"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.name || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, name: e.target.value })
+            }
+          />
+          <TextField
+            label="Address"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.address || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, address: e.target.value })
+            }
+          />
+          <TextField
+            label="Open Hours"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.hours || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, hours: e.target.value })
+            }
+          />
+          <TextField
+            label="Manager"
+            select
+            fullWidth
+            margin="normal"
+            value={currentBranch?.managerId || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, managerId: e.target.value })
+            }
+          >
+            {managers.map((manager) => (
+              <MenuItem key={manager.id} value={manager.id}>
+                {manager.name}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            label="Phone"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.phone || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, phone: e.target.value })
+            }
+          />
+          <TextField
+            label="Email"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.email || ""}
+            onChange={(e) =>
+              setCurrentBranch({ ...currentBranch, email: e.target.value })
+            }
+          />
+          <TextField
+            label="Map Link"
+            fullWidth
+            margin="normal"
+            value={currentBranch?.mapLink || ""}
+            onChange={(e) =>
+              setCurrentBranch({
+                ...currentBranch,
+                mapLink: e.target.value,
+              })
+            }
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

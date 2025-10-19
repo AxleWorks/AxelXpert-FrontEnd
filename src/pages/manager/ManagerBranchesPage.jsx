@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, CircularProgress, Typography, Button, Fab } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import BranchesComponent from "../../components/branches/BranchesComponent";
 import { BRANCHES_URL } from "../../config/apiEndpoints";
@@ -13,7 +12,7 @@ const ManagerBranchesPage = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch(BRANCHES_URL);
+        const response = await fetch(`${BRANCHES_URL}/all`);
         if (!response.ok) {
           throw new Error(`Failed to fetch branches: ${response.status}`);
         }
@@ -29,6 +28,70 @@ const ManagerBranchesPage = () => {
 
     fetchBranches();
   }, []);
+
+  const handleAddBranch = async (newBranch) => {
+    try {
+      const response = await fetch(BRANCHES_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newBranch),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add branch");
+      }
+
+      const createdBranch = await response.json();
+      setBranches((prevBranches) => [...prevBranches, createdBranch]);
+    } catch (error) {
+      console.error("Error adding branch:", error);
+    }
+  };
+
+  const handleEditBranch = async (updatedBranch) => {
+    try {
+      const response = await fetch(`${BRANCHES_URL}/${updatedBranch.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedBranch),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update branch");
+      }
+
+      const savedBranch = await response.json();
+      setBranches((prevBranches) =>
+        prevBranches.map((branch) =>
+          branch.id === savedBranch.id ? savedBranch : branch
+        )
+      );
+    } catch (error) {
+      console.error("Error updating branch:", error);
+    }
+  };
+
+  const handleDeleteBranch = async (branchId) => {
+    try {
+      const response = await fetch(`${BRANCHES_URL}/${branchId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete branch");
+      }
+
+      setBranches((prevBranches) =>
+        prevBranches.filter((branch) => branch.id !== branchId)
+      );
+    } catch (error) {
+      console.error("Error deleting branch:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -60,42 +123,13 @@ const ManagerBranchesPage = () => {
   return (
     <ManagerLayout>
       <Box sx={{ p: 2 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            Branch Management
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            sx={{ borderRadius: 2 }}
-          >
-            Add New Branch
-          </Button>
-        </Box>
-
-        <BranchesComponent branches={branches} />
-
-        {/* Floating action button for mobile view */}
-        <Fab
-          color="primary"
-          aria-label="add"
-          sx={{
-            position: "fixed",
-            bottom: 16,
-            right: 16,
-            display: { xs: "flex", md: "none" },
-          }}
-        >
-          <AddIcon />
-        </Fab>
+        <BranchesComponent
+          branches={branches}
+          isManager={true}
+          onAdd={handleAddBranch}
+          onEdit={handleEditBranch}
+          onDelete={handleDeleteBranch}
+        />
       </Box>
     </ManagerLayout>
   );
