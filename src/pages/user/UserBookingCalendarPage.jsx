@@ -176,23 +176,60 @@ const UserBookingCalendarPage = () => {
     setIsBookingModalOpen(true);
   };
 
-  const handleBookingSubmit = (bookingData) => {
-    const newBooking = {
-      id: Date.now(),
+  const handleBookingSubmit = async (bookingData) => {
+    // Build payload expected by backend
+    const payload = {
       date: bookingData.date?.toISOString?.() || new Date(bookingData.date).toISOString(),
       time: bookingData.time || bookingData.timeSlot,
       service: bookingData.service,
-      status: "Pending",
+      status: bookingData.status || "Pending",
       customer: bookingData.customer,
       vehicle: bookingData.vehicle,
-      branch: bookingData.branch,
-      notes: bookingData.notes,
+      branch: bookingData.branch || bookingData.branchId,
     };
-    setBookings((prev) => [...prev, newBooking]);
-    // No need to mutate configured availableSlots for default slots; booked time is excluded by getAvailableTimesForDate
-    setIsBookingModalOpen(false);
-    setSelectedDate(null);
-    setSelectedTimeSlot(null);
+
+    try {
+      const res = await fetch("http://localhost:8080/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        let err = null;
+        try {
+          err = await res.json();
+        } catch (e) {
+          /* ignore */
+        }
+        console.error("Create booking failed", res.status, err);
+        window.alert("Failed to create booking: " + (err?.message || res.statusText));
+        return;
+      }
+
+      const created = await res.json();
+
+      // Normalize returned booking for local state
+      const newBooking = {
+        id: created.id || Date.now(),
+        date: created.date?.toISOString?.() || created.date || payload.date,
+        time: created.time || payload.time,
+        service: created.service || payload.service,
+        status: created.status || payload.status,
+        customer: created.customer || payload.customer,
+        vehicle: created.vehicle || payload.vehicle,
+        branch: created.branch || payload.branch,
+      };
+
+      setBookings((prev) => [...prev, newBooking]);
+      // Close modal and reset selection
+      setIsBookingModalOpen(false);
+      setSelectedDate(null);
+      setSelectedTimeSlot(null);
+    } catch (err) {
+      console.error("Error creating booking", err);
+      window.alert("Error creating booking. See console for details.");
+    }
   };
 
   return (
