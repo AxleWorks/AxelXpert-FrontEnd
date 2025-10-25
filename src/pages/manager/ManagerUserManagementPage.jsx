@@ -14,8 +14,11 @@ import {
   Paper,
   Tooltip,
   TableSortLabel,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
 import { UserCheck, User, UserX } from "lucide-react";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import {
@@ -125,6 +128,7 @@ const ManagerUserManagementPage = () => {
   const [tasksOpen, setTasksOpen] = React.useState(false);
   const [orderBy, setOrderBy] = React.useState("name");
   const [order, setOrder] = React.useState("asc");
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -204,9 +208,27 @@ const ManagerUserManagementPage = () => {
       : (a, b) => -descendingComparator(a, b, orderBy);
   }, [descendingComparator]);
 
+  const filteredEmployees = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return employees;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return employees.filter((employee) => {
+      return (
+        employee.name?.toLowerCase().includes(query) ||
+        employee.email?.toLowerCase().includes(query) ||
+        employee.username?.toLowerCase().includes(query) ||
+        employee.role?.toLowerCase().includes(query) ||
+        employee.branch?.toLowerCase().includes(query) ||
+        employee.phoneNumber?.toLowerCase().includes(query)
+      );
+    });
+  }, [employees, searchQuery]);
+
   const sortedEmployees = React.useMemo(() => {
-    return [...employees].sort(getComparator(order, orderBy));
-  }, [employees, order, orderBy, getComparator]);
+    return [...filteredEmployees].sort(getComparator(order, orderBy));
+  }, [filteredEmployees, order, orderBy, getComparator]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -323,6 +345,27 @@ const ManagerUserManagementPage = () => {
             <CardTitle>Employees</CardTitle>
           </CardHeader>
           <CardContent>
+            <Box sx={{ mb: 3 }}>
+              <TextField
+                placeholder="Search employees..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                size="small"
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "text.secondary" }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
             <TableContainer
               component={Paper}
               variant="outlined"
@@ -387,7 +430,18 @@ const ManagerUserManagementPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {sortedEmployees.map((employee) => (
+                  {sortedEmployees.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                        <Typography color="text.secondary" variant="body1">
+                          {searchQuery
+                            ? `No employees found matching "${searchQuery}"`
+                            : "No employees found"}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    sortedEmployees.map((employee) => (
                     <TableRow
                       key={employee.id}
                       sx={{
@@ -485,7 +539,7 @@ const ManagerUserManagementPage = () => {
                         </Tooltip>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )))}
                 </TableBody>
               </Table>
             </TableContainer>
