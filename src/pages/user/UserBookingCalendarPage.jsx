@@ -185,7 +185,8 @@ const UserBookingCalendarPage = () => {
       status: bookingData.status || "Pending",
       customer: bookingData.customer,
       vehicle: bookingData.vehicle,
-      branch: bookingData.branch || bookingData.branchId,
+      // prefer explicit branch, then id, then branchName (manual entry)
+      branch: bookingData.branch || bookingData.branchId || bookingData.branchName,
     };
 
     try {

@@ -65,6 +65,80 @@ const BookingModal = ({
     { id: 6, name: "AC Service", price: 99.99, durationMinutes: 60 },
   ];
 
+  // Branch list (provided JSON fallback) - can be replaced by prop or API later
+  const [branches] = useState([
+    {
+      id: 1,
+      name: "Moratuwa",
+      address: "100 Central Ave",
+      phone: "555-4001",
+      email: "example@axlexpert.com",
+      mapLink: "https://maps.app.goo.gl/zGXzfHtBCkaU5VpB6",
+      openHours: "10:33",
+      closeHours: "19:32",
+      createdAt: null,
+      updatedAt: "2025-10-19T10:32:40.112605",
+      managerId: 11,
+      managerName: "mgr1",
+    },
+    {
+      id: 2,
+      name: "Kiribathgoda",
+      address: "200 North Rd",
+      phone: "0112 457 860 ",
+      email: null,
+      mapLink: null,
+      openHours: null,
+      closeHours: null,
+      createdAt: null,
+      updatedAt: "2025-10-19T10:10:13.04426",
+      managerId: 12,
+      managerName: "mgr2",
+    },
+    {
+      id: 3,
+      name: "East",
+      address: "300 East Blvd",
+      phone: "555-4003",
+      email: null,
+      mapLink: null,
+      openHours: null,
+      closeHours: null,
+      createdAt: null,
+      updatedAt: null,
+      managerId: 13,
+      managerName: "mgr3",
+    },
+    {
+      id: 4,
+      name: "South",
+      address: "400 South St",
+      phone: "555-4004",
+      email: null,
+      mapLink: null,
+      openHours: null,
+      closeHours: null,
+      createdAt: null,
+      updatedAt: null,
+      managerId: 14,
+      managerName: "mgr4",
+    },
+    {
+      id: 5,
+      name: "West",
+      address: "500 West Ln",
+      phone: "555-4005",
+      email: null,
+      mapLink: null,
+      openHours: null,
+      closeHours: null,
+      createdAt: null,
+      updatedAt: null,
+      managerId: 15,
+      managerName: "mgr5",
+    },
+  ]);
+
   // Normalize vehicles/services input
   const [existingVehicles] = useState(() => {
     const src = Array.isArray(vehicles) && vehicles.length ? vehicles : defaultVehicles;
@@ -109,7 +183,7 @@ const BookingModal = ({
   ]);
 
   // Minimal form data: only required fields
-  const [formData, setFormData] = useState({ vehicleType: "", serviceType: "", timeSlot: "", customerInfo: { name: "" } });
+  const [formData, setFormData] = useState({ vehicleType: "", serviceType: "", timeSlot: "", customerInfo: { name: "" }, branchId: branchId || "", manualBranchName: "" });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -133,6 +207,11 @@ const BookingModal = ({
     if (!formData.vehicleType) newErrors.vehicleType = "Please select a vehicle type";
     if (!formData.serviceType) newErrors.serviceType = "Please select a service type";
     if (!formData.timeSlot) newErrors.timeSlot = "Please select a time slot";
+    // require either a branch selection or a manual branch name
+    if (!formData.branchId && !formData.manualBranchName) {
+      newErrors.branchId = "Please select a branch or enter one manually";
+      newErrors.manualBranchName = "Please select a branch or enter one manually";
+    }
     if (!formData.customerInfo.name) newErrors.customerName = "Name is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -142,17 +221,27 @@ const BookingModal = ({
     if (!validateForm()) return;
     const vehicleText = formData.vehicleType || "";
     const selectedServiceDef = serviceTypes.find((s) => s.id === formData.serviceType);
+    // Determine branch id: prefer selected id, then try to infer from manualBranchName (case-insensitive)
+    let chosenBranchId = formData.branchId || branchId || null;
+    const manualName = formData.manualBranchName?.trim();
+    if (manualName) {
+      const matched = branches.find((b) => b.name?.toLowerCase() === manualName.toLowerCase());
+      if (matched) chosenBranchId = matched.id;
+    }
+    const chosenBranch = branches.find((b) => b.id === chosenBranchId) || branches.find((b) => b.id === Number(chosenBranchId)) || null;
+    const chosenBranchName = manualName || chosenBranch?.name || "";
     const bookingData = {
       ...formData,
       date: selectedDate,
-      branchId,
+      branchId: chosenBranchId,
+      branchName: chosenBranchName,
       status: "Pending",
       createdAt: new Date().toISOString(),
       customer: formData.customerInfo.name,
       vehicle: vehicleText,
       service: selectedServiceDef?.name || "",
       time: formData.timeSlot,
-      branch: branchId,
+      branch: chosenBranchId,
     };
     onSubmit?.(bookingData);
   };
@@ -231,6 +320,38 @@ const BookingModal = ({
                   helperText={errors.customerName}
                 />
               </Grid>
+              <Grid item xs={12} md={12}>
+                <FormControl fullWidth error={!!errors.branchId} sx={{ mt: 1 }}>
+                  <InputLabel>Branch *</InputLabel>
+                  <Select
+                    value={formData.branchId}
+                    label="Branch *"
+                    onChange={(e) => handleInputChange("branchId", e.target.value)}
+                  >
+                    {branches.map((b) => (
+                      <MenuItem key={b.id} value={b.id}>
+                        {b.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.branchId && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                      {errors.branchId}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={12}>
+                <TextField
+                  fullWidth
+                  label="Branch (or enter manually)"
+                  value={formData.manualBranchName}
+                  onChange={(e) => handleInputChange("manualBranchName", e.target.value)}
+                  placeholder="Type a branch name if not listed"
+                  error={!!errors.manualBranchName}
+                  helperText={errors.manualBranchName}
+                />
+              </Grid>
             </Grid>
           </Grid>
 
@@ -276,32 +397,7 @@ const BookingModal = ({
               <Build /> Service Information
             </Typography>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ width: "100%" }}>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <FormControl fullWidth error={!!errors.serviceType} sx={{ width: "100%" }}>
-                  <InputLabel>Service Type *</InputLabel>
-                  <Select
-                    fullWidth
-                    value={formData.serviceType}
-                    onChange={(e) => handleInputChange("serviceType", e.target.value)}
-                    label="Service Type *"
-                    sx={{ width: "100%" }}
-                  >
-                    {serviceTypes.map((service) => (
-                      <MenuItem key={service.id} value={service.id}>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-                          <span>{service.name}</span>
-                          <span>${service.price}</span>
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.serviceType && (
-                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                      {errors.serviceType}
-                    </Typography>
-                  )}
-                </FormControl>
-              </Box>
+            
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <FormControl fullWidth error={!!errors.timeSlot} sx={{ width: "100%" }}>
                   <InputLabel>Time Slot *</InputLabel>
