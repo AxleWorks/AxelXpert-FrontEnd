@@ -13,6 +13,7 @@ import {
   IconButton,
   Paper,
   Tooltip,
+  TableSortLabel,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { UserCheck, User, UserX } from "lucide-react";
@@ -122,6 +123,8 @@ const ManagerUserManagementPage = () => {
   const [selectedEmployee, setSelectedEmployee] = React.useState(null);
   const [addOpen, setAddOpen] = React.useState(false);
   const [tasksOpen, setTasksOpen] = React.useState(false);
+  const [orderBy, setOrderBy] = React.useState("name");
+  const [order, setOrder] = React.useState("asc");
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -171,6 +174,39 @@ const ManagerUserManagementPage = () => {
   const handleBan = (employeeId) => {
     console.log("Ban employee with ID:", employeeId);
   };
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
+  const descendingComparator = React.useCallback((a, b, orderBy) => {
+    let aValue = a[orderBy];
+    let bValue = b[orderBy];
+
+    // Handle null/undefined values
+    if (aValue == null) aValue = "";
+    if (bValue == null) bValue = "";
+
+    // Convert to lowercase for string comparison
+    if (typeof aValue === "string") aValue = aValue.toLowerCase();
+    if (typeof bValue === "string") bValue = bValue.toLowerCase();
+
+    if (bValue < aValue) return -1;
+    if (bValue > aValue) return 1;
+    return 0;
+  }, []);
+
+  const getComparator = React.useCallback((order, orderBy) => {
+    return order === "desc"
+      ? (a, b) => descendingComparator(a, b, orderBy)
+      : (a, b) => -descendingComparator(a, b, orderBy);
+  }, [descendingComparator]);
+
+  const sortedEmployees = React.useMemo(() => {
+    return [...employees].sort(getComparator(order, orderBy));
+  }, [employees, order, orderBy, getComparator]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -299,11 +335,51 @@ const ManagerUserManagementPage = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 600 }}>Employee</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>User Name</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Role</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Branch</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Phone Number</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      <TableSortLabel
+                        active={orderBy === "name"}
+                        direction={orderBy === "name" ? order : "asc"}
+                        onClick={() => handleRequestSort("name")}
+                      >
+                        Employee
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      <TableSortLabel
+                        active={orderBy === "username"}
+                        direction={orderBy === "username" ? order : "asc"}
+                        onClick={() => handleRequestSort("username")}
+                      >
+                        User Name
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      <TableSortLabel
+                        active={orderBy === "role"}
+                        direction={orderBy === "role" ? order : "asc"}
+                        onClick={() => handleRequestSort("role")}
+                      >
+                        Role
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      <TableSortLabel
+                        active={orderBy === "branch"}
+                        direction={orderBy === "branch" ? order : "asc"}
+                        onClick={() => handleRequestSort("branch")}
+                      >
+                        Branch
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      <TableSortLabel
+                        active={orderBy === "phoneNumber"}
+                        direction={orderBy === "phoneNumber" ? order : "asc"}
+                        onClick={() => handleRequestSort("phoneNumber")}
+                      >
+                        Phone Number
+                      </TableSortLabel>
+                    </TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                     <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>
                       Actions
@@ -311,7 +387,7 @@ const ManagerUserManagementPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {employees.map((employee) => (
+                  {sortedEmployees.map((employee) => (
                     <TableRow
                       key={employee.id}
                       sx={{
