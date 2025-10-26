@@ -41,7 +41,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
 
   const [existingVehicles] = useState(() => {
     const src = Array.isArray(vehicles) && vehicles.length ? vehicles : defaultVehicles;
-    return src.map((v) => ({ id: v.id, make: v.make, model: v.model, year: v.year, licensePlate: v.plateNumber || v.licensePlate, vin: v.chassisNumber || v.vin }));
+    return src.map((v) => ({ id: v.id, make: v.make, model: v.model, year: v.year, type: v.type || v.vehicleType || "", licensePlate: v.plateNumber || v.licensePlate, vin: v.chassisNumber || v.vin }));
   });
 
   const [serviceTypes] = useState(() => {
@@ -51,9 +51,33 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
 
   const [defaultTimeSlots] = useState(["09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM"]);
 
-  // Minimal form data: only fields we keep for customer booking
-  const [formData, setFormData] = useState({ vehicleType: "", serviceType: "", timeSlot: "", customerInfo: { name: "" }, branchId: branchId || "", manualBranchName: "" });
+  // Form data with vehicle selection support
+  const [formData, setFormData] = useState({ vehicleId: "", vehicleType: "", serviceType: "", timeSlot: "", customerInfo: { name: "" }, branchId: branchId || "", manualBranchName: "" });
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (selectedTimeSlot?.time) setFormData((p) => ({ ...p, timeSlot: selectedTimeSlot.time }));
+  }, [selectedTimeSlot]);
+
+  // Auto-fill vehicle type when existing vehicle is selected
+  useEffect(() => {
+    if (!formData.vehicleId) return;
+    const sel = existingVehicles.find((v) => v.id === formData.vehicleId || v.id === Number(formData.vehicleId));
+    if (sel && sel.type) {
+      setFormData((p) => ({ ...p, vehicleType: sel.type }));
+      if (errors.vehicleType) setErrors((prev) => ({ ...prev, vehicleType: "" }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.vehicleId]);
+
+  // Auto-select branch when manual name matches
+  useEffect(() => {
+    const name = formData.manualBranchName?.trim();
+    if (!name) return;
+    const matched = branches.find((b) => b.name?.toLowerCase() === name.toLowerCase());
+    if (matched) setFormData((p) => ({ ...p, branchId: matched.id }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.manualBranchName]);
 
   useEffect(() => {
     if (selectedTimeSlot?.time) setFormData((p) => ({ ...p, timeSlot: selectedTimeSlot.time }));
@@ -68,10 +92,11 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.vehicleType) newErrors.vehicleType = "Please select a vehicle type";
+    // Require either selected existing vehicle or a vehicle type
+    if (!formData.vehicleType && !formData.vehicleId) newErrors.vehicleType = "Please select a vehicle type or choose an existing vehicle";
     if (!formData.serviceType) newErrors.serviceType = "Please select a service type";
     if (!formData.timeSlot) newErrors.timeSlot = "Please select a time slot";
-    // require either a branch selection or a manual branch name
+    // Require either a branch selection or a manual branch name
     if (!formData.branchId && !formData.manualBranchName) {
       newErrors.branchId = "Please select a branch or enter one manually";
       newErrors.manualBranchName = "Please select a branch or enter one manually";
@@ -83,7 +108,8 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
 
   const handleSubmit = () => {
     if (!validateForm()) return;
-    const vehicleText = formData.vehicleType || "";
+    const selectedVehicle = existingVehicles.find((v) => v.id === formData.vehicleId || v.id === Number(formData.vehicleId));
+    const vehicleText = selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.licensePlate})` : formData.vehicleType || "";
     const selectedServiceDef = serviceTypes.find((s) => s.id === formData.serviceType);
     // Determine branch id: prefer selected id, then try to infer from manualBranchName (case-insensitive)
     let chosenBranchId = formData.branchId || branchId || null;
@@ -111,14 +137,27 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
   };
 
   const handleClose = () => {
-    setFormData({ vehicleType: "", serviceType: "", timeSlot: "", customerInfo: { name: "" }, branchId: branchId || "", manualBranchName: "" });
+    setFormData({ vehicleId: "", vehicleType: "", serviceType: "", timeSlot: "", customerInfo: { name: "" }, branchId: branchId || "", manualBranchName: "" });
     setErrors({});
     onClose();
   };
 
   const formatDate = (date) => (!date ? "" : date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }));
   const selectedService = serviceTypes.find((s) => s.id === formData.serviceType);
-  const paperStyle = { position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "min(92vw, 520px)", maxHeight: "86vh", overflowY: "auto", p: 3, borderRadius: 2, boxShadow: "0 12px 40px rgba(2,6,23,0.4)" };
+  
+  const paperStyle = { 
+    position: "absolute", 
+    top: "50%", 
+    left: "50%", 
+    transform: "translate(-50%, -50%)", 
+    width: "min(95vw, 650px)", 
+    maxHeight: "90vh", 
+    overflowY: "auto", 
+    p: 4, 
+    borderRadius: 3, 
+    boxShadow: 24,
+    bgcolor: 'background.paper'
+  };
 
   return (
     <Modal open={open} onClose={handleClose} closeAfterTransition BackdropProps={{ sx: { backdropFilter: "blur(6px)", backgroundColor: "rgba(0,0,0,0.36)" } }}>
@@ -132,130 +171,265 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
         </Stack>
         <Divider sx={{ mb: 2 }} />
 
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ mt: 2 }}>
+          {/* Customer Information Section */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
               <DirectionsCar /> Customer Information
             </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={12}>
-                <TextField
-                  fullWidth
-                  label="Full Name *"
-                  value={formData.customerInfo.name}
-                  onChange={(e) => handleNestedInputChange("customerInfo", "name", e.target.value)}
-                  error={!!errors.customerName}
-                  helperText={errors.customerName}
-                />
-              </Grid>
-              <Grid item xs={12} md={12}>
-                <FormControl fullWidth error={!!errors.branchId} sx={{ mt: 1 }}>
-                  <InputLabel>Branch *</InputLabel>
-                  <Select value={formData.branchId} label="Branch *" onChange={(e) => handleInputChange("branchId", e.target.value)}>
-                    {branches.map((b) => (
-                      <MenuItem key={b.id} value={b.id}>
-                        {b.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.branchId && (
-                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                      {errors.branchId}
-                    </Typography>
-                  )}
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={12}>
-                <TextField
-                  fullWidth
-                  label="Branch (or enter manually)"
-                  value={formData.manualBranchName}
-                  onChange={(e) => handleInputChange("manualBranchName", e.target.value)}
-                  placeholder="Type a branch name if not listed"
-                  error={!!errors.manualBranchName}
-                  helperText={errors.manualBranchName}
-                />
-              </Grid>
-            </Grid>
-          </Grid>
+            <Stack spacing={2.5}>
+              <TextField
+                fullWidth
+                label="Full Name *"
+                value={formData.customerInfo.name}
+                onChange={(e) => handleNestedInputChange("customerInfo", "name", e.target.value)}
+                error={!!errors.customerName}
+                helperText={errors.customerName}
+                InputProps={{
+                  sx: { fontSize: '16px' }
+                }}
+                InputLabelProps={{
+                  sx: { fontSize: '16px' }
+                }}
+              />
 
-          <Grid item xs={12}><Divider /></Grid>
+              <FormControl fullWidth error={!!errors.branchId}>
+                <InputLabel>Branch *</InputLabel>
+                <Select 
+                  value={formData.branchId} 
+                  label="Branch *" 
+                  onChange={(e) => handleInputChange("branchId", e.target.value)}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300,
+                      }
+                    }
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>Select a branch</em>
+                  </MenuItem>
+                  {branches.map((b) => (
+                    <MenuItem key={b.id} value={b.id}>
+                      {b.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.branchId && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {errors.branchId}
+                  </Typography>
+                )}
+              </FormControl>
 
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <TextField
+                fullWidth
+                label="Branch (or enter manually)"
+                value={formData.manualBranchName}
+                onChange={(e) => handleInputChange("manualBranchName", e.target.value)}
+                placeholder="Type a branch name if not listed"
+                error={!!errors.manualBranchName}
+                helperText={errors.manualBranchName || "Auto-selects from dropdown if name matches"}
+                InputProps={{
+                  sx: { fontSize: '16px' }
+                }}
+                InputLabelProps={{
+                  sx: { fontSize: '16px' }
+                }}
+              />
+            </Stack>
+          </Box>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Vehicle Information Section */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
               <DirectionsCar /> Vehicle Information
             </Typography>
-            <FormControl fullWidth error={!!errors.vehicleType}>
-              <InputLabel>Vehicle Type</InputLabel>
-              <Select value={formData.vehicleType} onChange={(e) => handleInputChange("vehicleType", e.target.value)} label="Vehicle Type">
-                {["Car", "Truck", "SUV", "Van"].map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
+            <Stack spacing={2.5}>
+              <FormControl fullWidth>
+                <InputLabel>Select Vehicle (optional)</InputLabel>
+                <Select 
+                  value={formData.vehicleId} 
+                  label="Select Vehicle (optional)" 
+                  onChange={(e) => handleInputChange("vehicleId", e.target.value)}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300,
+                      }
+                    }
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>None - Enter vehicle type manually</em>
                   </MenuItem>
-                ))}
-              </Select>
-              {errors.vehicleType && (
-                <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                  {errors.vehicleType}
-                </Typography>
-              )}
-            </FormControl>
-          </Grid>
+                  {existingVehicles.map((v) => (
+                    <MenuItem key={v.id} value={v.id}>
+                      {v.make} {v.model} ({v.year}) — {v.licensePlate}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-          <Grid item xs={12}><Divider /></Grid>
+              <FormControl fullWidth error={!!errors.vehicleType}>
+                <InputLabel>Vehicle Type *</InputLabel>
+                <Select 
+                  value={formData.vehicleType} 
+                  onChange={(e) => handleInputChange("vehicleType", e.target.value)} 
+                  label="Vehicle Type *"
+                >
+                  <MenuItem value="">
+                    <em>Select vehicle type</em>
+                  </MenuItem>
+                  {["Car", "Truck", "SUV", "Van"].map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.vehicleType && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {errors.vehicleType}
+                  </Typography>
+                )}
+              </FormControl>
+            </Stack>
+          </Box>
 
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Divider sx={{ my: 3 }} />
+
+          {/* Service Information Section */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
               <Build /> Service Information
             </Typography>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ width: "100%" }}>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <FormControl fullWidth error={!!errors.serviceType} sx={{ width: "100%" }}>
-                  <InputLabel>Service Type *</InputLabel>
-                  <Select fullWidth value={formData.serviceType} onChange={(e) => handleInputChange("serviceType", e.target.value)} label="Service Type *" sx={{ width: "100%" }}>
-                    {serviceTypes.map((service) => (
-                      <MenuItem key={service.id} value={service.id}>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-                          <span>{service.name}</span>
-                          <span>${service.price}</span>
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.serviceType && (<Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>{errors.serviceType}</Typography>)}
-                </FormControl>
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <FormControl fullWidth error={!!errors.timeSlot} sx={{ width: "100%" }}>
-                  <InputLabel>Time Slot *</InputLabel>
-                  <Select fullWidth value={formData.timeSlot} onChange={(e) => handleInputChange("timeSlot", e.target.value)} label="Time Slot *" sx={{ width: "100%" }}>
-                    {(dayTimeSlots.length ? dayTimeSlots : defaultTimeSlots).map((time) => (<MenuItem key={time} value={time}>{time}</MenuItem>))}
-                  </Select>
-                  {errors.timeSlot && (<Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>{errors.timeSlot}</Typography>)}
-                </FormControl>
-              </Box>
-            </Stack>
-            {selectedService && (
-              <Card sx={{ mt: 2, bgcolor: "primary.light", color: "primary.contrastText" }}>
-                <CardContent sx={{ py: 1.5 }}>
-                  <Typography variant="body2"><strong>Service Details:</strong> {selectedService.name} - Duration: {selectedService.duration} mins - Price: ${selectedService.price}</Typography>
-                </CardContent>
-              </Card>
-            )}
-          </Grid>
+            <Stack spacing={2.5}>
+              <FormControl fullWidth error={!!errors.serviceType}>
+                <InputLabel>Service Type *</InputLabel>
+                <Select 
+                  value={formData.serviceType} 
+                  onChange={(e) => handleInputChange("serviceType", e.target.value)} 
+                  label="Service Type *"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300,
+                      }
+                    }
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>Select a service</em>
+                  </MenuItem>
+                  {serviceTypes.map((service) => (
+                    <MenuItem key={service.id} value={service.id}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+                        <span>{service.name}</span>
+                        <Chip label={`$${service.price}`} size="small" color="primary" sx={{ ml: 2 }} />
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.serviceType && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {errors.serviceType}
+                  </Typography>
+                )}
+              </FormControl>
 
-          <Grid item xs={12}><Divider /></Grid>
-        </Grid>
+              <FormControl fullWidth error={!!errors.timeSlot}>
+                <InputLabel>Time Slot *</InputLabel>
+                <Select 
+                  value={formData.timeSlot} 
+                  onChange={(e) => handleInputChange("timeSlot", e.target.value)} 
+                  label="Time Slot *"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300,
+                      }
+                    }
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>Select time slot</em>
+                  </MenuItem>
+                  {(dayTimeSlots.length ? dayTimeSlots : defaultTimeSlots).map((time) => (
+                    <MenuItem key={time} value={time}>
+                      {time}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.timeSlot && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {errors.timeSlot}
+                  </Typography>
+                )}
+              </FormControl>
+
+              {selectedService && (
+                <Card sx={{ bgcolor: "primary.light", borderLeft: 4, borderColor: "primary.main" }}>
+                  <CardContent>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                      Service Details
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                      <strong>Service:</strong> {selectedService.name}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                      <strong>Duration:</strong> {selectedService.duration} minutes
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Price:</strong> ${selectedService.price}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              )}
+            </Stack>
+          </Box>
+        </Box>
 
         {formData.serviceType && formData.timeSlot && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            <Typography variant="body2"><strong>Booking Summary:</strong><br />Date: {formatDate(selectedDate)}<br />Time: {formData.timeSlot}<br />Service: {selectedService?.name}<br />Estimated Duration: {selectedService?.duration} minutes<br />Price: ${selectedService?.price}</Typography>
+          <Alert severity="info" icon={<Build />} sx={{ mt: 3, borderRadius: 2 }}>
+            <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+              Booking Summary
+            </Typography>
+            <Box component="ul" sx={{ m: 0, pl: 2 }}>
+              <Typography component="li" variant="body2">
+                <strong>Date:</strong> {formatDate(selectedDate)}
+              </Typography>
+              <Typography component="li" variant="body2">
+                <strong>Time:</strong> {formData.timeSlot}
+              </Typography>
+              <Typography component="li" variant="body2">
+                <strong>Service:</strong> {selectedService?.name}
+              </Typography>
+              <Typography component="li" variant="body2">
+                <strong>Duration:</strong> {selectedService?.duration} minutes
+              </Typography>
+              <Typography component="li" variant="body2">
+                <strong>Price:</strong> ${selectedService?.price}
+              </Typography>
+            </Box>
           </Alert>
         )}
 
-        <Stack direction="row" spacing={1} sx={{ p: 2, pt: 3 }}>
-          <Button onClick={handleClose} variant="outlined">Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" disabled={!formData.serviceType || !formData.timeSlot}>Book Appointment</Button>
+        <Stack direction="row" spacing={2} sx={{ mt: 4, justifyContent: "flex-end" }}>
+          <Button onClick={handleClose} variant="outlined" size="large" sx={{ minWidth: 120 }}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            size="large"
+            disabled={!formData.serviceType || !formData.timeSlot}
+            sx={{ minWidth: 160 }}
+          >
+            Book Appointment
+          </Button>
         </Stack>
       </Paper>
     </Modal>
