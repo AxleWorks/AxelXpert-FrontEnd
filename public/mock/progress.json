@@ -1,0 +1,36 @@
+{
+  "id": 101,
+  "customerName": "Shehan Maleesha",
+  "vehicle": "Toyota Aqua - 2019",
+  "durationMinutes": 120,
+  "title": "Full Vehicle Inspection & Service",
+  "description": "Perform 120-minute full service, including oil change, filter replacements, and brake check.",
+  "status": "IN_PROGRESS",
+  "subTasks": [
+    {
+      "id": 1,
+      "taskId": 101,
+      "title": "Oil & Filter Change",
+      "description": "Drain old oil, replace oil filter.",
+      "status": "COMPLETED"
+    },
+    {
+      "id": 2,
+      "taskId": 101,
+      "title": "Brake Inspection",
+      "description": "Check brake pad and disc wear.",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "id": 3,
+      "taskId": 101,
+      "title": "Tire Rotation",
+      "description": "Rotate all four tires.",
+      "status": "NOT_STARTED"
+    }
+  ],
+  "startTime": "2025-10-26T09:00:00",
+  "completedTime": null,
+  "createdAt": "2025-10-26T08:30:00",
+  "updatedAt": "2025-10-26T09:01:30"
+}
