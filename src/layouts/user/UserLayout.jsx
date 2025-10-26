@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Box, CssBaseline, Toolbar } from "@mui/material";
 import Header from "../Header";
 import UserSidebar from "./UserSidebar";
+import Chatbot from "../../components/ui/Chatbot";
 
 const UserLayout = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -31,6 +32,9 @@ const UserLayout = ({ children }) => {
         <Toolbar />
         {children}
       </Box>
+      
+      {/* Chatbot Component */}
+      <Chatbot />
     </Box>
   );
 };
