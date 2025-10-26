@@ -30,6 +30,7 @@ import {
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import EmployeeProfileModal from "../../components/userManagement/EmployeeProfileModal";
+import EditEmployeeModal from "../../components/userManagement/EditEmployeeModal";
 import AddEmployeeModal from "../../components/userManagement/AddEmployeeModal";
 import axios from "axios";
 import { Visibility, Edit, Delete, Block } from "@mui/icons-material";
@@ -122,10 +123,9 @@ const ManagerUserManagementPage = () => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
   const [modalOpen, setModalOpen] = React.useState(false);
-  const [modalMode, setModalMode] = React.useState("view");
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
   const [selectedEmployee, setSelectedEmployee] = React.useState(null);
   const [addOpen, setAddOpen] = React.useState(false);
-  const [tasksOpen, setTasksOpen] = React.useState(false);
   const [orderBy, setOrderBy] = React.useState("name");
   const [order, setOrder] = React.useState("asc");
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -154,21 +154,12 @@ const ManagerUserManagementPage = () => {
 
   const openView = (employee) => {
     setSelectedEmployee(employee);
-    setModalMode("view");
     setModalOpen(true);
   };
 
   const openEdit = (employee) => {
     setSelectedEmployee(employee);
-    setModalMode("edit");
-    setModalOpen(true);
-  };
-
-  const openTasks = (employee) => {
-    // resolve taskIds to actual task objects for the modal
-    const assigned = getTasksByIds(employee.taskIds || []);
-    setSelectedEmployee({ ...employee, assignedTasks: assigned });
-    setTasksOpen(true);
+    setEditModalOpen(true);
   };
 
   const handleDelete = (employeeId) => {
@@ -216,12 +207,12 @@ const ManagerUserManagementPage = () => {
     const query = searchQuery.toLowerCase();
     return employees.filter((employee) => {
       return (
-        employee.name?.toLowerCase().includes(query) ||
-        employee.email?.toLowerCase().includes(query) ||
         employee.username?.toLowerCase().includes(query) ||
+        employee.email?.toLowerCase().includes(query) ||
         employee.role?.toLowerCase().includes(query) ||
-        employee.branch?.toLowerCase().includes(query) ||
-        employee.phoneNumber?.toLowerCase().includes(query)
+        employee.branchName?.toLowerCase().includes(query) ||
+        employee.phoneNumber?.toLowerCase().includes(query) ||
+        employee.address?.toLowerCase().includes(query)
       );
     });
   }, [employees, searchQuery]);
@@ -229,6 +220,11 @@ const ManagerUserManagementPage = () => {
   const sortedEmployees = React.useMemo(() => {
     return [...filteredEmployees].sort(getComparator(order, orderBy));
   }, [filteredEmployees, order, orderBy, getComparator]);
+
+  // Calculate stats from actual data
+  const totalEmployees = employees.length;
+  const activeEmployees = employees.filter(emp => emp.isActive && !emp.isBlocked).length;
+  const inactiveEmployees = employees.filter(emp => !emp.isActive || emp.isBlocked).length;
 
   if (loading) {
     return <div>Loading...</div>;
@@ -294,7 +290,7 @@ const ManagerUserManagementPage = () => {
           >
             <StatCard
               title="Total Employees"
-              value={8}
+              value={totalEmployees}
               Icon={User}
               iconBg="#eaf3ff"
               iconColor="#0b75d9"
@@ -313,7 +309,7 @@ const ManagerUserManagementPage = () => {
           >
             <StatCard
               title="Active"
-              value={6}
+              value={activeEmployees}
               Icon={UserCheck}
               iconBg="#e9fbf0"
               iconColor="#10b981"
@@ -331,8 +327,8 @@ const ManagerUserManagementPage = () => {
             }}
           >
             <StatCard
-              title="On Leave"
-              value={2}
+              title="Inactive/Blocked"
+              value={inactiveEmployees}
               Icon={UserX}
               iconBg="#fff6ea"
               iconColor="#f59e0b"
@@ -380,20 +376,11 @@ const ManagerUserManagementPage = () => {
                   <TableRow>
                     <TableCell sx={{ fontWeight: 600 }}>
                       <TableSortLabel
-                        active={orderBy === "name"}
-                        direction={orderBy === "name" ? order : "asc"}
-                        onClick={() => handleRequestSort("name")}
-                      >
-                        Employee
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>
-                      <TableSortLabel
                         active={orderBy === "username"}
                         direction={orderBy === "username" ? order : "asc"}
                         onClick={() => handleRequestSort("username")}
                       >
-                        User Name
+                        Name
                       </TableSortLabel>
                     </TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>
@@ -407,9 +394,9 @@ const ManagerUserManagementPage = () => {
                     </TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>
                       <TableSortLabel
-                        active={orderBy === "branch"}
-                        direction={orderBy === "branch" ? order : "asc"}
-                        onClick={() => handleRequestSort("branch")}
+                        active={orderBy === "branchName"}
+                        direction={orderBy === "branchName" ? order : "asc"}
+                        onClick={() => handleRequestSort("branchName")}
                       >
                         Branch
                       </TableSortLabel>
@@ -432,7 +419,7 @@ const ManagerUserManagementPage = () => {
                 <TableBody>
                   {sortedEmployees.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                      <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                         <Typography color="text.secondary" variant="body1">
                           {searchQuery
                             ? `No employees found matching "${searchQuery}"`
@@ -457,29 +444,33 @@ const ManagerUserManagementPage = () => {
                           sx={{ display: "flex", alignItems: "center", gap: 2 }}
                         >
                           <Avatar
-                            name={employee.name}
+                            name={employee.username}
                             profileImageUrl={employee.profileImageUrl}
                           />
                           <Box>
-                            <Typography sx={{ fontWeight: 600 }}>
-                              {employee.name}
+                            <Typography sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
+                              {employee.username}
                             </Typography>
-                            <Typography color="text.secondary" variant="body2">
+                            <Typography 
+                              sx={{ 
+                                color: 'text.secondary',
+                                fontSize: '0.875rem',
+                                mt: 0.25,
+                              }}
+                            >
                               {employee.email}
                             </Typography>
                           </Box>
                         </Box>
                       </TableCell>
-                      <TableCell>{employee.username}</TableCell>
-                      <TableCell>{employee.role}</TableCell>
-                      <TableCell>{employee.branch || "No Branch"}</TableCell>
                       <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Box sx={{ color: "#f6c84c", fontSize: 18 }}></Box>
-                          <Typography>{employee.phoneNumber}</Typography>
-                        </Box>
+                        <Typography sx={{ textTransform: 'capitalize' }}>
+                          {employee.role}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{employee.branchName || "No Branch"}</TableCell>
+                      <TableCell>
+                        <Typography>{employee.phoneNumber || "N/A"}</Typography>
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -529,10 +520,10 @@ const ManagerUserManagementPage = () => {
                             <Delete />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Ban">
+                        <Tooltip title={employee.isBlocked ? "Unblock" : "Block"}>
                           <IconButton
                             onClick={() => handleBan(employee.id)}
-                            style={{ color: "#ff9800" }}
+                            style={{ color: employee.isBlocked ? "#4caf50" : "#ff9800" }}
                           >
                             <Block />
                           </IconButton>
@@ -549,28 +540,36 @@ const ManagerUserManagementPage = () => {
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           employee={selectedEmployee}
-          mode={modalMode}
+        />
+        <EditEmployeeModal
+          open={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setSelectedEmployee(null);
+          }}
+          employee={selectedEmployee}
           onSave={(updated) => {
-            // normalize and save
-            const normalized = {
-              ...updated,
-              name: updated.name || updated.fullName || selectedEmployee?.name,
+            // Update user via backend API
+            axios.put(`http://localhost:8080/api/users/${updated.id}`, {
+              username: updated.username,
               role: updated.role,
-              branch: updated.branch,
-              phone: updated.phone,
+              branchId: updated.branchId,
+              phoneNumber: updated.phoneNumber,
               address: updated.address,
-              hired_at:
-                updated.hiredAt ??
-                updated.hired_at ??
-                selectedEmployee?.hired_at,
-              status: updated.status || selectedEmployee?.status,
-            };
-            setEmployees((prev) =>
-              prev.map((e) =>
-                e.id === normalized.id ? { ...e, ...normalized } : e
-              )
-            );
-            setModalOpen(false);
+              isActive: updated.isActive,
+            })
+            .then((response) => {
+              // Update local state with response data
+              setEmployees((prev) =>
+                prev.map((e) => (e.id === response.data.id ? response.data : e))
+              );
+              console.log("User updated successfully");
+            })
+            .catch((error) => {
+              console.error("Failed to update user:", error);
+              setError("Failed to update user. Please try again.");
+            });
+            setEditModalOpen(false);
             setSelectedEmployee(null);
           }}
         />
