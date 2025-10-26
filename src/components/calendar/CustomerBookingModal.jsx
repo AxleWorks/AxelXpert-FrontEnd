@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { Modal, Button, TextField, FormControl, InputLabel, Select, MenuItem, Box, Typography, Grid, Chip, IconButton, Paper, Alert, Divider, Card, CardContent, FormControlLabel, Checkbox, Stack } from "@mui/material";
-import { Close, DirectionsCar, Build, PhotoCamera } from "@mui/icons-material";
+import React, { useEffect, useState, useRef } from "react";
+import { Modal, Button, TextField, FormControl, InputLabel, Select, MenuItem, Box, Typography, Grid, Chip, IconButton, Paper, Alert, Divider, Card, CardContent, FormControlLabel, Checkbox, Stack, Fade } from "@mui/material";
+import { Close, DirectionsCar, Build, PhotoCamera, KeyboardArrowDown } from "@mui/icons-material";
 
 const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, onSubmit, branchId, dayTimeSlots = [], services, vehicles }) => {
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const paperRef = useRef(null);
+
   const defaultVehicles = [
     { id: 1, type: "Car", year: 2018, make: "Toyota", model: "Corolla", plateNumber: "PLT-1001", chassisNumber: "CHASSIS1001" },
     { id: 2, type: "Car", year: 2020, make: "Honda", model: "Civic", plateNumber: "PLT-1002", chassisNumber: "CHASSIS1002" },
@@ -52,7 +55,19 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
   const [defaultTimeSlots] = useState(["09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM"]);
 
   // Form data with vehicle selection support
-  const [formData, setFormData] = useState({ vehicleId: "", vehicleType: "", serviceType: "", timeSlot: "", customerInfo: { name: "" }, branchId: branchId || "", manualBranchName: "" });
+  const [formData, setFormData] = useState({ 
+    vehicleId: "", 
+    vehicleType: "", 
+    serviceType: "", 
+    timeSlot: "", 
+    customerInfo: { 
+      name: "", 
+      phone: "" 
+    }, 
+    branchId: branchId || "", 
+    manualBranchName: "",
+    notes: ""
+  });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -78,6 +93,31 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     if (matched) setFormData((p) => ({ ...p, branchId: matched.id }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.manualBranchName]);
+
+  // Check if scroll indicator should be shown
+  useEffect(() => {
+    const checkScroll = () => {
+      if (paperRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = paperRef.current;
+        setShowScrollIndicator(scrollHeight > clientHeight && scrollTop < scrollHeight - clientHeight - 10);
+      }
+    };
+
+    checkScroll();
+    const timer = setTimeout(checkScroll, 100);
+
+    return () => clearTimeout(timer);
+  }, [open, formData]);
+
+  const handleScroll = () => {
+    if (paperRef.current) {
+      const { scrollTop } = paperRef.current;
+      // Hide indicator as soon as user starts scrolling
+      if (scrollTop > 0) {
+        setShowScrollIndicator(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (selectedTimeSlot?.time) setFormData((p) => ({ ...p, timeSlot: selectedTimeSlot.time }));
@@ -106,11 +146,16 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
+    
     const selectedVehicle = existingVehicles.find((v) => v.id === formData.vehicleId || v.id === Number(formData.vehicleId));
-    const vehicleText = selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.licensePlate})` : formData.vehicleType || "";
+    const vehicleText = selectedVehicle 
+      ? `${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.licensePlate})` 
+      : formData.vehicleType || "";
+    
     const selectedServiceDef = serviceTypes.find((s) => s.id === formData.serviceType);
+    
     // Determine branch id: prefer selected id, then try to infer from manualBranchName (case-insensitive)
     let chosenBranchId = formData.branchId || branchId || null;
     const manualName = formData.manualBranchName?.trim();
@@ -118,26 +163,62 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
       const matched = branches.find((b) => b.name?.toLowerCase() === manualName.toLowerCase());
       if (matched) chosenBranchId = matched.id;
     }
+    
     const chosenBranch = branches.find((b) => b.id === chosenBranchId) || branches.find((b) => b.id === Number(chosenBranchId)) || null;
     const chosenBranchName = manualName || chosenBranch?.name || "";
-    const bookingData = {
-      ...formData,
-      date: selectedDate,
-      branchId: chosenBranchId,
-      branchName: chosenBranchName,
-      status: "Pending",
-      createdAt: new Date().toISOString(),
-      customer: formData.customerInfo.name,
-      vehicle: vehicleText,
-      service: selectedServiceDef?.name || "",
-      time: formData.timeSlot,
-      branch: chosenBranchId,
+    
+    // Format date to YYYY-MM-DD in LOCAL timezone (not UTC)
+    let formattedDate;
+    if (selectedDate instanceof Date) {
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      formattedDate = `${year}-${month}-${day}`;
+    } else {
+      formattedDate = selectedDate;
+    }
+    
+    // Build payload matching backend CreateBookingRequest DTO
+    const bookingPayload = {
+      branch: chosenBranchId,                    // Long branchId
+      customer: formData.customerInfo.name,      // String (username or name)
+      service: formData.serviceType,             // Long serviceId or String serviceName
+      date: formattedDate,                       // String date (YYYY-MM-DD)
+      time: formData.timeSlot,                   // String time (e.g., "09:00 AM")
+      vehicle: vehicleText,                      // String vehicle description
+      status: "PENDING",                         // String status
+      notes: formData.notes || "",               // String notes
+      customerName: formData.customerInfo.name,  // String customerName
+      customerPhone: formData.customerInfo.phone || "", // String customerPhone
+      totalPrice: selectedServiceDef?.price || null     // BigDecimal totalPrice
     };
-    onSubmit(bookingData);
+    
+    try {
+      // Call the onSubmit callback with formatted data
+      await onSubmit(bookingPayload);
+      
+      // Close modal on success
+      handleClose();
+    } catch (error) {
+      console.error("Error submitting booking:", error);
+      setErrors({ submit: "Failed to create booking. Please try again." });
+    }
   };
 
   const handleClose = () => {
-    setFormData({ vehicleId: "", vehicleType: "", serviceType: "", timeSlot: "", customerInfo: { name: "" }, branchId: branchId || "", manualBranchName: "" });
+    setFormData({ 
+      vehicleId: "", 
+      vehicleType: "", 
+      serviceType: "", 
+      timeSlot: "", 
+      customerInfo: { 
+        name: "", 
+        phone: "" 
+      }, 
+      branchId: branchId || "", 
+      manualBranchName: "",
+      notes: ""
+    });
     setErrors({});
     onClose();
   };
@@ -156,12 +237,18 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     p: 4, 
     borderRadius: 3, 
     boxShadow: 24,
-    bgcolor: 'background.paper'
+    bgcolor: 'background.paper',
+    // Hide scrollbar
+    '&::-webkit-scrollbar': {
+      display: 'none'
+    },
+    msOverflowStyle: 'none',  // IE and Edge
+    scrollbarWidth: 'none',  // Firefox
   };
 
   return (
     <Modal open={open} onClose={handleClose} closeAfterTransition BackdropProps={{ sx: { backdropFilter: "blur(6px)", backgroundColor: "rgba(0,0,0,0.36)" } }}>
-      <Paper sx={paperStyle}>
+      <Paper ref={paperRef} onScroll={handleScroll} sx={paperStyle}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
           <Box>
             <Typography variant="h6">Book Appointment</Typography>
@@ -170,6 +257,12 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
           <IconButton onClick={handleClose} color="inherit"><Close /></IconButton>
         </Stack>
         <Divider sx={{ mb: 2 }} />
+
+        {errors.submit && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errors.submit}
+          </Alert>
+        )}
 
         <Box sx={{ mt: 2 }}>
           {/* Customer Information Section */}
@@ -185,6 +278,22 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
                 onChange={(e) => handleNestedInputChange("customerInfo", "name", e.target.value)}
                 error={!!errors.customerName}
                 helperText={errors.customerName}
+                InputProps={{
+                  sx: { fontSize: '16px' }
+                }}
+                InputLabelProps={{
+                  sx: { fontSize: '16px' }
+                }}
+              />
+
+              <TextField
+                fullWidth
+                label="Phone Number"
+                value={formData.customerInfo.phone}
+                onChange={(e) => handleNestedInputChange("customerInfo", "phone", e.target.value)}
+                error={!!errors.customerPhone}
+                helperText={errors.customerPhone}
+                placeholder="e.g., +1 234 567 8900"
                 InputProps={{
                   sx: { fontSize: '16px' }
                 }}
@@ -370,6 +479,22 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
                 )}
               </FormControl>
 
+              <TextField
+                fullWidth
+                label="Additional Notes"
+                value={formData.notes}
+                onChange={(e) => handleInputChange("notes", e.target.value)}
+                multiline
+                rows={3}
+                placeholder="Any special requests or additional information..."
+                InputProps={{
+                  sx: { fontSize: '16px' }
+                }}
+                InputLabelProps={{
+                  sx: { fontSize: '16px' }
+                }}
+              />
+
               {selectedService && (
                 <Card sx={{ bgcolor: "primary.light", borderLeft: 4, borderColor: "primary.main" }}>
                   <CardContent>
@@ -431,6 +556,39 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
             Book Appointment
           </Button>
         </Stack>
+
+        {/* Scroll Indicator */}
+        <Fade in={showScrollIndicator}>
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 20,
+              right: 20,
+              backgroundColor: 'primary.main',
+              borderRadius: '50%',
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 3,
+              animation: 'bounce 2s infinite',
+              '@keyframes bounce': {
+                '0%, 20%, 50%, 80%, 100%': {
+                  transform: 'translateY(0)',
+                },
+                '40%': {
+                  transform: 'translateY(-10px)',
+                },
+                '60%': {
+                  transform: 'translateY(-5px)',
+                },
+              },
+            }}
+          >
+            <KeyboardArrowDown sx={{ color: 'white' }} />
+          </Box>
+        </Fade>
       </Paper>
     </Modal>
   );

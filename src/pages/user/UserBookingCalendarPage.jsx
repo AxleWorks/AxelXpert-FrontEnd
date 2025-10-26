@@ -1,10 +1,12 @@
-import React, { useMemo, useState } from "react";
-import { Typography, Paper, Box, Container, useTheme } from "@mui/material";
+import React, { useMemo, useState, useEffect } from "react";
+import { Typography, Paper, Box, Container, useTheme, CircularProgress, Alert } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
 import CalendarHeader from "../../components/calendar/Booking_Manage/CalendarHeader";
 import CalendarGrid from "../../components/calendar/Booking_Manage/CalendarGrid";
 import CustomerBookingModal from "../../components/calendar/CustomerBookingModal";
+import AppointmentDetailModal from "../../components/calendar/AppointmentDetailModal";
 import { useAuth } from "../../contexts/AuthContext";
+import { createBooking, getCustomerBookings, deleteBooking } from "../../services/bookingService";
 
 const UserBookingCalendarPage = () => {
   const theme = useTheme();
@@ -14,8 +16,12 @@ const UserBookingCalendarPage = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Default 4 slots for every day
   const DEFAULT_DAY_TIMES = ["09:00 AM", "11:00 AM", "01:00 PM", "03:00 PM"];
@@ -54,6 +60,62 @@ const UserBookingCalendarPage = () => {
     if (user?.id) return VEHICLES.filter(v => v.userId === user.id);
     return VEHICLES;
   }, [user]);
+
+  // Fetch customer's bookings on component mount
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const customerBookings = await getCustomerBookings(user.id);
+        
+        // Transform backend BookingDTO to frontend format
+        const transformedBookings = customerBookings.map(booking => ({
+          id: booking.id,
+          date: booking.startAt, // Backend returns startAt as ISO string
+          time: extractTime(booking.startAt), // Extract time from startAt
+          service: booking.serviceName,
+          status: booking.status,
+          customer: booking.customerName,
+          vehicle: booking.vehicle,
+          branch: booking.branchId,
+          branchName: booking.branchName,
+          customerPhone: booking.customerPhone,
+          notes: booking.notes,
+          totalPrice: booking.totalPrice
+        }));
+        
+        setBookings(transformedBookings);
+      } catch (err) {
+        console.error("Error fetching bookings:", err);
+        setError("Failed to load your bookings. Please refresh the page.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [user?.id]);
+
+  // Helper function to extract time from ISO datetime string
+  const extractTime = (isoString) => {
+    if (!isoString) return "";
+    try {
+      const date = new Date(isoString);
+      return date.toLocaleTimeString("en-US", { 
+        hour: "2-digit", 
+        minute: "2-digit", 
+        hour12: true 
+      });
+    } catch (e) {
+      return "";
+    }
+  };
 
   const filteredAppointments = useMemo(() => {
     // Filter ONLY this user's bookings (already isolated in `bookings` state)
@@ -140,16 +202,34 @@ const UserBookingCalendarPage = () => {
   const getAvailableTimesForDate = (date) => {
     if (!date) return [];
     const day = new Date(date);
-    // Disable past days
-    if (day.setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0)) return [];
+    const today = new Date();
+    
+    // Disable past days (compare using local date only, not time)
+    const dayLocal = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (dayLocal < todayLocal) return [];
 
-    // Start with defaults
+    // Start with defaults (4 slots per day)
     const base = new Set(DEFAULT_DAY_TIMES);
 
-    // Remove any times already booked by the current user that day
-    bookings
-      .filter((b) => new Date(b.date).toDateString() === day.toDateString())
-      .forEach((b) => base.delete(b.time));
+    // Count bookings for this specific date (using local date components)
+    const bookingsOnThisDay = bookings.filter((b) => {
+      const bookingDate = new Date(b.date);
+      // Compare date components in local timezone
+      return (
+        bookingDate.getDate() === day.getDate() &&
+        bookingDate.getMonth() === day.getMonth() &&
+        bookingDate.getFullYear() === day.getFullYear()
+      );
+    });
+
+    // Remove booked times from available slots
+    bookingsOnThisDay.forEach((b) => {
+      // Try to match and remove the booked time slot
+      if (b.time && base.has(b.time)) {
+        base.delete(b.time);
+      }
+    });
 
     return Array.from(base);
   };
@@ -161,113 +241,148 @@ const UserBookingCalendarPage = () => {
     const monthDays = getDaysInMonth(currentDate);
     monthDays.forEach((d) => {
       const key = dateKey(d.date);
-      map[key] = getAvailableTimesForDate(d.date).length;
+      const availableSlots = getAvailableTimesForDate(d.date);
+      map[key] = availableSlots.length; // This will be 4 minus number of bookings
     });
     return map;
   }, [currentDate, bookings]);
 
   const handleDayClick = (date) => {
-    // Only allow today and future
+    // Only allow today and future (compare local dates without time)
     const today = new Date();
     const d = new Date(date);
-    if (d.setHours(0, 0, 0, 0) < new Date(today.setHours(0, 0, 0, 0))) return;
+    
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const selectedLocal = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    
+    if (selectedLocal < todayLocal) return;
+    
     setSelectedDate(date);
     setSelectedTimeSlot(null);
     setIsBookingModalOpen(true);
   };
 
   const handleBookingSubmit = async (bookingData) => {
-    // Build payload expected by backend
-    const payload = {
-      date: bookingData.date?.toISOString?.() || new Date(bookingData.date).toISOString(),
-      time: bookingData.time || bookingData.timeSlot,
-      service: bookingData.service,
-      status: bookingData.status || "Pending",
-      customer: bookingData.customer,
-      vehicle: bookingData.vehicle,
-      // prefer explicit branch, then id, then branchName (manual entry)
-      branch: bookingData.branch || bookingData.branchId || bookingData.branchName,
-    };
-
     try {
-      const res = await fetch("http://localhost:8080/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      // The bookingData from CustomerBookingModal is already formatted correctly
+      const created = await createBooking(bookingData);
 
-      if (!res.ok) {
-        let err = null;
-        try {
-          err = await res.json();
-        } catch (e) {
-          /* ignore */
-        }
-        console.error("Create booking failed", res.status, err);
-        window.alert("Failed to create booking: " + (err?.message || res.statusText));
-        return;
-      }
-
-      const created = await res.json();
-
-      // Normalize returned booking for local state
+      // Transform backend response to frontend format
       const newBooking = {
-        id: created.id || Date.now(),
-        date: created.date?.toISOString?.() || created.date || payload.date,
-        time: created.time || payload.time,
-        service: created.service || payload.service,
-        status: created.status || payload.status,
-        customer: created.customer || payload.customer,
-        vehicle: created.vehicle || payload.vehicle,
-        branch: created.branch || payload.branch,
+        id: created.id,
+        date: created.startAt,
+        time: extractTime(created.startAt),
+        service: created.serviceName,
+        status: created.status,
+        customer: created.customerName,
+        vehicle: created.vehicle,
+        branch: created.branchId,
+        branchName: created.branchName,
+        customerPhone: created.customerPhone,
+        notes: created.notes,
+        totalPrice: created.totalPrice
       };
 
       setBookings((prev) => [...prev, newBooking]);
+      
       // Close modal and reset selection
       setIsBookingModalOpen(false);
       setSelectedDate(null);
       setSelectedTimeSlot(null);
+      
+      // Success notification
+      window.alert("Booking created successfully!");
     } catch (err) {
       console.error("Error creating booking", err);
-      window.alert("Error creating booking. See console for details.");
+      window.alert("Error creating booking: " + (err.message || "Please try again."));
+      throw err; // Re-throw so modal can handle it
+    }
+  };
+
+  const handleAppointmentClick = (appointment) => {
+    setSelectedAppointment(appointment);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedAppointment(null);
+  };
+
+  const handleDeleteAppointment = async (appointmentId) => {
+    try {
+      console.log("handleDeleteAppointment called with ID:", appointmentId);
+      await deleteBooking(appointmentId);
+      
+      // Remove the deleted appointment from the bookings state
+      setBookings((prev) => prev.filter((booking) => booking.id !== appointmentId));
+      
+      // Show success message
+      window.alert("Appointment deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting appointment:", error);
+      // Re-throw with more context
+      throw new Error(error.message || "Unable to delete appointment. Please check your connection and try again.");
     }
   };
 
   return (
     <UserLayout>
       <Container maxWidth="xl" sx={{ py: 3, minHeight: "100vh" }}>
-        {/* Reuse manager header for identical look */}
-        <CalendarHeader
-          currentDate={currentDate}
-          onPrev={previousMonth}
-          onNext={nextMonth}
-          onToday={goToToday}
-          selectedBranch={selectedBranch}
-          setSelectedBranch={setSelectedBranch}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          counts={{
-            pending: bookings.filter((a) => a.status === "Pending").length,
-            approved: bookings.filter((a) => a.status === "Approved").length,
-            completed: bookings.filter((a) => a.status === "Completed").length,
-          }}
-          branches={branches}
-        />
-
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Box sx={{ mb: 1 }}>
-            <CalendarGrid
-              days={days}
-              onAppointmentClick={() => {}}
-              themeMode={theme.palette.mode}
-              onDayClick={handleDayClick}
-              availableSlotsByDate={slotMap}
-            />
+        {/* Show loading state */}
+        {loading && (
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 8 }}>
+            <CircularProgress />
+            <Typography variant="body1" sx={{ ml: 2 }}>
+              Loading your bookings...
+            </Typography>
           </Box>
-        </Paper>
+        )}
 
+        {/* Show error state */}
+        {error && !loading && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Show calendar content */}
+        {!loading && (
+          <>
+            {/* Reuse manager header for identical look */}
+            <CalendarHeader
+              currentDate={currentDate}
+              onPrev={previousMonth}
+              onNext={nextMonth}
+              onToday={goToToday}
+              selectedBranch={selectedBranch}
+              setSelectedBranch={setSelectedBranch}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+             
+              counts={{
+                pending: bookings.filter((a) => a.status === "Pending").length,
+                approved: bookings.filter((a) => a.status === "Approved").length,
+                completed: bookings.filter((a) => a.status === "Completed").length,
+              }}
+              branches={branches}
+            />
+
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Box sx={{ mb: 1 }}>
+                <CalendarGrid
+                  days={days}
+                  onAppointmentClick={handleAppointmentClick}
+                  themeMode={theme.palette.mode}
+                  onDayClick={handleDayClick}
+                  availableSlotsByDate={slotMap}
+                />
+              </Box>
+            </Paper>
+          </>
+        )}
+
+        {/* Booking Modal */}
         <CustomerBookingModal
           open={isBookingModalOpen}
           onClose={() => {
@@ -283,6 +398,14 @@ const UserBookingCalendarPage = () => {
           dayTimeSlots={selectedDate ? getAvailableTimesForDate(selectedDate) : []}
           services={SERVICES}
           vehicles={availableVehicles}
+        />
+
+        {/* Appointment Detail Modal */}
+        <AppointmentDetailModal
+          open={isDetailModalOpen}
+          onClose={handleCloseDetailModal}
+          appointment={selectedAppointment}
+          onDelete={handleDeleteAppointment}
         />
       </Container>
     </UserLayout>
