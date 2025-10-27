@@ -16,6 +16,13 @@ import {
   TableSortLabel,
   TextField,
   InputAdornment,
+  Snackbar,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -129,6 +136,13 @@ const ManagerUserManagementPage = () => {
   const [orderBy, setOrderBy] = React.useState("name");
   const [order, setOrder] = React.useState("asc");
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [successMessage, setSuccessMessage] = React.useState("");
+  const [successTitle, setSuccessTitle] = React.useState("");
+  const [showSuccess, setShowSuccess] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState("");
+  const [showError, setShowError] = React.useState(false);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -162,8 +176,56 @@ const ManagerUserManagementPage = () => {
     setEditModalOpen(true);
   };
 
-  const handleDelete = (employeeId) => {
-    console.log("Delete employee with ID:", employeeId);
+  const openDeleteDialog = (employee) => {
+    setEmployeeToDelete(employee);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (employeeToDelete) {
+      try {
+        await axios.delete(`http://localhost:8080/api/users/${employeeToDelete.id}`);
+        
+        // Success - HTTP 204 No Content
+        setEmployees((prev) => prev.filter((e) => e.id !== employeeToDelete.id));
+        setSuccessTitle("Employee deleted!");
+        setSuccessMessage(`${employeeToDelete.username} has been deleted successfully.`);
+        setShowSuccess(true);
+        console.log("Employee deleted successfully");
+        
+        setDeleteDialogOpen(false);
+        setEmployeeToDelete(null);
+      } catch (error) {
+        console.error("Failed to delete employee:", error);
+        
+        setDeleteDialogOpen(false);
+        setEmployeeToDelete(null);
+        
+        // Handle different error scenarios
+        if (error.response) {
+          if (error.response.status === 409) {
+            // Conflict - User has active bookings or tasks
+            setErrorMessage(error.response.data || "Cannot delete user: User has active bookings or tasks");
+          } else if (error.response.status === 404) {
+            // Not found
+            setErrorMessage("User not found. They may have been already deleted.");
+          } else {
+            // Other errors
+            setErrorMessage("Failed to delete employee. Please try again.");
+          }
+        } else {
+          // Network or other errors
+          setErrorMessage("Network error. Please check your connection and try again.");
+        }
+        
+        setShowError(true);
+      }
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setEmployeeToDelete(null);
   };
 
   const handleBan = (employeeId) => {
@@ -514,7 +576,7 @@ const ManagerUserManagementPage = () => {
                         </Tooltip>
                         <Tooltip title="Delete">
                           <IconButton
-                            onClick={() => handleDelete(employee.id)}
+                            onClick={() => openDeleteDialog(employee)}
                             style={{ color: "#f44336" }}
                           >
                             <Delete />
@@ -563,6 +625,9 @@ const ManagerUserManagementPage = () => {
               setEmployees((prev) =>
                 prev.map((e) => (e.id === response.data.id ? response.data : e))
               );
+              setSuccessTitle("Profile updated!");
+              setSuccessMessage("Your profile has been updated successfully.");
+              setShowSuccess(true);
               console.log("User updated successfully");
             })
             .catch((error) => {
@@ -579,9 +644,247 @@ const ManagerUserManagementPage = () => {
           onCreate={(newEmployee) => {
             const id = Math.max(0, ...employees.map((e) => e.id)) + 1;
             setEmployees((prev) => [...prev, { id, ...newEmployee }]);
+            setSuccessTitle("Employee added!");
+            setSuccessMessage("New employee has been added successfully.");
+            setShowSuccess(true);
             setAddOpen(false);
           }}
         />
+        <Snackbar
+          open={showSuccess}
+          autoHideDuration={4000}
+          onClose={() => setShowSuccess(false)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          sx={{ mt: 2 }}
+        >
+          <Alert 
+            onClose={() => setShowSuccess(false)} 
+            severity="success" 
+            variant="filled"
+            icon={
+              <Box
+                sx={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: '50%',
+                  backgroundColor: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#10b981',
+                }}
+              >
+                ✓
+              </Box>
+            }
+            sx={{ 
+              width: '400px',
+              backgroundColor: '#d1fae5',
+              color: '#065f46',
+              borderRadius: 2,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              fontSize: '0.95rem',
+              '& .MuiAlert-message': {
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.5,
+              },
+              '& .MuiAlert-icon': {
+                marginRight: 1.5,
+              },
+              '& .MuiIconButton-root': {
+                color: '#065f46',
+                '&:hover': {
+                  backgroundColor: 'rgba(6, 95, 70, 0.1)',
+                },
+              },
+            }}
+          >
+            <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: '#065f46' }}>
+              {successTitle}
+            </Typography>
+            <Typography sx={{ fontSize: '0.875rem', color: '#047857' }}>
+              {successMessage}
+            </Typography>
+          </Alert>
+        </Snackbar>
+        
+        {/* Error Notification */}
+        <Snackbar
+          open={showError}
+          autoHideDuration={5000}
+          onClose={() => setShowError(false)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          sx={{ mt: 2 }}
+        >
+          <Alert 
+            onClose={() => setShowError(false)} 
+            severity="error" 
+            variant="filled"
+            icon={
+              <Box
+                sx={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: '50%',
+                  backgroundColor: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ef4444',
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                }}
+              >
+                ✕
+              </Box>
+            }
+            sx={{ 
+              width: '400px',
+              backgroundColor: '#fee2e2',
+              color: '#7f1d1d',
+              borderRadius: 2,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              fontSize: '0.95rem',
+              '& .MuiAlert-message': {
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.5,
+              },
+              '& .MuiAlert-icon': {
+                marginRight: 1.5,
+              },
+              '& .MuiIconButton-root': {
+                color: '#7f1d1d',
+                '&:hover': {
+                  backgroundColor: 'rgba(127, 29, 29, 0.1)',
+                },
+              },
+            }}
+          >
+            <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: '#7f1d1d' }}>
+              Delete Failed
+            </Typography>
+            <Typography sx={{ fontSize: '0.875rem', color: '#991b1b' }}>
+              {errorMessage}
+            </Typography>
+          </Alert>
+        </Snackbar>
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={cancelDelete}
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              p: 3,
+              minWidth: 400,
+            }
+          }}
+        >
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 2,
+          }}>
+            {/* Delete Warning Icon */}
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                backgroundColor: '#ffebee',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '3px solid #ffcdd2',
+              }}
+            >
+              <Delete 
+                sx={{ 
+                  fontSize: '2rem', 
+                  color: '#f44336',
+                }}
+              />
+            </Box>
+
+            {/* Title */}
+            <DialogTitle sx={{ 
+              fontSize: '1.5rem', 
+              fontWeight: 600,
+              p: 0,
+              color: '#1a1a1a',
+            }}>
+              Confirm Delete
+            </DialogTitle>
+
+            {/* Message */}
+            <DialogContent sx={{ p: 0 }}>
+              <DialogContentText sx={{ 
+                color: '#666666', 
+                fontSize: '1rem',
+                lineHeight: 1.5,
+              }}>
+                Are you sure you want to delete <strong>{employeeToDelete?.username}</strong>?
+              </DialogContentText>
+              <DialogContentText sx={{ 
+                color: '#999999', 
+                fontSize: '0.875rem',
+                lineHeight: 1.5,
+                mt: 1.5,
+                fontStyle: 'italic',
+              }}>
+                Note: Users with active appointments or tasks cannot be deleted.
+              </DialogContentText>
+            </DialogContent>
+
+            {/* Buttons */}
+            <DialogActions sx={{ p: 0, gap: 2, width: '100%', justifyContent: 'center' }}>
+              <Button
+                onClick={cancelDelete}
+                sx={{
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.2,
+                  textTransform: 'uppercase',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#0b75d9',
+                  border: '1px solid #0b75d9',
+                  backgroundColor: 'transparent',
+                  minWidth: 120,
+                  '&:hover': {
+                    backgroundColor: 'rgba(11, 117, 217, 0.04)',
+                  },
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                sx={{
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.2,
+                  textTransform: 'uppercase',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  backgroundColor: '#0b75d9',
+                  color: 'white',
+                  minWidth: 120,
+                  '&:hover': {
+                    backgroundColor: '#0960b8',
+                  },
+                }}
+              >
+                Confirm
+              </Button>
+            </DialogActions>
+          </Box>
+        </Dialog>
       </Box>
     </ManagerLayout>
   );
