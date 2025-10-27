@@ -142,7 +142,10 @@ const ManagerUserManagementPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [employeeToDelete, setEmployeeToDelete] = React.useState(null);
   const [errorMessage, setErrorMessage] = React.useState("");
+  const [errorTitle, setErrorTitle] = React.useState("Operation Failed");
   const [showError, setShowError] = React.useState(false);
+  const [blockDialogOpen, setBlockDialogOpen] = React.useState(false);
+  const [employeeToBlock, setEmployeeToBlock] = React.useState(null);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -205,16 +208,20 @@ const ManagerUserManagementPage = () => {
         if (error.response) {
           if (error.response.status === 409) {
             // Conflict - User has active bookings or tasks
+            setErrorTitle("Delete Failed");
             setErrorMessage(error.response.data || "Cannot delete user: User has active bookings or tasks");
           } else if (error.response.status === 404) {
             // Not found
+            setErrorTitle("Delete Failed");
             setErrorMessage("User not found. They may have been already deleted.");
           } else {
             // Other errors
+            setErrorTitle("Delete Failed");
             setErrorMessage("Failed to delete employee. Please try again.");
           }
         } else {
           // Network or other errors
+          setErrorTitle("Delete Failed");
           setErrorMessage("Network error. Please check your connection and try again.");
         }
         
@@ -228,8 +235,80 @@ const ManagerUserManagementPage = () => {
     setEmployeeToDelete(null);
   };
 
-  const handleBan = (employeeId) => {
-    console.log("Ban employee with ID:", employeeId);
+  const openBlockDialog = (employee) => {
+    setEmployeeToBlock(employee);
+    setBlockDialogOpen(true);
+  };
+
+  const confirmBlock = async () => {
+    if (employeeToBlock) {
+      const isCurrentlyBlocked = employeeToBlock.isBlocked;
+      const newBlockedStatus = !isCurrentlyBlocked;
+      
+      try {
+        const response = await axios.put(
+          `http://localhost:8080/api/users/${employeeToBlock.id}/block`,
+          { blocked: newBlockedStatus }
+        );
+        
+        // Success - update local state with response data
+        setEmployees((prev) =>
+          prev.map((e) => (e.id === response.data.id ? response.data : e))
+        );
+        
+        setSuccessTitle(newBlockedStatus ? "User blocked!" : "User unblocked!");
+        setSuccessMessage(
+          newBlockedStatus
+            ? `${employeeToBlock.username} has been blocked successfully.`
+            : `${employeeToBlock.username} has been unblocked successfully.`
+        );
+        setShowSuccess(true);
+        console.log(`User ${newBlockedStatus ? 'blocked' : 'unblocked'} successfully`);
+        
+        setBlockDialogOpen(false);
+        setEmployeeToBlock(null);
+      } catch (error) {
+        console.error("Failed to update block status:", error);
+        
+        setBlockDialogOpen(false);
+        setEmployeeToBlock(null);
+        
+        // Handle different error scenarios
+        if (error.response) {
+          if (error.response.status === 409) {
+            // Conflict - User has active bookings or tasks
+            setErrorTitle(newBlockedStatus ? "Block Failed" : "Unblock Failed");
+            setErrorMessage(
+              error.response.data || 
+              "Cannot block user: User has active bookings or tasks"
+            );
+          } else if (error.response.status === 404) {
+            // Not found
+            setErrorTitle(newBlockedStatus ? "Block Failed" : "Unblock Failed");
+            setErrorMessage("User not found.");
+          } else if (error.response.status === 400) {
+            // Bad request
+            setErrorTitle(newBlockedStatus ? "Block Failed" : "Unblock Failed");
+            setErrorMessage("Invalid request. Please try again.");
+          } else {
+            // Other errors
+            setErrorTitle(newBlockedStatus ? "Block Failed" : "Unblock Failed");
+            setErrorMessage("Failed to update user status. Please try again.");
+          }
+        } else {
+          // Network or other errors
+          setErrorTitle(newBlockedStatus ? "Block Failed" : "Unblock Failed");
+          setErrorMessage("Network error. Please check your connection and try again.");
+        }
+        
+        setShowError(true);
+      }
+    }
+  };
+
+  const cancelBlock = () => {
+    setBlockDialogOpen(false);
+    setEmployeeToBlock(null);
   };
 
   const handleRequestSort = (property) => {
@@ -584,8 +663,10 @@ const ManagerUserManagementPage = () => {
                         </Tooltip>
                         <Tooltip title={employee.isBlocked ? "Unblock" : "Block"}>
                           <IconButton
-                            onClick={() => handleBan(employee.id)}
-                            style={{ color: employee.isBlocked ? "#4caf50" : "#ff9800" }}
+                            onClick={() => openBlockDialog(employee)}
+                            style={{ 
+                              color: employee.isBlocked ? "#10b981" : "#ff9800" 
+                            }}
                           >
                             <Block />
                           </IconButton>
@@ -763,7 +844,7 @@ const ManagerUserManagementPage = () => {
             }}
           >
             <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: '#7f1d1d' }}>
-              Delete Failed
+              {errorTitle}
             </Typography>
             <Typography sx={{ fontSize: '0.875rem', color: '#991b1b' }}>
               {errorMessage}
@@ -865,6 +946,142 @@ const ManagerUserManagementPage = () => {
               </Button>
               <Button
                 onClick={confirmDelete}
+                sx={{
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.2,
+                  textTransform: 'uppercase',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  backgroundColor: '#0b75d9',
+                  color: 'white',
+                  minWidth: 120,
+                  '&:hover': {
+                    backgroundColor: '#0960b8',
+                  },
+                }}
+              >
+                Confirm
+              </Button>
+            </DialogActions>
+          </Box>
+        </Dialog>
+
+        {/* Block/Unblock Confirmation Dialog */}
+        <Dialog
+          open={blockDialogOpen}
+          onClose={cancelBlock}
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              p: 3,
+              minWidth: 400,
+            }
+          }}
+        >
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 2,
+          }}>
+            {/* Block/Unblock Warning Icon */}
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                backgroundColor: employeeToBlock?.isBlocked ? '#e9fbf0' : '#fff6ea',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: employeeToBlock?.isBlocked 
+                  ? '3px solid #a7f3d0' 
+                  : '3px solid #fde68a',
+              }}
+            >
+              {employeeToBlock?.isBlocked ? (
+                <UserCheck 
+                  size={32}
+                  color="#10b981"
+                />
+              ) : (
+                <Block 
+                  sx={{ 
+                    fontSize: '2rem', 
+                    color: '#f59e0b',
+                  }}
+                />
+              )}
+            </Box>
+
+            {/* Title */}
+            <DialogTitle sx={{ 
+              fontSize: '1.5rem', 
+              fontWeight: 600,
+              p: 0,
+              color: '#1a1a1a',
+            }}>
+              {employeeToBlock?.isBlocked ? 'Confirm Unblock' : 'Confirm Block'}
+            </DialogTitle>
+
+            {/* Message */}
+            <DialogContent sx={{ p: 0 }}>
+              <DialogContentText sx={{ 
+                color: '#666666', 
+                fontSize: '1rem',
+                lineHeight: 1.5,
+              }}>
+                {employeeToBlock?.isBlocked ? (
+                  <>
+                    Are you sure you want to unblock <strong>{employeeToBlock?.username}</strong>?
+                  </>
+                ) : (
+                  <>
+                    Are you sure you want to block <strong>{employeeToBlock?.username}</strong>?
+                  </>
+                )}
+              </DialogContentText>
+              <DialogContentText sx={{ 
+                color: '#999999', 
+                fontSize: '0.875rem',
+                lineHeight: 1.5,
+                mt: 1.5,
+                fontStyle: 'italic',
+              }}>
+                {employeeToBlock?.isBlocked ? (
+                  "This will restore the user's access to the system."
+                ) : (
+                  "Note: Users with active appointments or tasks cannot be blocked."
+                )}
+              </DialogContentText>
+            </DialogContent>
+
+            {/* Buttons */}
+            <DialogActions sx={{ p: 0, gap: 2, width: '100%', justifyContent: 'center' }}>
+              <Button
+                onClick={cancelBlock}
+                sx={{
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.2,
+                  textTransform: 'uppercase',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#0b75d9',
+                  border: '1px solid #0b75d9',
+                  backgroundColor: 'transparent',
+                  minWidth: 120,
+                  '&:hover': {
+                    backgroundColor: 'rgba(11, 117, 217, 0.04)',
+                  },
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmBlock}
                 sx={{
                   borderRadius: 2,
                   px: 4,
