@@ -116,6 +116,10 @@ const ManagerReportsPage = () => {
         vehicles: vehicles.length,
       });
 
+      console.log("Sample booking:", bookings[0]);
+      console.log("Sample branch:", branches[0]);
+      console.log("Sample service:", services[0]);
+
       setBranches(branches);
       setServices(services);
 
@@ -128,6 +132,8 @@ const ManagerReportsPage = () => {
         vehicles
       );
       setReportData(processedData);
+
+      console.log("Final processed data:", processedData);
     } catch (err) {
       console.error("Error fetching report data:", err);
       setError(`Error fetching data: ${err.message}`);
@@ -150,14 +156,19 @@ const ManagerReportsPage = () => {
     const filteredBookings = safeBookings.filter((booking) => {
       if (!booking) return false;
 
-      // Parse booking date
+      // Parse booking date - be more flexible with date parsing
       const bookingDate = new Date(
-        booking.startAt || booking.createdAt || booking.updatedAt
+        booking.startAt || booking.createdAt || booking.updatedAt || new Date()
       );
+
+      // Make sure we have valid dates
       const startDate = new Date(filters.startDate);
       const endDate = new Date(filters.endDate);
 
-      const dateInRange = bookingDate >= startDate && bookingDate <= endDate;
+      // If booking date is invalid, include it
+      const dateInRange =
+        isNaN(bookingDate.getTime()) ||
+        (bookingDate >= startDate && bookingDate <= endDate);
 
       // Branch filtering
       const branchMatch =
@@ -175,12 +186,28 @@ const ManagerReportsPage = () => {
           ?.toLowerCase()
           .includes(filters.serviceType.toLowerCase());
 
-      return dateInRange && branchMatch && serviceMatch;
+      const result = dateInRange && branchMatch && serviceMatch;
+      if (!result) {
+        console.log("Filtered out booking:", {
+          booking: booking.id,
+          dateInRange,
+          branchMatch,
+          serviceMatch,
+          bookingDate: bookingDate.toISOString(),
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        });
+      }
+      return result;
     });
 
     console.log(
       `Filtered ${filteredBookings.length} bookings from ${safeBookings.length} total`
     );
+
+    // If no bookings match filters, use all bookings for chart display
+    const bookingsForCharts =
+      filteredBookings.length > 0 ? filteredBookings : safeBookings;
 
     // Calculate KPIs from real data
     const totalAppointments = filteredBookings.length;
@@ -217,12 +244,12 @@ const ManagerReportsPage = () => {
         : 0;
 
     // Generate appointment trends from actual booking dates
-    const appointmentTrends = generateMonthlyTrendsFromData(filteredBookings);
+    const appointmentTrends = generateMonthlyTrendsFromData(bookingsForCharts);
 
     // Revenue by branch using actual data
     const revenueByBranch = safeBranches
       .map((branch) => {
-        const branchBookings = filteredBookings.filter(
+        const branchBookings = bookingsForCharts.filter(
           (booking) => booking.branchId === branch.id
         );
 
@@ -235,12 +262,12 @@ const ManagerReportsPage = () => {
           revenue: Math.round(revenue),
         };
       })
-      .filter((item) => item.revenue > 0);
+      .filter((item) => item.revenue >= 0); // Changed from > 0 to >= 0 to show branches with 0 revenue
 
     // Service category breakdown using actual service data
     const serviceCategoryData = safeServices
       .map((service) => {
-        const serviceBookings = filteredBookings.filter(
+        const serviceBookings = bookingsForCharts.filter(
           (booking) => booking.serviceId === service.id
         );
 
@@ -249,7 +276,7 @@ const ManagerReportsPage = () => {
           value: serviceBookings.length,
         };
       })
-      .filter((item) => item.value > 0);
+      .filter((item) => item.value >= 0); // Changed from > 0 to >= 0 to show all services
 
     // Calculate performance metrics from real data
     const avgRevenuePerJob =
@@ -314,6 +341,35 @@ const ManagerReportsPage = () => {
       bookingConversion,
     });
 
+    console.log("Chart data:", {
+      appointmentTrends: appointmentTrends.length,
+      revenueByBranch: revenueByBranch.length,
+      serviceCategoryData: serviceCategoryData.length,
+    });
+
+    // Ensure we always have some data for charts, even if empty
+    const finalAppointmentTrends =
+      appointmentTrends.length > 0
+        ? appointmentTrends
+        : [
+            { month: "Jan", appointments: 0 },
+            { month: "Feb", appointments: 0 },
+            { month: "Mar", appointments: 0 },
+            { month: "Apr", appointments: 0 },
+            { month: "May", appointments: 0 },
+            { month: "Jun", appointments: 0 },
+          ];
+
+    const finalRevenueByBranch =
+      revenueByBranch.length > 0
+        ? revenueByBranch
+        : [{ branch: "No Data", revenue: 0 }];
+
+    const finalServiceCategoryData =
+      serviceCategoryData.length > 0
+        ? serviceCategoryData
+        : [{ name: "No Services", value: 1 }];
+
     return {
       kpis: {
         totalAppointments,
@@ -321,9 +377,9 @@ const ManagerReportsPage = () => {
         avgCompletionTime: parseFloat(avgCompletionTime.toFixed(1)),
         branchEfficiency,
       },
-      appointmentTrends,
-      revenueByBranch,
-      serviceCategoryData,
+      appointmentTrends: finalAppointmentTrends,
+      revenueByBranch: finalRevenueByBranch,
+      serviceCategoryData: finalServiceCategoryData,
       performanceMetrics: {
         customerSatisfaction: 0, // Would need separate feedback/rating endpoint
         employeeUtilization: Math.min(100, Math.max(0, branchEfficiency + 10)), // Based on efficiency
@@ -453,8 +509,8 @@ const ManagerReportsPage = () => {
         {/* Filters */}
         <Card sx={{ mb: 4 }}>
           <CardContent>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={3}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, gap: 3 }}>
+              <div>
                 <Label>Start Date</Label>
                 <Input
                   type="date"
@@ -463,8 +519,8 @@ const ManagerReportsPage = () => {
                     handleFilterChange("startDate", e.target.value)
                   }
                 />
-              </Grid>
-              <Grid item xs={12} md={3}>
+              </div>
+              <div>
                 <Label>End Date</Label>
                 <Input
                   type="date"
@@ -473,8 +529,8 @@ const ManagerReportsPage = () => {
                     handleFilterChange("endDate", e.target.value)
                   }
                 />
-              </Grid>
-              <Grid item xs={12} md={3}>
+              </div>
+              <div>
                 <Label>Branch</Label>
                 <Input
                   select
@@ -489,8 +545,8 @@ const ManagerReportsPage = () => {
                     </option>
                   ))}
                 </Input>
-              </Grid>
-              <Grid item xs={12} md={3}>
+              </div>
+              <div>
                 <Label>Service Type</Label>
                 <Input
                   select
@@ -507,64 +563,57 @@ const ManagerReportsPage = () => {
                     </option>
                   ))}
                 </Input>
-              </Grid>
-            </Grid>
+              </div>
+            </Box>
           </CardContent>
         </Card>
 
         {/* KPI Summary */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={6} lg={3}>
-            <KPICard
-              title="Total Appointments"
-              value={reportData.kpis.totalAppointments.toLocaleString()}
-              icon={Calendar}
-              color="bg-primary"
-              trend={`${reportData.kpis.totalAppointments} total bookings`}
-              trendUp={reportData.kpis.totalAppointments > 0}
-            />
-          </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <KPICard
-              title="Total Revenue"
-              value={`$${reportData.kpis.totalRevenue.toLocaleString()}`}
-              icon={DollarSign}
-              color="bg-green"
-              trend={`Avg $${reportData.performanceMetrics.avgRevenuePerJob} per job`}
-              trendUp={reportData.kpis.totalRevenue > 0}
-            />
-          </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <KPICard
-              title="Avg Completion Time"
-              value={`${reportData.kpis.avgCompletionTime} hrs`}
-              icon={Clock}
-              color="bg-secondary"
-              trend={`Based on ${reportData.serviceCategoryData.length} services`}
-              trendUp={reportData.kpis.avgCompletionTime > 0}
-            />
-          </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <KPICard
-              title="Branch Efficiency"
-              value={`${reportData.kpis.branchEfficiency}%`}
-              icon={TrendingUp}
-              color="bg-accent"
-              trend={`${reportData.revenueByBranch.length} active branches`}
-              trendUp={reportData.kpis.branchEfficiency > 50}
-            />
-          </Grid>
-        </Grid>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
+          <KPICard
+            title="Total Appointments"
+            value={reportData.kpis.totalAppointments.toLocaleString()}
+            icon={Calendar}
+            color="bg-primary"
+            trend={`${reportData.kpis.totalAppointments} total bookings`}
+            trendUp={reportData.kpis.totalAppointments > 0}
+          />
+          <KPICard
+            title="Total Revenue"
+            value={`$${reportData.kpis.totalRevenue.toLocaleString()}`}
+            icon={DollarSign}
+            color="bg-green"
+            trend={`Avg $${reportData.performanceMetrics.avgRevenuePerJob} per job`}
+            trendUp={reportData.kpis.totalRevenue > 0}
+          />
+          <KPICard
+            title="Avg Completion Time"
+            value={`${reportData.kpis.avgCompletionTime} hrs`}
+            icon={Clock}
+            color="bg-secondary"
+            trend={`Based on ${reportData.serviceCategoryData.length} services`}
+            trendUp={reportData.kpis.avgCompletionTime > 0}
+          />
+          <KPICard
+            title="Branch Efficiency"
+            value={`${reportData.kpis.branchEfficiency}%`}
+            icon={TrendingUp}
+            color="bg-accent"
+            trend={`${reportData.revenueByBranch.length} active branches`}
+            trendUp={reportData.kpis.branchEfficiency > 50}
+          />
+        </Box>
 
         {/* Charts Section */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' }, gap: 3, mb: 4 }}>
           {/* Appointment Trends */}
-          <Grid item xs={12} lg={6}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Appointment Trends</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle>Appointment Trends</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {reportData.appointmentTrends &&
+              reportData.appointmentTrends.length > 0 ? (
                 <Box sx={{ width: "100%", height: 300 }}>
                   <ResponsiveContainer>
                     <LineChart data={reportData.appointmentTrends}>
@@ -583,17 +632,31 @@ const ManagerReportsPage = () => {
                     </LineChart>
                   </ResponsiveContainer>
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+              ) : (
+                <Box
+                  sx={{
+                    height: 300,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography color="text.secondary">
+                    No appointment data available for the selected period
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Service Category Breakdown */}
-          <Grid item xs={12} lg={6}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Service Category Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle>Service Category Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {reportData.serviceCategoryData &&
+              reportData.serviceCategoryData.length > 0 ? (
                 <Box sx={{ width: "100%", height: 300 }}>
                   <ResponsiveContainer>
                     <PieChart>
@@ -609,21 +672,36 @@ const ManagerReportsPage = () => {
                         fill="#8884d8"
                         dataKey="value"
                       >
-                        {reportData.serviceCategoryData.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        ))}
+                        {reportData.serviceCategoryData.map(
+                          (entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
+                          )
+                        )}
                       </Pie>
                       <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+              ) : (
+                <Box
+                  sx={{
+                    height: 300,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography color="text.secondary">
+                    No service data available
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
 
         {/* Revenue by Branch */}
         <Card sx={{ mb: 4 }}>
