@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
-import BranchesComponent from "../../components/branches/BranchesComponent";
+import BranchesComponent from "../../components/branches/BranchesComponentUser";
 import { BRANCHES_URL } from "../../config/apiEndpoints";
 
 const UserBranchesPage = () => {

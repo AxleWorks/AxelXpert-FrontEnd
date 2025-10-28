@@ -7,30 +7,17 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
-  TableContainer,
-  Paper,
-  Table,
-  TableCell,
-  TableHead,
-  TableRow,
-  TableBody,
-  TableSortLabel,
-  IconButton,
   MenuItem,
-  InputAdornment,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
-import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { Card, CardHeader, CardContent, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-
+import { Card, CardHeader, CardContent, CardTitle } from "../ui/card.jsx";
+import { Button } from "../ui/button.jsx";
+import { Badge } from "../ui/badge.jsx";
+import { EditIcon, Trash2, Trash2Icon } from "lucide-react";
 import { USERS_URL } from "../../config/apiEndpoints.jsx";
 
 export default function BranchesComponent({
@@ -46,9 +33,6 @@ export default function BranchesComponent({
   const [managers, setManagers] = useState([]);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState("name");
 
   useEffect(() => {
     if (isManager) {
@@ -130,191 +114,202 @@ export default function BranchesComponent({
     setCurrentBranch(null);
   };
 
-  // Sorting helpers
-  const handleRequestSort = (property) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
-    setOrderBy(property);
-  };
-  const descendingComparator = (a, b, orderBy) => {
-    let aValue = a[orderBy];
-    let bValue = b[orderBy];
-    if (aValue == null) aValue = "";
-    if (bValue == null) bValue = "";
-    if (typeof aValue === "string") aValue = aValue.toLowerCase();
-    if (typeof bValue === "string") bValue = bValue.toLowerCase();
-    if (bValue < aValue) return -1;
-    if (bValue > aValue) return 1;
-    return 0;
-  };
-  const getComparator = (order, orderBy) => {
-    return order === "desc"
-      ? (a, b) => descendingComparator(a, b, orderBy)
-      : (a, b) => -descendingComparator(a, b, orderBy);
-  };
-  const stableSort = (array, comparator) => {
-    const stabilizedThis = array.map((el, index) => [el, index]);
-    stabilizedThis.sort((a, b) => {
-      const order = comparator(a[0], b[0]);
-      if (order !== 0) return order;
-      return a[1] - b[1];
-    });
-    return stabilizedThis.map((el) => el[0]);
-  };
-
-  // Filter and sort branches
-  const filteredBranches = branches.filter(
-    (branch) =>
-      branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (branch.address &&
-        branch.address.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (branch.managerName &&
-        branch.managerName.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-  const sortedBranches = stableSort(
-    filteredBranches,
-    getComparator(order, orderBy)
-  );
-
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
-        Service Centers
-      </Typography>
-      <Card sx={{ borderRadius: 3 }}>
-        <CardHeader>
-          <CardTitle>Branches</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Box
-            sx={{
-              mb: 3,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {/* Header */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+            Service Centers
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Find a service center near you
+          </Typography>
+        </Box>
+
+        {isManager && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleAddClick}
+            sx={{ borderRadius: 2 }}
           >
-            <TextField
-              placeholder="Search branches..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              size="small"
-              sx={{
-                flexGrow: 1,
-                mr: 2,
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                },
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: "text.secondary" }} />
-                  </InputAdornment>
-                ),
-              }}
+            Add New Branch
+          </Button>
+        )}
+      </Box>
+
+      {/* Branches Grid */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            md: "repeat(2, 1fr)",
+            lg: "repeat(3, 1fr)",
+          },
+          gap: 3,
+        }}
+      >
+        {branches.map((branch) => (
+          <Card key={branch.id}>
+            <CardHeader
+              title={
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 2,
+                      bgcolor: "primary.light",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <LocationOnIcon sx={{ color: "white", fontSize: 28 }} />
+                  </Box>
+                  <Badge>Open</Badge>
+                </Box>
+              }
+              subheader={<CardTitle>{branch.name}</CardTitle>}
             />
-            {isManager && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleAddClick}
-                sx={{ borderRadius: 2 }}
-              >
-                Add Branch
-              </Button>
-            )}
-          </Box>
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{
-              borderRadius: 3,
-              boxShadow: "none",
-              border: "1px solid rgba(0,0,0,0.06)",
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    <TableSortLabel
-                      active={orderBy === "name"}
-                      direction={orderBy === "name" ? order : "asc"}
-                      onClick={() => handleRequestSort("name")}
-                    >
-                      Branch Name
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    <TableSortLabel
-                      active={orderBy === "address"}
-                      direction={orderBy === "address" ? order : "asc"}
-                      onClick={() => handleRequestSort("address")}
-                    >
-                      Address
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    <TableSortLabel
-                      active={orderBy === "openHours"}
-                      direction={orderBy === "openHours" ? order : "asc"}
-                      onClick={() => handleRequestSort("openHours")}
-                    >
-                      Open Hours
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    <TableSortLabel
-                      active={orderBy === "closeHours"}
-                      direction={orderBy === "closeHours" ? order : "asc"}
-                      onClick={() => handleRequestSort("closeHours")}
-                    >
-                      Close Hours
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Manager</TableCell>
-                  {isManager && (
-                    <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>
-                      Actions
-                    </TableCell>
-                  )}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sortedBranches.map((branch) => (
-                  <TableRow key={branch.id}>
-                    <TableCell>{branch.name}</TableCell>
-                    <TableCell>{branch.address || "-"}</TableCell>
-                    <TableCell>{branch.openHours || "-"}</TableCell>
-                    <TableCell>{branch.closeHours || "-"}</TableCell>
-                    <TableCell>{branch.managerName || "-"}</TableCell>
-                    {isManager && (
-                      <TableCell align="center">
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleEditClick(branch)}
-                          size="small"
-                          sx={{ mr: 0.5 }}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDeleteClick(branch.id)}
-                          size="small"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+
+            <CardContent>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Open At: {branch.openHours || "N/A"}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Close At: {branch.closeHours || "N/A"}
+                </Typography>
+
+                <Box
+                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
+                >
+                  <LocationOnIcon
+                    sx={{
+                      color: "text.secondary",
+                      fontSize: 18,
+                      mt: 0.5,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {branch.address}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <PersonIcon
+                    sx={{
+                      color: "text.secondary",
+                      fontSize: 18,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Manager: {branch.managerName}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <PhoneIcon
+                    sx={{
+                      color: "text.secondary",
+                      fontSize: 18,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {branch.phone}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <EmailIcon
+                    sx={{
+                      color: "text.secondary",
+                      fontSize: 18,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {`${branch.email || " Not Provided"}`}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <LocationOnIcon
+                    sx={{
+                      color: "text.secondary",
+                      fontSize: 18,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    color="primary"
+                    component="a"
+                    href={branch.mapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View Location
+                  </Typography>
+                </Box>
+              </Box>
+
+              {isManager && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignContent: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    pt: 2,
+                    mt: 2,
+                    borderTop: "1px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditClick(branch)}
+                  >
+                    <EditIcon />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    color="error"
+                    onClick={() => handleDeleteClick(branch.id)}
+                  >
+                    <Trash2Icon />
+                    Delete
+                  </Button>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
 
       {/* Confirm Dialog */}
       <Dialog
