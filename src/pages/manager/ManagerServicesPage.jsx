@@ -36,6 +36,7 @@ const ManagerServicesPage = () => {
   const [editMode, setEditMode] = useState(false);
   const [currentService, setCurrentService] = useState(emptyService);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
 
   const fetchServices = () => {
     setLoading(true);
@@ -116,12 +117,37 @@ const ManagerServicesPage = () => {
       .catch((err) => setError(err.message));
   };
 
+  // Filter services by search
+  const filteredServices = services.filter(
+    (service) =>
+      service.name.toLowerCase().includes(search.toLowerCase()) ||
+      (service.description &&
+        service.description.toLowerCase().includes(search.toLowerCase()))
+  );
+
   return (
     <ManagerLayout>
       <Box>
         <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
           Service Management
         </Typography>
+        {/* Search Section */}
+        <Paper sx={{ mb: 2, p: 1.5, borderRadius: 2, boxShadow: 0 }}>
+          <input
+            type="text"
+            placeholder="Search services..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              borderRadius: 6,
+              border: "1px solid #d1d5db",
+              fontSize: 16,
+              outline: "none",
+            }}
+          />
+        </Paper>
         <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
           <Box display="flex" justifyContent="flex-end" mb={2}>
             <Button
@@ -156,7 +182,7 @@ const ManagerServicesPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {services.map((service) => (
+                  {filteredServices.map((service) => (
                     <TableRow key={service.id}>
                       <TableCell>{service.name}</TableCell>
                       <TableCell>${service.price.toFixed(2)}</TableCell>
