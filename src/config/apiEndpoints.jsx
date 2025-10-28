@@ -9,6 +9,7 @@ export const BRANCHES_URL = `${API_BASE}${API_PREFIX}/branches`;
 export const USERS_URL = `${API_BASE}${API_PREFIX}/users`;
 export const VEHICLES_URL = `${API_BASE}${API_PREFIX}/vehicles`;
 export const SERVICES_URL = `${API_BASE}${API_PREFIX}/services`;
+export const TASKS_URL = `${API_BASE}${API_PREFIX}/tasks`;
 export const AUTH_URL = `${API_BASE}${API_PREFIX}/auth`;
 export const PROFILE_IMAGE_URL = `${API_BASE}${API_PREFIX}/users/{id}/profile-image`;
 
@@ -21,6 +22,7 @@ export default {
   USERS_URL,
   VEHICLES_URL,
   SERVICES_URL,
+  TASKS_URL,
   AUTH_URL,
   PROFILE_IMAGE_URL,
 };
