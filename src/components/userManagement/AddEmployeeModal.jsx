@@ -24,6 +24,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
   });
   const [branches, setBranches] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState("");
 
   // Fetch branches when modal opens
@@ -59,18 +60,56 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
   const handleChange = (key) => (e) =>
     setForm((s) => ({ ...s, [key]: e.target.value }));
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
+    // Validation
     if (!form.email || !form.role || !form.branch) {
       setError("All fields are required");
       return;
     }
-    
-    onCreate({
-      email: form.email,
-      role: form.role,
-      branch: form.branch,
-    });
-    onClose();
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    try {
+      // Call backend API to add employee
+      const response = await axios.post(
+        "http://localhost:8080/api/users/add-employee",
+        {
+          email: form.email,
+          role: form.role,
+          branch: form.branch,
+        }
+      );
+
+      // Success - pass the created employee data to parent
+      onCreate(response.data);
+      onClose();
+    } catch (err) {
+      console.error("Failed to add employee:", err);
+      
+      // Handle different error scenarios
+      if (err.response) {
+        if (err.response.status === 400) {
+          // Bad request - validation error or email exists
+          setError(err.response.data || "Invalid data. Please check your inputs.");
+        } else if (err.response.status === 500) {
+          setError("Server error. Please try again later.");
+        } else {
+          setError("Failed to add employee. Please try again.");
+        }
+      } else {
+        setError("Network error. Please check your connection.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -286,6 +325,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
         </Button>
         <Button 
           onClick={handleCreate}
+          disabled={submitting}
           sx={{
             borderRadius: 2,
             px: 3,
@@ -298,9 +338,20 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
             '&:hover': {
               backgroundColor: '#0765b6',
             },
+            '&:disabled': {
+              backgroundColor: '#a0c4e8',
+              color: 'white',
+            },
           }}
         >
-          Save
+          {submitting ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CircularProgress size={16} sx={{ color: 'white' }} />
+              <span>Saving...</span>
+            </Box>
+          ) : (
+            'Save'
+          )}
         </Button>
       </DialogActions>
     </Dialog>

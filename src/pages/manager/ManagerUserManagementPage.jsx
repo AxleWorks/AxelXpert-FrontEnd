@@ -723,10 +723,10 @@ const ManagerUserManagementPage = () => {
           open={addOpen}
           onClose={() => setAddOpen(false)}
           onCreate={(newEmployee) => {
-            const id = Math.max(0, ...employees.map((e) => e.id)) + 1;
-            setEmployees((prev) => [...prev, { id, ...newEmployee }]);
+            // Add the new employee returned from the backend to the local state
+            setEmployees((prev) => [...prev, newEmployee]);
             setSuccessTitle("Employee added!");
-            setSuccessMessage("New employee has been added successfully.");
+            setSuccessMessage(`${newEmployee.email} has been added successfully. A welcome email with login credentials has been sent.`);
             setShowSuccess(true);
             setAddOpen(false);
           }}
