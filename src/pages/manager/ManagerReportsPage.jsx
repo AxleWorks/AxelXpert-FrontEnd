@@ -40,6 +40,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { KPICard } from "../../components/ui/KPICard";
+import PDFReportGenerator from "../../components/reports/PDFReportGenerator";
 import {
   BOOKINGS_URL,
   BRANCHES_URL,
@@ -68,6 +69,8 @@ const ManagerReportsPage = () => {
   });
   const [branches, setBranches] = useState([]);
   const [services, setServices] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [filters, setFilters] = useState({
     startDate: new Date(new Date().getFullYear(), 0, 1)
       .toISOString()
@@ -122,6 +125,7 @@ const ManagerReportsPage = () => {
 
       setBranches(branches);
       setServices(services);
+      setAppointments(bookings); // Store raw appointments data for PDF
 
       // Process data for reports
       const processedData = processReportData(
@@ -440,9 +444,12 @@ const ManagerReportsPage = () => {
     return trendsData;
   };
 
-  const handleDownloadPDF = () => {
-    // Mock PDF download
-    alert("Report Downloaded! PDF report has been generated successfully.");
+  const handleDownloadStart = () => {
+    setDownloadingPDF(true);
+  };
+
+  const handleDownloadComplete = () => {
+    setDownloadingPDF(false);
   };
 
   const handleFilterChange = (field, value) => {
@@ -491,18 +498,27 @@ const ManagerReportsPage = () => {
               Comprehensive business insights and performance metrics
             </Typography>
           </Box>
-          <Button
-            onClick={handleDownloadPDF}
-            variant="contained"
-            startIcon={<Download />}
-          >
-            Download PDF
-          </Button>
+          <PDFReportGenerator
+            reportData={reportData}
+            filters={filters}
+            appointments={appointments}
+            onDownloadStart={handleDownloadStart}
+            onDownloadComplete={handleDownloadComplete}
+          />
         </Box>
 
         {error && (
           <Alert severity="warning" sx={{ mb: 3 }}>
             {error} - Showing demo data for illustration
+          </Alert>
+        )}
+
+        {downloadingPDF && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <CircularProgress size={20} />
+              Generating PDF report... Please wait.
+            </Box>
           </Alert>
         )}
 
@@ -752,199 +768,197 @@ const ManagerReportsPage = () => {
             <CardTitle>Performance Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6} lg={4}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 2,
-                  }}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  md: "repeat(2, 1fr)",
+                  lg: "repeat(3, 1fr)",
+                },
+                gap: 3,
+              }}
+            >
+              <Paper
+                sx={{
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
                 >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    Customer Satisfaction
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                    {reportData.performanceMetrics.customerSatisfaction > 0
-                      ? `${reportData.performanceMetrics.customerSatisfaction} / 5.0`
-                      : "N/A"}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Requires feedback data
-                  </Typography>
-                </Paper>
-              </Grid>
+                  Customer Satisfaction
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {reportData.performanceMetrics.customerSatisfaction > 0
+                    ? `${reportData.performanceMetrics.customerSatisfaction} / 5.0`
+                    : "N/A"}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  Requires feedback data
+                </Typography>
+              </Paper>
 
-              <Grid item xs={12} md={6} lg={4}>
-                <Paper
+              <Paper
+                sx={{
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  Employee Utilization
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {reportData.performanceMetrics.employeeUtilization}%
+                </Typography>
+                <Typography
+                  variant="body2"
                   sx={{
-                    p: 2,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 2,
+                    color:
+                      reportData.performanceMetrics.employeeUtilization > 70
+                        ? "success.main"
+                        : "warning.main",
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    Employee Utilization
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                    {reportData.performanceMetrics.employeeUtilization}%
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color:
-                        reportData.performanceMetrics.employeeUtilization > 70
-                          ? "success.main"
-                          : "warning.main",
-                    }}
-                  >
-                    Based on efficiency
-                  </Typography>
-                </Paper>
-              </Grid>
+                  Based on efficiency
+                </Typography>
+              </Paper>
 
-              <Grid item xs={12} md={6} lg={4}>
-                <Paper
+              <Paper
+                sx={{
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  Repeat Customers
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {reportData.performanceMetrics.repeatCustomers}%
+                </Typography>
+                <Typography
+                  variant="body2"
                   sx={{
-                    p: 2,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 2,
+                    color:
+                      reportData.performanceMetrics.repeatCustomers > 50
+                        ? "success.main"
+                        : "warning.main",
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    Repeat Customers
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                    {reportData.performanceMetrics.repeatCustomers}%
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color:
-                        reportData.performanceMetrics.repeatCustomers > 50
-                          ? "success.main"
-                          : "warning.main",
-                    }}
-                  >
-                    From actual bookings
-                  </Typography>
-                </Paper>
-              </Grid>
+                  From actual bookings
+                </Typography>
+              </Paper>
 
-              <Grid item xs={12} md={6} lg={4}>
-                <Paper
+              <Paper
+                sx={{
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  Average Revenue per Job
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  ${reportData.performanceMetrics.avgRevenuePerJob}
+                </Typography>
+                <Typography
+                  variant="body2"
                   sx={{
-                    p: 2,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 2,
+                    color:
+                      reportData.performanceMetrics.avgRevenuePerJob > 0
+                        ? "success.main"
+                        : "text.secondary",
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    Average Revenue per Job
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                    ${reportData.performanceMetrics.avgRevenuePerJob}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color:
-                        reportData.performanceMetrics.avgRevenuePerJob > 0
-                          ? "success.main"
-                          : "text.secondary",
-                    }}
-                  >
-                    Calculated from bookings
-                  </Typography>
-                </Paper>
-              </Grid>
+                  Calculated from bookings
+                </Typography>
+              </Paper>
 
-              <Grid item xs={12} md={6} lg={4}>
-                <Paper
+              <Paper
+                sx={{
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  On-Time Completion
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {reportData.performanceMetrics.onTimeCompletion}%
+                </Typography>
+                <Typography
+                  variant="body2"
                   sx={{
-                    p: 2,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 2,
+                    color:
+                      reportData.performanceMetrics.onTimeCompletion > 80
+                        ? "success.main"
+                        : "warning.main",
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    On-Time Completion
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                    {reportData.performanceMetrics.onTimeCompletion}%
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color:
-                        reportData.performanceMetrics.onTimeCompletion > 80
-                          ? "success.main"
-                          : "warning.main",
-                    }}
-                  >
-                    Based on service duration
-                  </Typography>
-                </Paper>
-              </Grid>
+                  Based on service duration
+                </Typography>
+              </Paper>
 
-              <Grid item xs={12} md={6} lg={4}>
-                <Paper
+              <Paper
+                sx={{
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  Booking Conversion
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                  {reportData.performanceMetrics.bookingConversion}%
+                </Typography>
+                <Typography
+                  variant="body2"
                   sx={{
-                    p: 2,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 2,
+                    color:
+                      reportData.performanceMetrics.bookingConversion > 70
+                        ? "success.main"
+                        : "error.main",
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    Booking Conversion
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                    {reportData.performanceMetrics.bookingConversion}%
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color:
-                        reportData.performanceMetrics.bookingConversion > 70
-                          ? "success.main"
-                          : "error.main",
-                    }}
-                  >
-                    Non-cancelled bookings
-                  </Typography>
-                </Paper>
-              </Grid>
-            </Grid>
+                  Non-cancelled bookings
+                </Typography>
+              </Paper>
+            </Box>
           </CardContent>
         </Card>
       </Box>
