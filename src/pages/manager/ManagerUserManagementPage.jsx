@@ -23,6 +23,7 @@ import {
   DialogContent,
   DialogActions,
   DialogContentText,
+  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -391,11 +392,39 @@ const ManagerUserManagementPage = () => {
   ).length;
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <ManagerLayout>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '60vh',
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      </ManagerLayout>
+    );
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return (
+      <ManagerLayout>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '60vh',
+          }}
+        >
+          <Typography variant="h6" color="error">
+            {error}
+          </Typography>
+        </Box>
+      </ManagerLayout>
+    );
   }
 
   // edits are handled by EmployeeProfileModal's onSave handler
@@ -770,7 +799,7 @@ const ManagerUserManagementPage = () => {
             setEmployees((prev) => [...prev, newEmployee]);
             setSuccessTitle("Employee added!");
             setSuccessMessage(
-              `${newEmployee.email} has been added successfully. A welcome email with login credentials has been sent.`
+              `${newEmployee.email} has been added successfully. Login credentials have been sent.`
             );
             setShowSuccess(true);
             setAddOpen(false);
