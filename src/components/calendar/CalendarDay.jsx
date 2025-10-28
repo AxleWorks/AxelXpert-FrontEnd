@@ -42,18 +42,12 @@ const CalendarDay = ({
   };
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return theme.palette.warning.main;
-      case 'confirmed':
-        return theme.palette.info.main;
-      case 'completed':
-        return theme.palette.success.main;
-      case 'cancelled':
-        return theme.palette.error.main;
-      default:
-        return theme.palette.grey[500];
-    }
+    const s = String(status || '').toLowerCase();
+    if (s === 'pending') return theme.palette.warning.main;
+    if (s === 'approved' || s === 'confirmed') return theme.palette.success.main;
+    if (s === 'completed') return theme.palette.info.main;
+    if (s === 'cancelled') return theme.palette.error.main;
+    return theme.palette.grey[500];
   };
 
   const isPastDate = date < new Date().setHours(0, 0, 0, 0);
@@ -140,7 +134,7 @@ const CalendarDay = ({
           </Box>
         )}
 
-        {/* Existing Bookings */}
+        {/* Existing Bookings (render as chips like manager grid) */}
         <Box sx={{ 
           display: 'flex', 
           flexDirection: 'column', 
@@ -149,35 +143,17 @@ const CalendarDay = ({
           flex: 1
         }}>
           {bookings.slice(0, 3).map((booking, index) => (
-            <Box
+            <Chip
               key={booking.id || index}
+              label={`${booking.time} • ${booking.customer || booking.service || 'Booking'}`}
+              size="small"
               sx={{
-                fontSize: '0.7rem',
-                p: 0.25,
-                bgcolor: getStatusColor(booking.status) + '20',
-                borderLeft: `3px solid ${getStatusColor(booking.status)}`,
-                borderRadius: 0.5,
-                cursor: 'pointer',
-                '&:hover': {
-                  bgcolor: getStatusColor(booking.status) + '40',
-                },
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
+                bgcolor: getStatusColor(booking.status),
+                color: '#fff',
+                width: '100%',
               }}
-              onClick={(e) => {
-                e.stopPropagation();
-                // Handle booking click - could open booking details
-              }}
-            >
-              <Typography variant="caption" sx={{ 
-                display: 'block',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}>
-                {booking.time} - {booking.service || 'Service'}
-              </Typography>
-            </Box>
+              onClick={(e) => e.stopPropagation()}
+            />
           ))}
           
           {bookings.length > 3 && (

@@ -30,6 +30,13 @@ const Calendar = ({ branchId, availableSlots = [], existingBookings = [] }) => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [slideDirection, setSlideDirection] = useState('left');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  // keep a local copy so we can append new pending bookings immediately
+  const [bookings, setBookings] = useState(existingBookings);
+
+  useEffect(() => {
+    // if parent props change, refresh local state
+    setBookings(existingBookings);
+  }, [existingBookings]);
 
   // Get first day of current month
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -99,24 +106,31 @@ const Calendar = ({ branchId, availableSlots = [], existingBookings = [] }) => {
   };
 
   const handleBookingSubmit = (bookingData) => {
-    // Here you would typically send the booking data to your backend
-    console.log('Booking submitted:', bookingData);
-    
-    // Show success notification (you could use a toast library here)
-    alert(`Booking confirmed for ${bookingData.date.toLocaleDateString()} at ${bookingData.timeSlot}`);
-    
+    // TODO: send to backend; for now optimistic update local calendar
+    const newBooking = {
+      id: Date.now(),
+      date: bookingData.date?.toISOString?.() || new Date(bookingData.date).toISOString(),
+      time: bookingData.time || bookingData.timeSlot,
+      service: bookingData.service,
+      status: 'Pending',
+      customer: bookingData.customer,
+      vehicle: bookingData.vehicle,
+      branch: bookingData.branch,
+      notes: bookingData.notes,
+    };
+
+    setBookings((prev) => [...prev, newBooking]);
+    console.log('Booking submitted (pending):', newBooking);
+
     // Close the modal
     setIsBookingModalOpen(false);
     setSelectedDate(null);
     setSelectedTimeSlot(null);
-    
-    // You could also update the calendar data here
-    // For example, add the new booking to existingBookings array
   };
 
   const getBookingsForDate = (date) => {
     if (!date) return [];
-    return existingBookings.filter(booking => {
+    return bookings.filter(booking => {
       const bookingDate = new Date(booking.date);
       return bookingDate.toDateString() === date.toDateString();
     });
@@ -330,26 +344,10 @@ const Calendar = ({ branchId, availableSlots = [], existingBookings = [] }) => {
 
         {/* Legend */}
         <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Chip 
-            label="Available" 
-            size="small" 
-            sx={{ bgcolor: theme.palette.success.light, color: 'white' }}
-          />
-          <Chip 
-            label="Pending" 
-            size="small" 
-            sx={{ bgcolor: theme.palette.warning.light, color: 'white' }}
-          />
-          <Chip 
-            label="Confirmed" 
-            size="small" 
-            sx={{ bgcolor: theme.palette.info.light, color: 'white' }}
-          />
-          <Chip 
-            label="Completed" 
-            size="small" 
-            sx={{ bgcolor: theme.palette.success.main, color: 'white' }}
-          />
+          <Chip label="Available" size="small" sx={{ bgcolor: theme.palette.success.light, color: 'white' }} />
+          <Chip label="Pending" size="small" sx={{ bgcolor: theme.palette.warning.main, color: 'white' }} />
+          <Chip label="Approved" size="small" sx={{ bgcolor: theme.palette.success.main, color: 'white' }} />
+          <Chip label="Completed" size="small" sx={{ bgcolor: theme.palette.info.main, color: 'white' }} />
         </Box>
 
         {/* Keyboard shortcuts hint */}
