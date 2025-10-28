@@ -509,7 +509,13 @@ const ManagerReportsPage = () => {
         {/* Filters */}
         <Card sx={{ mb: 4 }}>
           <CardContent>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, gap: 3 }}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "repeat(4, 1fr)" },
+                gap: 3,
+              }}
+            >
               <div>
                 <Label>Start Date</Label>
                 <Input
@@ -569,7 +575,18 @@ const ManagerReportsPage = () => {
         </Card>
 
         {/* KPI Summary */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "repeat(2, 1fr)",
+              lg: "repeat(4, 1fr)",
+            },
+            gap: 3,
+            mb: 4,
+          }}
+        >
           <KPICard
             title="Total Appointments"
             value={reportData.kpis.totalAppointments.toLocaleString()}
@@ -605,7 +622,14 @@ const ManagerReportsPage = () => {
         </Box>
 
         {/* Charts Section */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' }, gap: 3, mb: 4 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" },
+            gap: 3,
+            mb: 4,
+          }}
+        >
           {/* Appointment Trends */}
           <Card>
             <CardHeader>
@@ -672,14 +696,12 @@ const ManagerReportsPage = () => {
                         fill="#8884d8"
                         dataKey="value"
                       >
-                        {reportData.serviceCategoryData.map(
-                          (entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length]}
-                            />
-                          )
-                        )}
+                        {reportData.serviceCategoryData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
                       </Pie>
                       <Tooltip />
                     </PieChart>
