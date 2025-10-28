@@ -39,7 +39,8 @@ const UserServicesPage = () => {
   const filteredServices = services.filter(
     (service) =>
       service.name.toLowerCase().includes(search.toLowerCase()) ||
-      (service.description && service.description.toLowerCase().includes(search.toLowerCase()))
+      (service.description &&
+        service.description.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -54,14 +55,14 @@ const UserServicesPage = () => {
             type="text"
             placeholder="Search services..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             style={{
               width: "100%",
               padding: "10px 14px",
               borderRadius: 6,
               border: "1px solid #d1d5db",
               fontSize: 16,
-              outline: "none"
+              outline: "none",
             }}
           />
         </Paper>
