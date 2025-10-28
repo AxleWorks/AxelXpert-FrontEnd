@@ -12,6 +12,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import EmployeeLayout from "../../layouts/employee/EmployeeLayout";
+import { SERVICES_URL } from "../../config/apiEndpoints.jsx";
 
 const EmployeeServicesPage = () => {
   const [services, setServices] = useState([]);
@@ -20,7 +21,7 @@ const EmployeeServicesPage = () => {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/services")
+    fetch(SERVICES_URL)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch services");
         return res.json();

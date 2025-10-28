@@ -19,6 +19,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { Edit, Delete, Add } from "@mui/icons-material";
+import { SERVICES_URL } from "../../config/apiEndpoints.jsx";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 
 const emptyService = {
@@ -40,7 +41,7 @@ const ManagerServicesPage = () => {
 
   const fetchServices = () => {
     setLoading(true);
-    fetch("http://localhost:8080/api/services")
+    fetch(SERVICES_URL)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch services");
         return res.json();
@@ -80,8 +81,8 @@ const ManagerServicesPage = () => {
     setSaving(true);
     const method = editMode ? "PUT" : "POST";
     const url = editMode
-      ? `http://localhost:8080/api/services/${currentService.id}`
-      : "http://localhost:8080/api/services";
+      ? `${SERVICES_URL}/${currentService.id}`
+      : SERVICES_URL;
     fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
@@ -109,7 +110,7 @@ const ManagerServicesPage = () => {
   const handleDelete = (id) => {
     if (!window.confirm("Are you sure you want to delete this service?"))
       return;
-    fetch(`http://localhost:8080/api/services/${id}`, { method: "DELETE" })
+    fetch(`${SERVICES_URL}/${id}`, { method: "DELETE" })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to delete service");
         fetchServices();

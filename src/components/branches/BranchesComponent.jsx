@@ -18,6 +18,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { EditIcon, Trash2, Trash2Icon } from "lucide-react";
+import { USERS_URL } from "../../config/apiEndpoints.jsx";
 
 export default function BranchesComponent({
   branches,
@@ -37,9 +38,7 @@ export default function BranchesComponent({
     if (isManager) {
       const fetchManagers = async () => {
         try {
-          const response = await fetch(
-            "http://localhost:8080/api/users/managers"
-          );
+          const response = await fetch(`${USERS_URL}/managers`);
           if (response.ok) {
             const data = await response.json();
             setManagers(data);

@@ -1,5 +1,7 @@
 // API service for booking operations
-const API_BASE_URL = "http://localhost:8080/api/bookings";
+import { API_BASE, API_PREFIX } from "../config/apiEndpoints.jsx";
+
+const API_BASE_URL = `${API_BASE}${API_PREFIX}/bookings`;
 
 /**
  * Create a new booking
@@ -35,7 +37,9 @@ export const createBooking = async (bookingData) => {
  */
 export const getAllBookings = async (count = null) => {
   try {
-    const url = count ? `${API_BASE_URL}/all?count=${count}` : `${API_BASE_URL}/all`;
+    const url = count
+      ? `${API_BASE_URL}/all?count=${count}`
+      : `${API_BASE_URL}/all`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -58,7 +62,7 @@ export const getCustomerBookings = async (customerId) => {
   try {
     const allBookings = await getAllBookings();
     // Filter bookings for this customer
-    return allBookings.filter(booking => booking.customerId === customerId);
+    return allBookings.filter((booking) => booking.customerId === customerId);
   } catch (error) {
     console.error("Error fetching customer bookings:", error);
     throw error;
@@ -130,7 +134,7 @@ export const rejectBooking = async (bookingId, reason, notes = "") => {
 export const deleteBooking = async (bookingId) => {
   try {
     console.log(`Attempting to delete booking with ID: ${bookingId}`);
-    
+
     const response = await fetch(`${API_BASE_URL}/${bookingId}`, {
       method: "DELETE",
       headers: {

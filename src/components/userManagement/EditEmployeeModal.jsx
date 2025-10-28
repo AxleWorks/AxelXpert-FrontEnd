@@ -14,13 +14,9 @@ import {
 } from "@mui/material";
 import { Button } from "../ui/button";
 import axios from "axios";
+import { BRANCHES_URL, USERS_URL } from "../../config/apiEndpoints.jsx";
 
-export default function EditEmployeeModal({
-  open,
-  onClose,
-  employee,
-  onSave,
-}) {
+export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
   const [form, setForm] = React.useState({
     username: "",
     role: "",
@@ -40,8 +36,8 @@ export default function EditEmployeeModal({
       // Fetch fresh employee data
       setLoading(true);
       Promise.all([
-        axios.get(`http://localhost:8080/api/users/${employee.id}`),
-        axios.get("http://localhost:8080/api/branches/all"),
+        axios.get(`${USERS_URL}/${employee.id}`),
+        axios.get(`${BRANCHES_URL}/all`),
       ])
         .then(([userResponse, branchesResponse]) => {
           const userData = userResponse.data;
@@ -84,10 +80,10 @@ export default function EditEmployeeModal({
 
   const handleChange = (field) => (e) => {
     const value = e.target.value;
-    
+
     if (field === "branchId") {
       // When branch changes, update both branchId and branchName
-      const selectedBranch = branches.find(b => b.id === value);
+      const selectedBranch = branches.find((b) => b.id === value);
       setForm((s) => ({
         ...s,
         branchId: value,
@@ -121,52 +117,52 @@ export default function EditEmployeeModal({
   };
 
   const inputStyles = {
-    '& .MuiOutlinedInput-root': {
+    "& .MuiOutlinedInput-root": {
       borderRadius: 2,
-      backgroundColor: 'background.paper',
-      '& fieldset': {
-        borderColor: 'rgba(0, 0, 0, 0.12)',
+      backgroundColor: "background.paper",
+      "& fieldset": {
+        borderColor: "rgba(0, 0, 0, 0.12)",
       },
-      '&:hover fieldset': {
-        borderColor: 'rgba(0, 0, 0, 0.23)',
+      "&:hover fieldset": {
+        borderColor: "rgba(0, 0, 0, 0.23)",
       },
-      '&.Mui-focused fieldset': {
-        borderColor: '#0b75d9',
+      "&.Mui-focused fieldset": {
+        borderColor: "#0b75d9",
       },
-      '&.Mui-disabled': {
-        backgroundColor: 'rgba(0, 0, 0, 0.02)',
+      "&.Mui-disabled": {
+        backgroundColor: "rgba(0, 0, 0, 0.02)",
       },
     },
-    '& .MuiInputBase-input': {
-      padding: '12px 14px',
+    "& .MuiInputBase-input": {
+      padding: "12px 14px",
     },
-    '& .MuiInputBase-input.Mui-disabled': {
-      WebkitTextFillColor: 'rgba(0, 0, 0, 0.6)',
+    "& .MuiInputBase-input.Mui-disabled": {
+      WebkitTextFillColor: "rgba(0, 0, 0, 0.6)",
     },
   };
 
   const labelStyles = {
     mb: 1,
-    color: 'text.secondary',
-    fontSize: '0.875rem',
+    color: "text.secondary",
+    fontSize: "0.875rem",
     fontWeight: 500,
   };
 
   if (loading) {
     return (
-      <Dialog 
-        open={!!open} 
-        onClose={onClose} 
-        maxWidth="sm" 
+      <Dialog
+        open={!!open}
+        onClose={onClose}
+        maxWidth="sm"
         fullWidth
         PaperProps={{
           sx: {
             borderRadius: 3,
             p: 1,
-          }
+          },
         }}
       >
-        <DialogContent sx={{ px: 3, py: 4, textAlign: 'center' }}>
+        <DialogContent sx={{ px: 3, py: 4, textAlign: "center" }}>
           <CircularProgress />
           <Typography sx={{ mt: 2 }}>Loading...</Typography>
         </DialogContent>
@@ -175,30 +171,31 @@ export default function EditEmployeeModal({
   }
 
   return (
-    <Dialog 
-      open={!!open} 
-      onClose={onClose} 
-      maxWidth="sm" 
+    <Dialog
+      open={!!open}
+      onClose={onClose}
+      maxWidth="sm"
       fullWidth
       PaperProps={{
         sx: {
           borderRadius: 3,
           p: 1,
-        }
+        },
       }}
     >
-      <DialogTitle sx={{ 
-        fontSize: '1.5rem', 
-        fontWeight: 600,
-        pb: 2,
-        pt: 3,
-        px: 3,
-      }}>
+      <DialogTitle
+        sx={{
+          fontSize: "1.5rem",
+          fontWeight: 600,
+          pb: 2,
+          pt: 3,
+          px: 3,
+        }}
+      >
         Edit Profile
       </DialogTitle>
       <DialogContent sx={{ px: 3, py: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
-          
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
           {/* User Name */}
           <Box>
             <Typography variant="body2" sx={labelStyles}>
@@ -239,24 +236,26 @@ export default function EditEmployeeModal({
                 displayEmpty
                 sx={{
                   borderRadius: 2,
-                  backgroundColor: 'background.paper',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.12)',
+                  backgroundColor: "background.paper",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.12)",
                   },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.23)",
                   },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#0b75d9',
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#0b75d9",
                   },
-                  '& .MuiSelect-select': {
-                    padding: '12px 14px',
-                    textTransform: 'capitalize',
+                  "& .MuiSelect-select": {
+                    padding: "12px 14px",
+                    textTransform: "capitalize",
                   },
                 }}
               >
                 <MenuItem value="" disabled>
-                  <Typography sx={{ color: 'text.secondary' }}>Select role</Typography>
+                  <Typography sx={{ color: "text.secondary" }}>
+                    Select role
+                  </Typography>
                 </MenuItem>
                 <MenuItem value="user">User</MenuItem>
                 <MenuItem value="employee">Employee</MenuItem>
@@ -277,42 +276,46 @@ export default function EditEmployeeModal({
                 displayEmpty
                 sx={{
                   borderRadius: 2,
-                  backgroundColor: 'background.paper',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.12)',
+                  backgroundColor: "background.paper",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.12)",
                   },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.23)",
                   },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#0b75d9',
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#0b75d9",
                   },
-                  '& .MuiSelect-select': {
-                    padding: '12px 14px',
+                  "& .MuiSelect-select": {
+                    padding: "12px 14px",
                   },
                 }}
               >
                 {loading ? (
                   <MenuItem disabled>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <CircularProgress size={20} />
                       <Typography>Loading branches...</Typography>
                     </Box>
                   </MenuItem>
                 ) : branches.length === 0 ? (
                   <MenuItem value="" disabled>
-                    <Typography sx={{ color: 'text.secondary' }}>No branches available</Typography>
+                    <Typography sx={{ color: "text.secondary" }}>
+                      No branches available
+                    </Typography>
                   </MenuItem>
                 ) : (
                   [
                     <MenuItem key="placeholder" value="" disabled>
-                      <Typography sx={{ color: 'text.secondary' }}>Select branch</Typography>
+                      <Typography sx={{ color: "text.secondary" }}>
+                        Select branch
+                      </Typography>
                     </MenuItem>,
                     ...branches.map((branch) => (
                       <MenuItem key={branch.id} value={branch.id}>
                         {branch.name}
                       </MenuItem>
-                    ))
+                    )),
                   ]
                 )}
               </Select>
@@ -355,29 +358,38 @@ export default function EditEmployeeModal({
             <FormControl fullWidth>
               <Select
                 value={form.isActive ? "active" : "inactive"}
-                onChange={(e) => setForm(s => ({ ...s, isActive: e.target.value === "active" }))}
+                onChange={(e) =>
+                  setForm((s) => ({
+                    ...s,
+                    isActive: e.target.value === "active",
+                  }))
+                }
                 sx={{
                   borderRadius: 2,
-                  backgroundColor: 'background.paper',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.12)',
+                  backgroundColor: "background.paper",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.12)",
                   },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.23)",
                   },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#0b75d9',
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#0b75d9",
                   },
-                  '& .MuiSelect-select': {
-                    padding: '12px 14px',
+                  "& .MuiSelect-select": {
+                    padding: "12px 14px",
                   },
                 }}
               >
                 <MenuItem value="active">
-                  <Typography sx={{ color: '#10b981', fontWeight: 500 }}>Active</Typography>
+                  <Typography sx={{ color: "#10b981", fontWeight: 500 }}>
+                    Active
+                  </Typography>
                 </MenuItem>
                 <MenuItem value="inactive">
-                  <Typography sx={{ color: '#f59e0b', fontWeight: 500 }}>Inactive</Typography>
+                  <Typography sx={{ color: "#f59e0b", fontWeight: 500 }}>
+                    Inactive
+                  </Typography>
                 </MenuItem>
               </Select>
             </FormControl>
@@ -389,7 +401,11 @@ export default function EditEmployeeModal({
               Created At
             </Typography>
             <TextField
-              value={employee?.createdAt ? new Date(employee.createdAt).toLocaleString() : "N/A"}
+              value={
+                employee?.createdAt
+                  ? new Date(employee.createdAt).toLocaleString()
+                  : "N/A"
+              }
               fullWidth
               disabled
               sx={inputStyles}
@@ -397,50 +413,52 @@ export default function EditEmployeeModal({
           </Box>
 
           {error && (
-            <Box sx={{ 
-              color: "error.main", 
-              fontSize: "0.875rem",
-              mt: -1,
-            }}>
+            <Box
+              sx={{
+                color: "error.main",
+                fontSize: "0.875rem",
+                mt: -1,
+              }}
+            >
               {error}
             </Box>
           )}
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3, pt: 2, gap: 2 }}>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={onClose}
           sx={{
             borderRadius: 2,
             px: 3,
             py: 1.5,
-            textTransform: 'none',
-            fontSize: '1rem',
+            textTransform: "none",
+            fontSize: "1rem",
             fontWeight: 500,
-            borderColor: 'rgba(0, 0, 0, 0.12)',
-            color: 'text.primary',
-            '&:hover': {
-              borderColor: 'rgba(0, 0, 0, 0.23)',
-              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            borderColor: "rgba(0, 0, 0, 0.12)",
+            color: "text.primary",
+            "&:hover": {
+              borderColor: "rgba(0, 0, 0, 0.23)",
+              backgroundColor: "rgba(0, 0, 0, 0.04)",
             },
           }}
         >
           Cancel
         </Button>
-        <Button 
+        <Button
           onClick={handleSave}
           sx={{
             borderRadius: 2,
             px: 3,
             py: 1.5,
-            textTransform: 'none',
-            fontSize: '1rem',
+            textTransform: "none",
+            fontSize: "1rem",
             fontWeight: 500,
-            backgroundColor: '#0b75d9',
-            color: 'white',
-            '&:hover': {
-              backgroundColor: '#0765b6',
+            backgroundColor: "#0b75d9",
+            color: "white",
+            "&:hover": {
+              backgroundColor: "#0765b6",
             },
           }}
         >

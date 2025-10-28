@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { Button } from "../../components/ui/button";
 import axios from "axios";
+import { BRANCHES_URL, USERS_URL } from "../../config/apiEndpoints.jsx";
 
 export default function AddEmployeeModal({ open, onClose, onCreate }) {
   const [form, setForm] = React.useState({
@@ -33,7 +34,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
       const fetchBranches = async () => {
         setLoading(true);
         try {
-          const response = await axios.get("http://localhost:8080/api/branches/all");
+          const response = await axios.get(`${BRANCHES_URL}/all`);
           setBranches(response.data);
         } catch (err) {
           console.error("Failed to fetch branches:", err);
@@ -79,26 +80,25 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
 
     try {
       // Call backend API to add employee
-      const response = await axios.post(
-        "http://localhost:8080/api/users/add-employee",
-        {
-          email: form.email,
-          role: form.role,
-          branch: form.branch,
-        }
-      );
+      const response = await axios.post(`${USERS_URL}/add-employee`, {
+        email: form.email,
+        role: form.role,
+        branch: form.branch,
+      });
 
       // Success - pass the created employee data to parent
       onCreate(response.data);
       onClose();
     } catch (err) {
       console.error("Failed to add employee:", err);
-      
+
       // Handle different error scenarios
       if (err.response) {
         if (err.response.status === 400) {
           // Bad request - validation error or email exists
-          setError(err.response.data || "Invalid data. Please check your inputs.");
+          setError(
+            err.response.data || "Invalid data. Please check your inputs."
+          );
         } else if (err.response.status === 500) {
           setError("Server error. Please try again later.");
         } else {
@@ -113,36 +113,38 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
   };
 
   return (
-    <Dialog 
-      open={!!open} 
-      onClose={onClose} 
-      fullWidth 
+    <Dialog
+      open={!!open}
+      onClose={onClose}
+      fullWidth
       maxWidth="sm"
       PaperProps={{
         sx: {
           borderRadius: 3,
           p: 1,
-        }
+        },
       }}
     >
-      <DialogTitle sx={{ 
-        fontSize: '1.5rem', 
-        fontWeight: 600,
-        pb: 2,
-        pt: 3,
-        px: 3,
-      }}>
+      <DialogTitle
+        sx={{
+          fontSize: "1.5rem",
+          fontWeight: 600,
+          pb: 2,
+          pt: 3,
+          px: 3,
+        }}
+      >
         Add Employee
       </DialogTitle>
       <DialogContent sx={{ px: 3, py: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
           <Box>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                mb: 1, 
-                color: 'text.secondary',
-                fontSize: '0.875rem',
+            <Typography
+              variant="body2"
+              sx={{
+                mb: 1,
+                color: "text.secondary",
+                fontSize: "0.875rem",
                 fontWeight: 500,
               }}
             >
@@ -157,66 +159,64 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
               placeholder="example@axlexpert.com"
               error={!!error && !form.email}
               sx={{
-                '& .MuiOutlinedInput-root': {
+                "& .MuiOutlinedInput-root": {
                   borderRadius: 2,
-                  backgroundColor: 'background.paper',
-                  '& fieldset': {
-                    borderColor: 'rgba(0, 0, 0, 0.12)',
+                  backgroundColor: "background.paper",
+                  "& fieldset": {
+                    borderColor: "rgba(0, 0, 0, 0.12)",
                   },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  "&:hover fieldset": {
+                    borderColor: "rgba(0, 0, 0, 0.23)",
                   },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#0b75d9',
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#0b75d9",
                   },
                 },
-                '& .MuiInputBase-input': {
-                  padding: '12px 14px',
+                "& .MuiInputBase-input": {
+                  padding: "12px 14px",
                 },
               }}
             />
           </Box>
 
           <Box>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                mb: 1, 
-                color: 'text.secondary',
-                fontSize: '0.875rem',
+            <Typography
+              variant="body2"
+              sx={{
+                mb: 1,
+                color: "text.secondary",
+                fontSize: "0.875rem",
                 fontWeight: 500,
               }}
             >
               Role
             </Typography>
-            <FormControl 
-              fullWidth 
-              required 
-              error={!!error && !form.role}
-            >
+            <FormControl fullWidth required error={!!error && !form.role}>
               <Select
                 value={form.role}
                 onChange={handleChange("role")}
                 displayEmpty
                 sx={{
                   borderRadius: 2,
-                  backgroundColor: 'background.paper',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.12)',
+                  backgroundColor: "background.paper",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.12)",
                   },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.23)",
                   },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#0b75d9',
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#0b75d9",
                   },
-                  '& .MuiSelect-select': {
-                    padding: '12px 14px',
+                  "& .MuiSelect-select": {
+                    padding: "12px 14px",
                   },
                 }}
               >
                 <MenuItem value="" disabled>
-                  <Typography sx={{ color: 'text.secondary' }}>Select role</Typography>
+                  <Typography sx={{ color: "text.secondary" }}>
+                    Select role
+                  </Typography>
                 </MenuItem>
                 <MenuItem value="USER">User</MenuItem>
                 <MenuItem value="EMPLOYEE">Employee</MenuItem>
@@ -226,21 +226,21 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
           </Box>
 
           <Box>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                mb: 1, 
-                color: 'text.secondary',
-                fontSize: '0.875rem',
+            <Typography
+              variant="body2"
+              sx={{
+                mb: 1,
+                color: "text.secondary",
+                fontSize: "0.875rem",
                 fontWeight: 500,
               }}
             >
               Branch
             </Typography>
-            <FormControl 
-              fullWidth 
-              required 
-              error={!!error && !form.branch} 
+            <FormControl
+              fullWidth
+              required
+              error={!!error && !form.branch}
               disabled={loading}
             >
               <Select
@@ -249,42 +249,46 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
                 displayEmpty
                 sx={{
                   borderRadius: 2,
-                  backgroundColor: 'background.paper',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.12)',
+                  backgroundColor: "background.paper",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.12)",
                   },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0, 0, 0, 0.23)",
                   },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#0b75d9',
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#0b75d9",
                   },
-                  '& .MuiSelect-select': {
-                    padding: '12px 14px',
+                  "& .MuiSelect-select": {
+                    padding: "12px 14px",
                   },
                 }}
               >
                 {loading ? (
                   <MenuItem disabled>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <CircularProgress size={20} />
                       <Typography>Loading branches...</Typography>
                     </Box>
                   </MenuItem>
                 ) : branches.length === 0 ? (
                   <MenuItem value="" disabled>
-                    <Typography sx={{ color: 'text.secondary' }}>No branches available</Typography>
+                    <Typography sx={{ color: "text.secondary" }}>
+                      No branches available
+                    </Typography>
                   </MenuItem>
                 ) : (
                   [
                     <MenuItem key="placeholder" value="" disabled>
-                      <Typography sx={{ color: 'text.secondary' }}>Select branch</Typography>
+                      <Typography sx={{ color: "text.secondary" }}>
+                        Select branch
+                      </Typography>
                     </MenuItem>,
                     ...branches.map((branch) => (
                       <MenuItem key={branch.id} value={branch.name}>
                         {branch.name}
                       </MenuItem>
-                    ))
+                    )),
                   ]
                 )}
               </Select>
@@ -292,65 +296,67 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
           </Box>
 
           {error && (
-            <Box sx={{ 
-              color: "error.main", 
-              fontSize: "0.875rem",
-              mt: -1,
-            }}>
+            <Box
+              sx={{
+                color: "error.main",
+                fontSize: "0.875rem",
+                mt: -1,
+              }}
+            >
               {error}
             </Box>
           )}
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3, pt: 2, gap: 2 }}>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={onClose}
           sx={{
             borderRadius: 2,
             px: 3,
             py: 1.5,
-            textTransform: 'none',
-            fontSize: '1rem',
+            textTransform: "none",
+            fontSize: "1rem",
             fontWeight: 500,
-            borderColor: 'rgba(0, 0, 0, 0.12)',
-            color: 'text.primary',
-            '&:hover': {
-              borderColor: 'rgba(0, 0, 0, 0.23)',
-              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            borderColor: "rgba(0, 0, 0, 0.12)",
+            color: "text.primary",
+            "&:hover": {
+              borderColor: "rgba(0, 0, 0, 0.23)",
+              backgroundColor: "rgba(0, 0, 0, 0.04)",
             },
           }}
         >
           Cancel
         </Button>
-        <Button 
+        <Button
           onClick={handleCreate}
           disabled={submitting}
           sx={{
             borderRadius: 2,
             px: 3,
             py: 1.5,
-            textTransform: 'none',
-            fontSize: '1rem',
+            textTransform: "none",
+            fontSize: "1rem",
             fontWeight: 500,
-            backgroundColor: '#0b75d9',
-            color: 'white',
-            '&:hover': {
-              backgroundColor: '#0765b6',
+            backgroundColor: "#0b75d9",
+            color: "white",
+            "&:hover": {
+              backgroundColor: "#0765b6",
             },
-            '&:disabled': {
-              backgroundColor: '#a0c4e8',
-              color: 'white',
+            "&:disabled": {
+              backgroundColor: "#a0c4e8",
+              color: "white",
             },
           }}
         >
           {submitting ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CircularProgress size={16} sx={{ color: 'white' }} />
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CircularProgress size={16} sx={{ color: "white" }} />
               <span>Saving...</span>
             </Box>
           ) : (
-            'Save'
+            "Save"
           )}
         </Button>
       </DialogActions>

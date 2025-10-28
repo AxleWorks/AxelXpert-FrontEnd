@@ -10,12 +10,9 @@ import {
 } from "@mui/material";
 import { Button } from "../ui/button";
 import axios from "axios";
+import { USERS_URL } from "../../config/apiEndpoints.jsx";
 
-export default function EmployeeProfileModal({
-  open,
-  onClose,
-  employee,
-}) {
+export default function EmployeeProfileModal({ open, onClose, employee }) {
   const [userData, setUserData] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
 
@@ -23,7 +20,8 @@ export default function EmployeeProfileModal({
     if (open && employee?.id) {
       setLoading(true);
       // Fetch fresh data from backend
-      axios.get(`http://localhost:8080/api/users/${employee.id}`)
+      axios
+        .get(`${USERS_URL}/${employee.id}`)
         .then((response) => {
           setUserData(response.data);
         })
@@ -39,53 +37,53 @@ export default function EmployeeProfileModal({
   }, [open, employee]);
 
   const inputStyles = {
-    '& .MuiOutlinedInput-root': {
+    "& .MuiOutlinedInput-root": {
       borderRadius: 2,
-      backgroundColor: 'rgba(0, 0, 0, 0.02)',
-      '& fieldset': {
-        borderColor: 'rgba(0, 0, 0, 0.12)',
+      backgroundColor: "rgba(0, 0, 0, 0.02)",
+      "& fieldset": {
+        borderColor: "rgba(0, 0, 0, 0.12)",
       },
-      '&:hover fieldset': {
-        borderColor: 'rgba(0, 0, 0, 0.12)',
+      "&:hover fieldset": {
+        borderColor: "rgba(0, 0, 0, 0.12)",
       },
-      '&.Mui-focused fieldset': {
-        borderColor: 'rgba(0, 0, 0, 0.12)',
+      "&.Mui-focused fieldset": {
+        borderColor: "rgba(0, 0, 0, 0.12)",
       },
-      '&.Mui-disabled': {
-        backgroundColor: 'rgba(0, 0, 0, 0.02)',
+      "&.Mui-disabled": {
+        backgroundColor: "rgba(0, 0, 0, 0.02)",
       },
     },
-    '& .MuiInputBase-input': {
-      padding: '12px 14px',
-      cursor: 'default',
+    "& .MuiInputBase-input": {
+      padding: "12px 14px",
+      cursor: "default",
     },
-    '& .MuiInputBase-input.Mui-disabled': {
-      WebkitTextFillColor: 'rgba(0, 0, 0, 0.87)',
+    "& .MuiInputBase-input.Mui-disabled": {
+      WebkitTextFillColor: "rgba(0, 0, 0, 0.87)",
     },
   };
 
   const labelStyles = {
     mb: 1,
-    color: 'text.secondary',
-    fontSize: '0.875rem',
+    color: "text.secondary",
+    fontSize: "0.875rem",
     fontWeight: 500,
   };
 
   if (loading || !userData) {
     return (
-      <Dialog 
-        open={!!open} 
-        onClose={onClose} 
-        maxWidth="sm" 
+      <Dialog
+        open={!!open}
+        onClose={onClose}
+        maxWidth="sm"
         fullWidth
         PaperProps={{
           sx: {
             borderRadius: 3,
             p: 1,
-          }
+          },
         }}
       >
-        <DialogContent sx={{ px: 3, py: 4, textAlign: 'center' }}>
+        <DialogContent sx={{ px: 3, py: 4, textAlign: "center" }}>
           <Typography>Loading...</Typography>
         </DialogContent>
       </Dialog>
@@ -93,30 +91,31 @@ export default function EmployeeProfileModal({
   }
 
   return (
-    <Dialog 
-      open={!!open} 
-      onClose={onClose} 
-      maxWidth="sm" 
+    <Dialog
+      open={!!open}
+      onClose={onClose}
+      maxWidth="sm"
       fullWidth
       PaperProps={{
         sx: {
           borderRadius: 3,
           p: 1,
-        }
+        },
       }}
     >
-      <DialogTitle sx={{ 
-        fontSize: '1.5rem', 
-        fontWeight: 600,
-        pb: 2,
-        pt: 3,
-        px: 3,
-      }}>
+      <DialogTitle
+        sx={{
+          fontSize: "1.5rem",
+          fontWeight: 600,
+          pb: 2,
+          pt: 3,
+          px: 3,
+        }}
+      >
         View Profile
       </DialogTitle>
       <DialogContent sx={{ px: 3, py: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
-          
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
           {/* User Name */}
           <Box>
             <Typography variant="body2" sx={labelStyles}>
@@ -154,9 +153,9 @@ export default function EmployeeProfileModal({
               disabled
               sx={{
                 ...inputStyles,
-                '& .MuiInputBase-input.Mui-disabled': {
-                  WebkitTextFillColor: 'rgba(0, 0, 0, 0.87)',
-                  textTransform: 'capitalize',
+                "& .MuiInputBase-input.Mui-disabled": {
+                  WebkitTextFillColor: "rgba(0, 0, 0, 0.87)",
+                  textTransform: "capitalize",
                 },
               }}
             />
@@ -208,22 +207,22 @@ export default function EmployeeProfileModal({
             </Typography>
             <TextField
               value={
-                userData.isBlocked 
-                  ? "Blocked" 
-                  : userData.isActive 
-                  ? "Active" 
+                userData.isBlocked
+                  ? "Blocked"
+                  : userData.isActive
+                  ? "Active"
                   : "Inactive"
               }
               fullWidth
               disabled
               sx={{
                 ...inputStyles,
-                '& .MuiInputBase-input.Mui-disabled': {
-                  WebkitTextFillColor: userData.isBlocked 
-                    ? '#ef4444' 
-                    : userData.isActive 
-                    ? '#10b981' 
-                    : '#f59e0b',
+                "& .MuiInputBase-input.Mui-disabled": {
+                  WebkitTextFillColor: userData.isBlocked
+                    ? "#ef4444"
+                    : userData.isActive
+                    ? "#10b981"
+                    : "#f59e0b",
                   fontWeight: 500,
                 },
               }}
@@ -236,29 +235,34 @@ export default function EmployeeProfileModal({
               Created At
             </Typography>
             <TextField
-              value={userData.createdAt ? new Date(userData.createdAt).toLocaleString() : "N/A"}
+              value={
+                userData.createdAt
+                  ? new Date(userData.createdAt).toLocaleString()
+                  : "N/A"
+              }
               fullWidth
               disabled
               sx={inputStyles}
             />
           </Box>
-
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 3, pt: 2, gap: 2, justifyContent: 'flex-end' }}>
-        <Button 
+      <DialogActions
+        sx={{ px: 3, pb: 3, pt: 2, gap: 2, justifyContent: "flex-end" }}
+      >
+        <Button
           onClick={onClose}
           sx={{
             borderRadius: 2,
             px: 4,
             py: 1.5,
-            textTransform: 'none',
-            fontSize: '1rem',
+            textTransform: "none",
+            fontSize: "1rem",
             fontWeight: 500,
-            backgroundColor: '#0b75d9',
-            color: 'white',
-            '&:hover': {
-              backgroundColor: '#0765b6',
+            backgroundColor: "#0b75d9",
+            color: "white",
+            "&:hover": {
+              backgroundColor: "#0765b6",
             },
           }}
         >

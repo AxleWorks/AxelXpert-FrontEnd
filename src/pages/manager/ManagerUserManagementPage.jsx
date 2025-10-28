@@ -41,6 +41,7 @@ import EditEmployeeModal from "../../components/userManagement/EditEmployeeModal
 import AddEmployeeModal from "../../components/userManagement/AddEmployeeModal";
 import axios from "axios";
 import { Visibility, Edit, Delete, Block } from "@mui/icons-material";
+import { USERS_URL } from "../../config/apiEndpoints.jsx";
 
 const StatCard = ({
   title,
@@ -150,7 +151,7 @@ const ManagerUserManagementPage = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/users/all");
+        const response = await axios.get(`${USERS_URL}/all`);
         setEmployees(response.data);
       } catch (err) {
         console.error("Failed to fetch employees:", err);
@@ -187,33 +188,42 @@ const ManagerUserManagementPage = () => {
   const confirmDelete = async () => {
     if (employeeToDelete) {
       try {
-        await axios.delete(`http://localhost:8080/api/users/${employeeToDelete.id}`);
-        
+        await axios.delete(`${USERS_URL}/${employeeToDelete.id}`);
+
         // Success - HTTP 204 No Content
-        setEmployees((prev) => prev.filter((e) => e.id !== employeeToDelete.id));
+        setEmployees((prev) =>
+          prev.filter((e) => e.id !== employeeToDelete.id)
+        );
         setSuccessTitle("Employee deleted!");
-        setSuccessMessage(`${employeeToDelete.username} has been deleted successfully.`);
+        setSuccessMessage(
+          `${employeeToDelete.username} has been deleted successfully.`
+        );
         setShowSuccess(true);
         console.log("Employee deleted successfully");
-        
+
         setDeleteDialogOpen(false);
         setEmployeeToDelete(null);
       } catch (error) {
         console.error("Failed to delete employee:", error);
-        
+
         setDeleteDialogOpen(false);
         setEmployeeToDelete(null);
-        
+
         // Handle different error scenarios
         if (error.response) {
           if (error.response.status === 409) {
             // Conflict - User has active bookings or tasks
             setErrorTitle("Delete Failed");
-            setErrorMessage(error.response.data || "Cannot delete user: User has active bookings or tasks");
+            setErrorMessage(
+              error.response.data ||
+                "Cannot delete user: User has active bookings or tasks"
+            );
           } else if (error.response.status === 404) {
             // Not found
             setErrorTitle("Delete Failed");
-            setErrorMessage("User not found. They may have been already deleted.");
+            setErrorMessage(
+              "User not found. They may have been already deleted."
+            );
           } else {
             // Other errors
             setErrorTitle("Delete Failed");
@@ -222,9 +232,11 @@ const ManagerUserManagementPage = () => {
         } else {
           // Network or other errors
           setErrorTitle("Delete Failed");
-          setErrorMessage("Network error. Please check your connection and try again.");
+          setErrorMessage(
+            "Network error. Please check your connection and try again."
+          );
         }
-        
+
         setShowError(true);
       }
     }
@@ -244,18 +256,18 @@ const ManagerUserManagementPage = () => {
     if (employeeToBlock) {
       const isCurrentlyBlocked = employeeToBlock.isBlocked;
       const newBlockedStatus = !isCurrentlyBlocked;
-      
+
       try {
         const response = await axios.put(
-          `http://localhost:8080/api/users/${employeeToBlock.id}/block`,
+          `${USERS_URL}/${employeeToBlock.id}/block`,
           { blocked: newBlockedStatus }
         );
-        
+
         // Success - update local state with response data
         setEmployees((prev) =>
           prev.map((e) => (e.id === response.data.id ? response.data : e))
         );
-        
+
         setSuccessTitle(newBlockedStatus ? "User blocked!" : "User unblocked!");
         setSuccessMessage(
           newBlockedStatus
@@ -263,24 +275,26 @@ const ManagerUserManagementPage = () => {
             : `${employeeToBlock.username} has been unblocked successfully.`
         );
         setShowSuccess(true);
-        console.log(`User ${newBlockedStatus ? 'blocked' : 'unblocked'} successfully`);
-        
+        console.log(
+          `User ${newBlockedStatus ? "blocked" : "unblocked"} successfully`
+        );
+
         setBlockDialogOpen(false);
         setEmployeeToBlock(null);
       } catch (error) {
         console.error("Failed to update block status:", error);
-        
+
         setBlockDialogOpen(false);
         setEmployeeToBlock(null);
-        
+
         // Handle different error scenarios
         if (error.response) {
           if (error.response.status === 409) {
             // Conflict - User has active bookings or tasks
             setErrorTitle(newBlockedStatus ? "Block Failed" : "Unblock Failed");
             setErrorMessage(
-              error.response.data || 
-              "Cannot block user: User has active bookings or tasks"
+              error.response.data ||
+                "Cannot block user: User has active bookings or tasks"
             );
           } else if (error.response.status === 404) {
             // Not found
@@ -298,9 +312,11 @@ const ManagerUserManagementPage = () => {
         } else {
           // Network or other errors
           setErrorTitle(newBlockedStatus ? "Block Failed" : "Unblock Failed");
-          setErrorMessage("Network error. Please check your connection and try again.");
+          setErrorMessage(
+            "Network error. Please check your connection and try again."
+          );
         }
-        
+
         setShowError(true);
       }
     }
@@ -334,17 +350,20 @@ const ManagerUserManagementPage = () => {
     return 0;
   }, []);
 
-  const getComparator = React.useCallback((order, orderBy) => {
-    return order === "desc"
-      ? (a, b) => descendingComparator(a, b, orderBy)
-      : (a, b) => -descendingComparator(a, b, orderBy);
-  }, [descendingComparator]);
+  const getComparator = React.useCallback(
+    (order, orderBy) => {
+      return order === "desc"
+        ? (a, b) => descendingComparator(a, b, orderBy)
+        : (a, b) => -descendingComparator(a, b, orderBy);
+    },
+    [descendingComparator]
+  );
 
   const filteredEmployees = React.useMemo(() => {
     if (!searchQuery.trim()) {
       return employees;
     }
-    
+
     const query = searchQuery.toLowerCase();
     return employees.filter((employee) => {
       return (
@@ -364,8 +383,12 @@ const ManagerUserManagementPage = () => {
 
   // Calculate stats from actual data
   const totalEmployees = employees.length;
-  const activeEmployees = employees.filter(emp => emp.isActive && !emp.isBlocked).length;
-  const inactiveEmployees = employees.filter(emp => !emp.isActive || emp.isBlocked).length;
+  const activeEmployees = employees.filter(
+    (emp) => emp.isActive && !emp.isBlocked
+  ).length;
+  const inactiveEmployees = employees.filter(
+    (emp) => !emp.isActive || emp.isBlocked
+  ).length;
 
   if (loading) {
     return <div>Loading...</div>;
@@ -570,110 +593,125 @@ const ManagerUserManagementPage = () => {
                     </TableRow>
                   ) : (
                     sortedEmployees.map((employee) => (
-                    <TableRow
-                      key={employee.id}
-                      sx={{
-                        cursor: "pointer",
-                        transition: "background-color 150ms ease",
-                        "&:hover": {
-                          backgroundColor: "action.hover",
-                        },
-                      }}
-                    >
-                      <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                        >
-                          <Avatar
-                            name={employee.username}
-                            profileImageUrl={employee.profileImageUrl}
-                          />
-                          <Box>
-                            <Typography sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
-                              {employee.username}
-                            </Typography>
-                            <Typography 
-                              sx={{ 
-                                color: 'text.secondary',
-                                fontSize: '0.875rem',
-                                mt: 0.25,
-                              }}
-                            >
-                              {employee.email}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography sx={{ textTransform: 'capitalize' }}>
-                          {employee.role}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{employee.branchName || "No Branch"}</TableCell>
-                      <TableCell>
-                        <Typography>{employee.phoneNumber || "N/A"}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          sx={{
-                            borderRadius: 8,
-                            padding: "4px 10px",
-                            backgroundColor: employee.isBlocked
-                              ? "#ef4444" // Red for blocked
-                              : employee.isActive
-                              ? "#10b981" // Green for active
-                              : "#f59e0b", // Orange for inactive
-                            color: "white",
-                          }}
-                        >
-                          {employee.isBlocked ? (
-                            <Typography>Blocked</Typography>
-                          ) : employee.isActive ? (
-                            <Typography>Active</Typography>
-                          ) : (
-                            <Typography>Inactive</Typography>
-                          )}
-                        </Badge>
-                      </TableCell>
-
-                      <TableCell align="center">
-                        <Tooltip title="View">
-                          <IconButton
-                            onClick={() => openView(employee)}
-                            style={{ color: "#4caf50" }}
-                          >
-                            <Visibility />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Edit">
-                          <IconButton
-                            onClick={() => openEdit(employee)}
-                            style={{ color: "#0b75d9" }}
-                          >
-                            <Edit />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton
-                            onClick={() => openDeleteDialog(employee)}
-                            style={{ color: "#f44336" }}
-                          >
-                            <Delete />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title={employee.isBlocked ? "Unblock" : "Block"}>
-                          <IconButton
-                            onClick={() => openBlockDialog(employee)}
-                            style={{ 
-                              color: employee.isBlocked ? "#10b981" : "#ff9800" 
+                      <TableRow
+                        key={employee.id}
+                        sx={{
+                          cursor: "pointer",
+                          transition: "background-color 150ms ease",
+                          "&:hover": {
+                            backgroundColor: "action.hover",
+                          },
+                        }}
+                      >
+                        <TableCell>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 2,
                             }}
                           >
-                            <Block />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  )))}
+                            <Avatar
+                              name={employee.username}
+                              profileImageUrl={employee.profileImageUrl}
+                            />
+                            <Box>
+                              <Typography
+                                sx={{ fontWeight: 600, fontSize: "0.95rem" }}
+                              >
+                                {employee.username}
+                              </Typography>
+                              <Typography
+                                sx={{
+                                  color: "text.secondary",
+                                  fontSize: "0.875rem",
+                                  mt: 0.25,
+                                }}
+                              >
+                                {employee.email}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography sx={{ textTransform: "capitalize" }}>
+                            {employee.role}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          {employee.branchName || "No Branch"}
+                        </TableCell>
+                        <TableCell>
+                          <Typography>
+                            {employee.phoneNumber || "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            sx={{
+                              borderRadius: 8,
+                              padding: "4px 10px",
+                              backgroundColor: employee.isBlocked
+                                ? "#ef4444" // Red for blocked
+                                : employee.isActive
+                                ? "#10b981" // Green for active
+                                : "#f59e0b", // Orange for inactive
+                              color: "white",
+                            }}
+                          >
+                            {employee.isBlocked ? (
+                              <Typography>Blocked</Typography>
+                            ) : employee.isActive ? (
+                              <Typography>Active</Typography>
+                            ) : (
+                              <Typography>Inactive</Typography>
+                            )}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell align="center">
+                          <Tooltip title="View">
+                            <IconButton
+                              onClick={() => openView(employee)}
+                              style={{ color: "#4caf50" }}
+                            >
+                              <Visibility />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Edit">
+                            <IconButton
+                              onClick={() => openEdit(employee)}
+                              style={{ color: "#0b75d9" }}
+                            >
+                              <Edit />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton
+                              onClick={() => openDeleteDialog(employee)}
+                              style={{ color: "#f44336" }}
+                            >
+                              <Delete />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip
+                            title={employee.isBlocked ? "Unblock" : "Block"}
+                          >
+                            <IconButton
+                              onClick={() => openBlockDialog(employee)}
+                              style={{
+                                color: employee.isBlocked
+                                  ? "#10b981"
+                                  : "#ff9800",
+                              }}
+                            >
+                              <Block />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -693,28 +731,33 @@ const ManagerUserManagementPage = () => {
           employee={selectedEmployee}
           onSave={(updated) => {
             // Update user via backend API
-            axios.put(`http://localhost:8080/api/users/${updated.id}`, {
-              username: updated.username,
-              role: updated.role,
-              branchId: updated.branchId,
-              phoneNumber: updated.phoneNumber,
-              address: updated.address,
-              isActive: updated.isActive,
-            })
-            .then((response) => {
-              // Update local state with response data
-              setEmployees((prev) =>
-                prev.map((e) => (e.id === response.data.id ? response.data : e))
-              );
-              setSuccessTitle("Profile updated!");
-              setSuccessMessage("Your profile has been updated successfully.");
-              setShowSuccess(true);
-              console.log("User updated successfully");
-            })
-            .catch((error) => {
-              console.error("Failed to update user:", error);
-              setError("Failed to update user. Please try again.");
-            });
+            axios
+              .put(`${USERS_URL}/${updated.id}`, {
+                username: updated.username,
+                role: updated.role,
+                branchId: updated.branchId,
+                phoneNumber: updated.phoneNumber,
+                address: updated.address,
+                isActive: updated.isActive,
+              })
+              .then((response) => {
+                // Update local state with response data
+                setEmployees((prev) =>
+                  prev.map((e) =>
+                    e.id === response.data.id ? response.data : e
+                  )
+                );
+                setSuccessTitle("Profile updated!");
+                setSuccessMessage(
+                  "Your profile has been updated successfully."
+                );
+                setShowSuccess(true);
+                console.log("User updated successfully");
+              })
+              .catch((error) => {
+                console.error("Failed to update user:", error);
+                setError("Failed to update user. Please try again.");
+              });
             setEditModalOpen(false);
             setSelectedEmployee(null);
           }}
@@ -726,7 +769,9 @@ const ManagerUserManagementPage = () => {
             // Add the new employee returned from the backend to the local state
             setEmployees((prev) => [...prev, newEmployee]);
             setSuccessTitle("Employee added!");
-            setSuccessMessage(`${newEmployee.email} has been added successfully. A welcome email with login credentials has been sent.`);
+            setSuccessMessage(
+              `${newEmployee.email} has been added successfully. A welcome email with login credentials has been sent.`
+            );
             setShowSuccess(true);
             setAddOpen(false);
           }}
@@ -735,123 +780,127 @@ const ManagerUserManagementPage = () => {
           open={showSuccess}
           autoHideDuration={4000}
           onClose={() => setShowSuccess(false)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
           sx={{ mt: 2 }}
         >
-          <Alert 
-            onClose={() => setShowSuccess(false)} 
-            severity="success" 
+          <Alert
+            onClose={() => setShowSuccess(false)}
+            severity="success"
             variant="filled"
             icon={
               <Box
                 sx={{
                   width: 24,
                   height: 24,
-                  borderRadius: '50%',
-                  backgroundColor: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#10b981',
+                  borderRadius: "50%",
+                  backgroundColor: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#10b981",
                 }}
               >
                 ✓
               </Box>
             }
-            sx={{ 
-              width: '400px',
-              backgroundColor: '#d1fae5',
-              color: '#065f46',
+            sx={{
+              width: "400px",
+              backgroundColor: "#d1fae5",
+              color: "#065f46",
               borderRadius: 2,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              fontSize: '0.95rem',
-              '& .MuiAlert-message': {
-                display: 'flex',
-                flexDirection: 'column',
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              fontSize: "0.95rem",
+              "& .MuiAlert-message": {
+                display: "flex",
+                flexDirection: "column",
                 gap: 0.5,
               },
-              '& .MuiAlert-icon': {
+              "& .MuiAlert-icon": {
                 marginRight: 1.5,
               },
-              '& .MuiIconButton-root': {
-                color: '#065f46',
-                '&:hover': {
-                  backgroundColor: 'rgba(6, 95, 70, 0.1)',
+              "& .MuiIconButton-root": {
+                color: "#065f46",
+                "&:hover": {
+                  backgroundColor: "rgba(6, 95, 70, 0.1)",
                 },
               },
             }}
           >
-            <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: '#065f46' }}>
+            <Typography
+              sx={{ fontWeight: 600, fontSize: "1rem", color: "#065f46" }}
+            >
               {successTitle}
             </Typography>
-            <Typography sx={{ fontSize: '0.875rem', color: '#047857' }}>
+            <Typography sx={{ fontSize: "0.875rem", color: "#047857" }}>
               {successMessage}
             </Typography>
           </Alert>
         </Snackbar>
-        
+
         {/* Error Notification */}
         <Snackbar
           open={showError}
           autoHideDuration={5000}
           onClose={() => setShowError(false)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
           sx={{ mt: 2 }}
         >
-          <Alert 
-            onClose={() => setShowError(false)} 
-            severity="error" 
+          <Alert
+            onClose={() => setShowError(false)}
+            severity="error"
             variant="filled"
             icon={
               <Box
                 sx={{
                   width: 24,
                   height: 24,
-                  borderRadius: '50%',
-                  backgroundColor: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ef4444',
-                  fontSize: '1.2rem',
+                  borderRadius: "50%",
+                  backgroundColor: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#ef4444",
+                  fontSize: "1.2rem",
                   fontWeight: 700,
                 }}
               >
                 ✕
               </Box>
             }
-            sx={{ 
-              width: '400px',
-              backgroundColor: '#fee2e2',
-              color: '#7f1d1d',
+            sx={{
+              width: "400px",
+              backgroundColor: "#fee2e2",
+              color: "#7f1d1d",
               borderRadius: 2,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              fontSize: '0.95rem',
-              '& .MuiAlert-message': {
-                display: 'flex',
-                flexDirection: 'column',
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              fontSize: "0.95rem",
+              "& .MuiAlert-message": {
+                display: "flex",
+                flexDirection: "column",
                 gap: 0.5,
               },
-              '& .MuiAlert-icon': {
+              "& .MuiAlert-icon": {
                 marginRight: 1.5,
               },
-              '& .MuiIconButton-root': {
-                color: '#7f1d1d',
-                '&:hover': {
-                  backgroundColor: 'rgba(127, 29, 29, 0.1)',
+              "& .MuiIconButton-root": {
+                color: "#7f1d1d",
+                "&:hover": {
+                  backgroundColor: "rgba(127, 29, 29, 0.1)",
                 },
               },
             }}
           >
-            <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: '#7f1d1d' }}>
+            <Typography
+              sx={{ fontWeight: 600, fontSize: "1rem", color: "#7f1d1d" }}
+            >
               {errorTitle}
             </Typography>
-            <Typography sx={{ fontSize: '0.875rem', color: '#991b1b' }}>
+            <Typography sx={{ fontSize: "0.875rem", color: "#991b1b" }}>
               {errorMessage}
             </Typography>
           </Alert>
         </Snackbar>
-        
+
         {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialogOpen}
@@ -861,84 +910,95 @@ const ManagerUserManagementPage = () => {
               borderRadius: 3,
               p: 3,
               minWidth: 400,
-            }
+            },
           }}
         >
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center',
-            textAlign: 'center',
-            gap: 2,
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+              gap: 2,
+            }}
+          >
             {/* Delete Warning Icon */}
             <Box
               sx={{
                 width: 64,
                 height: 64,
-                borderRadius: '50%',
-                backgroundColor: '#ffebee',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '3px solid #ffcdd2',
+                borderRadius: "50%",
+                backgroundColor: "#ffebee",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "3px solid #ffcdd2",
               }}
             >
-              <Delete 
-                sx={{ 
-                  fontSize: '2rem', 
-                  color: '#f44336',
+              <Delete
+                sx={{
+                  fontSize: "2rem",
+                  color: "#f44336",
                 }}
               />
             </Box>
 
             {/* Title */}
-            <DialogTitle sx={{ 
-              fontSize: '1.5rem', 
-              fontWeight: 600,
-              p: 0,
-              color: '#1a1a1a',
-            }}>
+            <DialogTitle
+              sx={{
+                fontSize: "1.5rem",
+                fontWeight: 600,
+                p: 0,
+                color: "#1a1a1a",
+              }}
+            >
               Confirm Delete
             </DialogTitle>
 
             {/* Message */}
             <DialogContent sx={{ p: 0 }}>
-              <DialogContentText sx={{ 
-                color: '#666666', 
-                fontSize: '1rem',
-                lineHeight: 1.5,
-              }}>
-                Are you sure you want to delete <strong>{employeeToDelete?.username}</strong>?
+              <DialogContentText
+                sx={{
+                  color: "#666666",
+                  fontSize: "1rem",
+                  lineHeight: 1.5,
+                }}
+              >
+                Are you sure you want to delete{" "}
+                <strong>{employeeToDelete?.username}</strong>?
               </DialogContentText>
-              <DialogContentText sx={{ 
-                color: '#999999', 
-                fontSize: '0.875rem',
-                lineHeight: 1.5,
-                mt: 1.5,
-                fontStyle: 'italic',
-              }}>
+              <DialogContentText
+                sx={{
+                  color: "#999999",
+                  fontSize: "0.875rem",
+                  lineHeight: 1.5,
+                  mt: 1.5,
+                  fontStyle: "italic",
+                }}
+              >
                 Note: Users with active appointments or tasks cannot be deleted.
               </DialogContentText>
             </DialogContent>
 
             {/* Buttons */}
-            <DialogActions sx={{ p: 0, gap: 2, width: '100%', justifyContent: 'center' }}>
+            <DialogActions
+              sx={{ p: 0, gap: 2, width: "100%", justifyContent: "center" }}
+            >
               <Button
                 onClick={cancelDelete}
                 sx={{
                   borderRadius: 2,
                   px: 4,
                   py: 1.2,
-                  textTransform: 'uppercase',
-                  fontSize: '0.875rem',
+                  textTransform: "uppercase",
+                  fontSize: "0.875rem",
                   fontWeight: 600,
-                  color: '#0b75d9',
-                  border: '1px solid #0b75d9',
-                  backgroundColor: 'transparent',
+                  color: "#0b75d9",
+                  border: "1px solid #0b75d9",
+                  backgroundColor: "transparent",
                   minWidth: 120,
-                  '&:hover': {
-                    backgroundColor: 'rgba(11, 117, 217, 0.04)',
+                  "&:hover": {
+                    backgroundColor: "rgba(11, 117, 217, 0.04)",
                   },
                 }}
               >
@@ -950,14 +1010,14 @@ const ManagerUserManagementPage = () => {
                   borderRadius: 2,
                   px: 4,
                   py: 1.2,
-                  textTransform: 'uppercase',
-                  fontSize: '0.875rem',
+                  textTransform: "uppercase",
+                  fontSize: "0.875rem",
                   fontWeight: 600,
-                  backgroundColor: '#0b75d9',
-                  color: 'white',
+                  backgroundColor: "#0b75d9",
+                  color: "white",
                   minWidth: 120,
-                  '&:hover': {
-                    backgroundColor: '#0960b8',
+                  "&:hover": {
+                    backgroundColor: "#0960b8",
                   },
                 }}
               >
@@ -976,105 +1036,114 @@ const ManagerUserManagementPage = () => {
               borderRadius: 3,
               p: 3,
               minWidth: 400,
-            }
+            },
           }}
         >
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center',
-            textAlign: 'center',
-            gap: 2,
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+              gap: 2,
+            }}
+          >
             {/* Block/Unblock Warning Icon */}
             <Box
               sx={{
                 width: 64,
                 height: 64,
-                borderRadius: '50%',
-                backgroundColor: employeeToBlock?.isBlocked ? '#e9fbf0' : '#fff6ea',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: employeeToBlock?.isBlocked 
-                  ? '3px solid #a7f3d0' 
-                  : '3px solid #fde68a',
+                borderRadius: "50%",
+                backgroundColor: employeeToBlock?.isBlocked
+                  ? "#e9fbf0"
+                  : "#fff6ea",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: employeeToBlock?.isBlocked
+                  ? "3px solid #a7f3d0"
+                  : "3px solid #fde68a",
               }}
             >
               {employeeToBlock?.isBlocked ? (
-                <UserCheck 
-                  size={32}
-                  color="#10b981"
-                />
+                <UserCheck size={32} color="#10b981" />
               ) : (
-                <Block 
-                  sx={{ 
-                    fontSize: '2rem', 
-                    color: '#f59e0b',
+                <Block
+                  sx={{
+                    fontSize: "2rem",
+                    color: "#f59e0b",
                   }}
                 />
               )}
             </Box>
 
             {/* Title */}
-            <DialogTitle sx={{ 
-              fontSize: '1.5rem', 
-              fontWeight: 600,
-              p: 0,
-              color: '#1a1a1a',
-            }}>
-              {employeeToBlock?.isBlocked ? 'Confirm Unblock' : 'Confirm Block'}
+            <DialogTitle
+              sx={{
+                fontSize: "1.5rem",
+                fontWeight: 600,
+                p: 0,
+                color: "#1a1a1a",
+              }}
+            >
+              {employeeToBlock?.isBlocked ? "Confirm Unblock" : "Confirm Block"}
             </DialogTitle>
 
             {/* Message */}
             <DialogContent sx={{ p: 0 }}>
-              <DialogContentText sx={{ 
-                color: '#666666', 
-                fontSize: '1rem',
-                lineHeight: 1.5,
-              }}>
+              <DialogContentText
+                sx={{
+                  color: "#666666",
+                  fontSize: "1rem",
+                  lineHeight: 1.5,
+                }}
+              >
                 {employeeToBlock?.isBlocked ? (
                   <>
-                    Are you sure you want to unblock <strong>{employeeToBlock?.username}</strong>?
+                    Are you sure you want to unblock{" "}
+                    <strong>{employeeToBlock?.username}</strong>?
                   </>
                 ) : (
                   <>
-                    Are you sure you want to block <strong>{employeeToBlock?.username}</strong>?
+                    Are you sure you want to block{" "}
+                    <strong>{employeeToBlock?.username}</strong>?
                   </>
                 )}
               </DialogContentText>
-              <DialogContentText sx={{ 
-                color: '#999999', 
-                fontSize: '0.875rem',
-                lineHeight: 1.5,
-                mt: 1.5,
-                fontStyle: 'italic',
-              }}>
-                {employeeToBlock?.isBlocked ? (
-                  "This will restore the user's access to the system."
-                ) : (
-                  "Note: Users with active appointments or tasks cannot be blocked."
-                )}
+              <DialogContentText
+                sx={{
+                  color: "#999999",
+                  fontSize: "0.875rem",
+                  lineHeight: 1.5,
+                  mt: 1.5,
+                  fontStyle: "italic",
+                }}
+              >
+                {employeeToBlock?.isBlocked
+                  ? "This will restore the user's access to the system."
+                  : "Note: Users with active appointments or tasks cannot be blocked."}
               </DialogContentText>
             </DialogContent>
 
             {/* Buttons */}
-            <DialogActions sx={{ p: 0, gap: 2, width: '100%', justifyContent: 'center' }}>
+            <DialogActions
+              sx={{ p: 0, gap: 2, width: "100%", justifyContent: "center" }}
+            >
               <Button
                 onClick={cancelBlock}
                 sx={{
                   borderRadius: 2,
                   px: 4,
                   py: 1.2,
-                  textTransform: 'uppercase',
-                  fontSize: '0.875rem',
+                  textTransform: "uppercase",
+                  fontSize: "0.875rem",
                   fontWeight: 600,
-                  color: '#0b75d9',
-                  border: '1px solid #0b75d9',
-                  backgroundColor: 'transparent',
+                  color: "#0b75d9",
+                  border: "1px solid #0b75d9",
+                  backgroundColor: "transparent",
                   minWidth: 120,
-                  '&:hover': {
-                    backgroundColor: 'rgba(11, 117, 217, 0.04)',
+                  "&:hover": {
+                    backgroundColor: "rgba(11, 117, 217, 0.04)",
                   },
                 }}
               >
@@ -1086,14 +1155,14 @@ const ManagerUserManagementPage = () => {
                   borderRadius: 2,
                   px: 4,
                   py: 1.2,
-                  textTransform: 'uppercase',
-                  fontSize: '0.875rem',
+                  textTransform: "uppercase",
+                  fontSize: "0.875rem",
                   fontWeight: 600,
-                  backgroundColor: '#0b75d9',
-                  color: 'white',
+                  backgroundColor: "#0b75d9",
+                  color: "white",
                   minWidth: 120,
-                  '&:hover': {
-                    backgroundColor: '#0960b8',
+                  "&:hover": {
+                    backgroundColor: "#0960b8",
                   },
                 }}
               >
