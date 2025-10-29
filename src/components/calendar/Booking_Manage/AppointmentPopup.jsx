@@ -19,6 +19,7 @@ import {
 import AppointmentHeader from "./ui/AppointmentHeader";
 import AppointmentDetails from "./ui/AppointmentDetails";
 import AssignEmployeeSection from "./ui/AssignEmployeeSection";
+import { API_BASE, API_PREFIX } from "../../../config/apiEndpoints.jsx";
 import AppointmentActions from "./ui/AppointmentActions";
 import RejectionDialog from "./ui/RejectionDialog";
 
@@ -63,7 +64,7 @@ export default function AppointmentPopup({
   onReject,
   selectedEmployee,
   setSelectedEmployee,
-  apiBase = "http://localhost:8080/api",
+  apiBase = `${API_BASE}${API_PREFIX}`,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);

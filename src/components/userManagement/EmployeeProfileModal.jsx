@@ -4,191 +4,270 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   Box,
   TextField,
-  Avatar,
   Typography,
-  FormControlLabel,
-  Switch,
-  Grid,
 } from "@mui/material";
+import { Button } from "../ui/button";
+import axios from "axios";
+import { USERS_URL } from "../../config/apiEndpoints.jsx";
 
-export default function EmployeeProfileModal({
-  open,
-  onClose,
-  employee,
-  mode = "view",
-  onSave,
-}) {
-  const [form, setForm] = React.useState(() => ({
-    fullName: employee?.name || "",
-    role: employee?.role || "",
-    branch: employee?.branch || "",
-    email: employee?.email || "",
-    phone: employee?.phone || "",
-    address: employee?.address || "",
-    hiredAt: employee?.hiredAt ?? employee?.hired_at ?? "",
-    active: employee?.status === "Active",
-  }));
+export default function EmployeeProfileModal({ open, onClose, employee }) {
+  const [userData, setUserData] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
-    setForm({
-      fullName: employee?.name || "",
-      role: employee?.role || "",
-      branch: employee?.branch || "",
-      email: employee?.email || "",
-      phone: employee?.phone || "",
-      address: employee?.address || "",
-      hiredAt: employee?.hiredAt ?? employee?.hired_at ?? "",
-      active: employee?.status === "Active",
-    });
-  }, [employee, open]);
-
-  const readOnly = mode === "view";
-
-  const handleChange = (field) => (e) => {
-    const value = field === "active" ? e.target.checked : e.target.value;
-    setForm((s) => ({ ...s, [field]: value }));
-  };
-
-  const handleSave = () => {
-    if (onSave) {
-      const updated = {
-        ...employee,
-        name: form.fullName,
-        role: form.role,
-        branch: form.branch,
-        phone: form.phone,
-        address: form.address,
-        hiredAt: form.hiredAt,
-        status: form.active ? "Active" : "On Leave",
-      };
-      onSave(updated);
+    if (open && employee?.id) {
+      setLoading(true);
+      // Fetch fresh data from backend
+      axios
+        .get(`${USERS_URL}/${employee.id}`)
+        .then((response) => {
+          setUserData(response.data);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch user data:", error);
+          // Fallback to provided employee data
+          setUserData(employee);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
-    onClose();
+  }, [open, employee]);
+
+  const inputStyles = {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 2,
+      backgroundColor: "rgba(0, 0, 0, 0.02)",
+      "& fieldset": {
+        borderColor: "rgba(0, 0, 0, 0.12)",
+      },
+      "&:hover fieldset": {
+        borderColor: "rgba(0, 0, 0, 0.12)",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "rgba(0, 0, 0, 0.12)",
+      },
+      "&.Mui-disabled": {
+        backgroundColor: "rgba(0, 0, 0, 0.02)",
+      },
+    },
+    "& .MuiInputBase-input": {
+      padding: "12px 14px",
+      cursor: "default",
+    },
+    "& .MuiInputBase-input.Mui-disabled": {
+      WebkitTextFillColor: "rgba(0, 0, 0, 0.87)",
+    },
   };
+
+  const labelStyles = {
+    mb: 1,
+    color: "text.secondary",
+    fontSize: "0.875rem",
+    fontWeight: 500,
+  };
+
+  if (loading || !userData) {
+    return (
+      <Dialog
+        open={!!open}
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 1,
+          },
+        }}
+      >
+        <DialogContent sx={{ px: 3, py: 4, textAlign: "center" }}>
+          <Typography>Loading...</Typography>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
-    <Dialog open={!!open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {mode === "view" ? "View Profile" : "Edit Profile"}
+    <Dialog
+      open={!!open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          p: 1,
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          fontSize: "1.5rem",
+          fontWeight: 600,
+          pb: 2,
+          pt: 3,
+          px: 3,
+        }}
+      >
+        View Profile
       </DialogTitle>
-      <DialogContent>
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
-          <Avatar
-            sx={{
-              width: 64,
-              height: 64,
-              bgcolor: "#f1f5f9",
-              color: "#1f2937",
-              fontWeight: 700,
-            }}
-          >
-            {employee?.name
-              ?.split(" ")
-              .map((n) => n[0])
-              .slice(0, 2)
-              .join("")}
-          </Avatar>
+      <DialogContent sx={{ px: 3, py: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
+          {/* User Name */}
           <Box>
-            <Typography variant="h6">{employee?.name}</Typography>
-            <Typography color="text.secondary">{employee?.role}</Typography>
+            <Typography variant="body2" sx={labelStyles}>
+              User Name
+            </Typography>
+            <TextField
+              value={userData.username || ""}
+              fullWidth
+              disabled
+              sx={inputStyles}
+            />
+          </Box>
+
+          {/* Email */}
+          <Box>
+            <Typography variant="body2" sx={labelStyles}>
+              Email
+            </Typography>
+            <TextField
+              value={userData.email || ""}
+              fullWidth
+              disabled
+              sx={inputStyles}
+            />
+          </Box>
+
+          {/* Role */}
+          <Box>
+            <Typography variant="body2" sx={labelStyles}>
+              Role
+            </Typography>
+            <TextField
+              value={userData.role || ""}
+              fullWidth
+              disabled
+              sx={{
+                ...inputStyles,
+                "& .MuiInputBase-input.Mui-disabled": {
+                  WebkitTextFillColor: "rgba(0, 0, 0, 0.87)",
+                  textTransform: "capitalize",
+                },
+              }}
+            />
+          </Box>
+
+          {/* Branch */}
+          <Box>
+            <Typography variant="body2" sx={labelStyles}>
+              Branch
+            </Typography>
+            <TextField
+              value={userData.branchName || "No Branch"}
+              fullWidth
+              disabled
+              sx={inputStyles}
+            />
+          </Box>
+
+          {/* Phone Number */}
+          <Box>
+            <Typography variant="body2" sx={labelStyles}>
+              Phone Number
+            </Typography>
+            <TextField
+              value={userData.phoneNumber || "N/A"}
+              fullWidth
+              disabled
+              sx={inputStyles}
+            />
+          </Box>
+
+          {/* Address */}
+          <Box>
+            <Typography variant="body2" sx={labelStyles}>
+              Address
+            </Typography>
+            <TextField
+              value={userData.address || "N/A"}
+              fullWidth
+              disabled
+              sx={inputStyles}
+            />
+          </Box>
+
+          {/* Status */}
+          <Box>
+            <Typography variant="body2" sx={labelStyles}>
+              Status
+            </Typography>
+            <TextField
+              value={
+                userData.isBlocked
+                  ? "Blocked"
+                  : userData.isActive
+                  ? "Active"
+                  : "Inactive"
+              }
+              fullWidth
+              disabled
+              sx={{
+                ...inputStyles,
+                "& .MuiInputBase-input.Mui-disabled": {
+                  WebkitTextFillColor: userData.isBlocked
+                    ? "#ef4444"
+                    : userData.isActive
+                    ? "#10b981"
+                    : "#f59e0b",
+                  fontWeight: 500,
+                },
+              }}
+            />
+          </Box>
+
+          {/* Created At */}
+          <Box>
+            <Typography variant="body2" sx={labelStyles}>
+              Created At
+            </Typography>
+            <TextField
+              value={
+                userData.createdAt
+                  ? new Date(userData.createdAt).toLocaleString()
+                  : "N/A"
+              }
+              fullWidth
+              disabled
+              sx={inputStyles}
+            />
           </Box>
         </Box>
-
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Full Name"
-              value={form.fullName}
-              onChange={handleChange("fullName")}
-              fullWidth
-              InputProps={{ readOnly }}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Role"
-              value={form.role}
-              onChange={handleChange("role")}
-              fullWidth
-              InputProps={{ readOnly }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Email"
-              value={form.email}
-              fullWidth
-              InputProps={{ readOnly: true }}
-              disabled
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Phone"
-              value={form.phone}
-              onChange={handleChange("phone")}
-              fullWidth
-              InputProps={{ readOnly }}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              label="Address"
-              value={form.address}
-              onChange={handleChange("address")}
-              fullWidth
-              InputProps={{ readOnly }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Branch"
-              value={form.branch}
-              onChange={handleChange("branch")}
-              fullWidth
-              InputProps={{ readOnly }}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Hired At"
-              value={form.hiredAt}
-              onChange={handleChange("hiredAt")}
-              type="date"
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ readOnly: true }}
-              disabled
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={form.active}
-                  onChange={handleChange("active")}
-                  disabled={readOnly}
-                />
-              }
-              label="Active"
-            />
-          </Grid>
-        </Grid>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-        {mode === "edit" && (
-          <Button variant="contained" onClick={handleSave}>
-            Save
-          </Button>
-        )}
+      <DialogActions
+        sx={{ px: 3, pb: 3, pt: 2, gap: 2, justifyContent: "flex-end" }}
+      >
+        <Button
+          onClick={onClose}
+          sx={{
+            borderRadius: 2,
+            px: 4,
+            py: 1.5,
+            textTransform: "none",
+            fontSize: "1rem",
+            fontWeight: 500,
+            backgroundColor: "#0b75d9",
+            color: "white",
+            "&:hover": {
+              backgroundColor: "#0765b6",
+            },
+          }}
+        >
+          Close
+        </Button>
       </DialogActions>
     </Dialog>
   );

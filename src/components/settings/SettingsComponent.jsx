@@ -9,7 +9,7 @@ import { toast } from "../ui/toast";
 import { ConfirmationDialog } from "../ui/dialog";
 import ProfilePhotoManager from "../ui/ProfilePhotoManager";
 import { Box, Typography, CircularProgress, IconButton } from "@mui/material";
-import { API_BASE } from "../../config/apiEndpoints";
+import { API_BASE, API_PREFIX } from "../../config/apiEndpoints";
 
 const SettingsComponent = ({ role = "user" }) => {
   const [loading, setLoading] = useState(true);
@@ -132,7 +132,7 @@ const SettingsComponent = ({ role = "user" }) => {
         setSaving(true);
         try {
           const response = await fetch(
-            `${API_BASE}/api/users/${userDetails.id}`,
+            `${API_BASE}${API_PREFIX}/users/${userDetails.id}`,
             {
               method: "PUT",
               headers: {
@@ -212,7 +212,7 @@ const SettingsComponent = ({ role = "user" }) => {
         setSaving(true);
         try {
           const response = await fetch(
-            `${API_BASE}/api/users/${userDetails.id}/password`,
+            `${API_BASE}${API_PREFIX}/users/${userDetails.id}/password`,
             {
               method: "PUT",
               headers: {
@@ -270,7 +270,7 @@ const SettingsComponent = ({ role = "user" }) => {
         setSaving(true);
         try {
           const response = await fetch(
-            `${API_BASE}/api/users/${userDetails.id}`,
+            `${API_BASE}${API_PREFIX}/users/${userDetails.id}`,
             {
               method: "DELETE",
               headers: {

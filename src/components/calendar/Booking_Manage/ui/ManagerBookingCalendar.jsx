@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import CalendarHeader from "../CalendarHeader";
+import { API_BASE, API_PREFIX } from "../../../../config/apiEndpoints.jsx";
 import CalendarGrid from "../CalendarGrid";
 import AppointmentPopup from "../AppointmentPopup";
 
@@ -34,7 +35,7 @@ function getStatusColor(mode, status) {
 }
 
 export default function ManagerBookingCalendar({
-  apiBase = "http://localhost:8080/api",
+  apiBase = `${API_BASE}${API_PREFIX}`,
 }) {
   const theme = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());

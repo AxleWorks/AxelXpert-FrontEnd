@@ -17,7 +17,7 @@ import axios from "axios";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
-import { API_BASE } from "../../config/apiEndpoints";
+import { AUTH_URL } from "../../config/apiEndpoints";
 
 const SignIn = () => {
   const [error, setError] = useState(null);
@@ -32,7 +32,7 @@ const SignIn = () => {
     let mounted = true;
     (async () => {
       try {
-        await axios.get(`${API_BASE}/api/auth/status`);
+        await axios.get(`${AUTH_URL}/status`);
       } catch (e) {
         // ignore - used only for quick healthcheck
       }
@@ -47,7 +47,7 @@ const SignIn = () => {
 
     try {
       // call backend login endpoint and expect LoginResponse {id, username, email, role}
-      const res = await axios.post(`${API_BASE}/api/auth/login`, {
+      const res = await axios.post(`${AUTH_URL}/login`, {
         email: username,
         password,
       });
