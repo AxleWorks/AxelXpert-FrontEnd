@@ -32,80 +32,12 @@ import {
 } from "@mui/icons-material";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import { useTheme } from "@mui/material/styles";
-import CalendarHeader from "../../components/calendar/Booking_Manage/CalendarHeader";
-import CalendarGrid from "../../components/calendar/Booking_Manage/CalendarGrid";
-import AppointmentPopup from "../../components/calendar/Booking_Manage/AppointmentPopup";
-
-// Small contract
-// - Inputs: none (demo data inside). Branch & filters control displayed appointments.
-// - Outputs: UI to inspect, approve (assign employee), reschedule (demo), cancel appointments.
-// - Error modes: none external; UI-only state updates.
-
-const branches = ["Downtown", "Westside", "North Branch", "South Branch"];
-
-// employees will be loaded from the API
-
-const initialAppointments = [
-  {
-    id: 1,
-    customer: "John Doe",
-    vehicle: "Honda Civic 2020",
-    service: "Oil Change",
-    date: new Date(2025, 9, 15),
-    time: "10:00 AM",
-    status: "Approved",
-    branch: "Downtown",
-    phone: "(555) 123-4567",
-    assignedEmployee: "Michael Chen",
-    notes: "Please check tire pressure as well",
-  },
-  {
-    id: 2,
-    customer: "Jane Smith",
-    vehicle: "Toyota Camry 2019",
-    service: "Brake Service",
-    date: new Date(2025, 9, 15),
-    time: "11:00 AM",
-    status: "Pending",
-    branch: "Downtown",
-    phone: "(555) 234-5678",
-  },
-  {
-    id: 3,
-    customer: "Mike Johnson",
-    vehicle: "Ford F-150 2021",
-    service: "Tire Rotation",
-    date: new Date(2025, 9, 16),
-    time: "2:00 PM",
-    status: "Approved",
-    branch: "Downtown",
-    phone: "(555) 345-6789",
-    assignedEmployee: "Sarah Wilson",
-  },
-  {
-    id: 4,
-    customer: "Sarah Williams",
-    vehicle: "BMW 3 Series 2022",
-    service: "Battery Replacement",
-    date: new Date(2025, 9, 16),
-    time: "9:00 AM",
-    status: "Pending",
-    branch: "Downtown",
-    phone: "(555) 456-7890",
-  },
-  {
-    id: 5,
-    customer: "Robert Brown",
-    vehicle: "Mercedes C-Class 2021",
-    service: "AC Service",
-    date: new Date(2025, 9, 18),
-    time: "1:00 PM",
-    status: "Completed",
-    branch: "Downtown",
-    phone: "(555) 567-8901",
-    assignedEmployee: "Michael Chen",
-  },
-];
+import ManagerBookingCalendar from "../../components/calendar/Booking_Manage/ui/ManagerBookingCalendar";
+import {
+  BRANCHES_URL,
+  EMPLOYEES_URL,
+  BOOKINGS_URL,
+} from "../../config/apiEndpoints";
 
 function getStatusColor(mode, status) {
   // return background color for chip based on MUI mode
@@ -130,25 +62,54 @@ const ManagerBookingCalendarPage = () => {
   const [selectedBranch, setSelectedBranch] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [appointments, setAppointments] = useState(initialAppointments);
+  // appointments will be loaded from the bookings API on mount
+  const [appointments, setAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   // selectedEmployee will be an employee object (or null)
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employees, setEmployees] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
+  // fetch branches from backend on mount
+  useEffect(() => {
+    const ac = new AbortController();
+    async function loadBranches() {
+      try {
+        const res = await fetch(`${BRANCHES_URL}/all`, {
+          signal: ac.signal,
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        // map server shape to UI shape: branch name
+        const mapped = (data || []).map((b) => b.branchName || b.name || "");
+        setBranches(mapped);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Failed to load branches", err);
+          setSnackbar({
+            open: true,
+            message: "Failed to load branches",
+            severity: "error",
+          });
+        }
+      }
+    }
+    loadBranches();
+    return () => ac.abort();
+  }, []);
 
   // fetch employees from backend on mount
   useEffect(() => {
     const ac = new AbortController();
     async function load() {
       try {
-        const res = await fetch("http://localhost:8080/api/users/employees", {
+        const res = await fetch(EMPLOYEES_URL, {
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -182,11 +143,12 @@ const ManagerBookingCalendarPage = () => {
     const ac = new AbortController();
     async function loadBookings() {
       try {
-        const res = await fetch("http://localhost:8080/api/bookings/all", {
+        const res = await fetch(BOOKINGS_URL, {
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
+        console.log("API Response - Bookings:", data);
         const mapped = (data || []).map((b) => {
           const start = b.startAt ? new Date(b.startAt) : null;
           const end = b.endAt ? new Date(b.endAt) : null;
@@ -196,6 +158,10 @@ const ManagerBookingCalendarPage = () => {
                 minute: "2-digit",
               })
             : "";
+
+          console.log(
+            `Processing appointment ${b.id}, Branch: ${b.branchName}, Date: ${b.startAt}, Parsed: ${start}`
+          );
           const status = (b.status || "").toLowerCase();
           const prettyStatus =
             status === "pending"
@@ -205,6 +171,14 @@ const ManagerBookingCalendarPage = () => {
               : status === "completed"
               ? "Completed"
               : status === "cancelled" || status === "canceled"
+              ? "Cancelled"
+              : b.status === "PENDING"
+              ? "Pending"
+              : b.status === "APPROVED"
+              ? "Approved"
+              : b.status === "COMPLETED"
+              ? "Completed"
+              : b.status === "CANCELLED" || b.status === "CANCELED"
               ? "Cancelled"
               : b.status || "";
 
@@ -223,6 +197,8 @@ const ManagerBookingCalendarPage = () => {
             raw: b,
             startAt: b.startAt,
             endAt: b.endAt,
+            // Log for debugging
+            branchId: b.branchId,
           };
         });
         setAppointments(mapped);
@@ -246,10 +222,13 @@ const ManagerBookingCalendarPage = () => {
       const matchesBranch =
         selectedBranch === "All" || apt.branch === selectedBranch;
       const matchesStatus =
-        statusFilter === "All" || apt.status === statusFilter;
+        statusFilter === "All" ||
+        apt.status === statusFilter ||
+        apt.status?.toUpperCase() === statusFilter?.toUpperCase();
       const matchesSearch = apt.customer
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+        ?.toLowerCase()
+        .includes((searchQuery || "").toLowerCase());
+
       return matchesBranch && matchesStatus && matchesSearch;
     });
   }, [appointments, selectedBranch, statusFilter, searchQuery]);
@@ -280,12 +259,16 @@ const ManagerBookingCalendarPage = () => {
     const today = new Date();
     for (let i = 1; i <= daysInMonth; i++) {
       const dayDate = new Date(year, month, i);
-      const dayAppointments = filteredAppointments.filter(
-        (apt) =>
-          apt.date.getDate() === i &&
-          apt.date.getMonth() === month &&
-          apt.date.getFullYear() === year
-      );
+      const dayAppointments = filteredAppointments.filter((apt) => {
+        // Handle both Date objects and ISO strings
+        const aptDate =
+          apt.date instanceof Date ? apt.date : new Date(apt.date);
+        return (
+          aptDate.getDate() === i &&
+          aptDate.getMonth() === month &&
+          aptDate.getFullYear() === year
+        );
+      });
       days.push({
         date: dayDate,
         dayNumber: i,
@@ -406,134 +389,7 @@ const ManagerBookingCalendarPage = () => {
           Branch Booking Calendar
         </Typography>
 
-        <CalendarHeader
-          currentDate={currentDate}
-          onPrev={previousMonth}
-          onNext={nextMonth}
-          onToday={goToToday}
-          selectedBranch={selectedBranch}
-          setSelectedBranch={setSelectedBranch}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          counts={counts}
-          branches={branches}
-        />
-
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Box sx={{ mb: 1 }}>
-            <CalendarGrid
-              days={days}
-              onAppointmentClick={handleAppointmentClick}
-              themeMode={theme.palette.mode}
-            />
-          </Box>
-        </Paper>
-
-        <AppointmentPopup
-          open={!!selectedAppointment}
-          onClose={() => setSelectedAppointment(null)}
-          appointment={selectedAppointment}
-          employees={employees}
-          onApprove={(employee) => {
-            if (!employee) {
-              setSnackbar({
-                open: true,
-                message: "Please select an employee",
-                severity: "error",
-              });
-              return;
-            }
-            setAppointments((prev) =>
-              prev.map((a) =>
-                a.id === selectedAppointment.id
-                  ? {
-                      ...a,
-                      status: "Approved",
-                      assignedEmployee: employee.name,
-                    }
-                  : a
-              )
-            );
-            setSnackbar({
-              open: true,
-              message: `Assigned to ${employee.name} and approved`,
-              severity: "success",
-            });
-            setSelectedAppointment(null);
-          }}
-          onReject={() => {
-            setAppointments((prev) =>
-              prev.map((a) =>
-                a.id === selectedAppointment.id
-                  ? { ...a, status: "Cancelled" }
-                  : a
-              )
-            );
-            setSnackbar({
-              open: true,
-              message: "Appointment rejected",
-              severity: "info",
-            });
-            setSelectedAppointment(null);
-          }}
-          selectedEmployee={selectedEmployee}
-          setSelectedEmployee={setSelectedEmployee}
-        />
-
-        {/* Approve Dialog */}
-        <Dialog
-          open={approveDialogOpen}
-          onClose={() => setApproveDialogOpen(false)}
-        >
-          <DialogTitle>Approve & Assign Employee</DialogTitle>
-          <DialogContent>
-            <Box sx={{ mt: 1 }}>
-              <Select
-                fullWidth
-                value={selectedEmployee ? selectedEmployee.id : ""}
-                onChange={(e) => {
-                  const id = e.target.value;
-                  const emp = employees.find((x) => x.id === id) || null;
-                  setSelectedEmployee(emp);
-                }}
-                displayEmpty
-              >
-                <MenuItem value="">Select employee</MenuItem>
-                {employees.map((emp) => (
-                  <MenuItem
-                    key={emp.id}
-                    value={emp.id}
-                    disabled={!emp.available}
-                  >
-                    {emp.name} — {emp.role} {emp.available ? "" : "(Busy)"}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setApproveDialogOpen(false)}>Close</Button>
-            <Button onClick={handleApprove} variant="contained" color="success">
-              Confirm & Approve
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={4000}
-          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        >
-          <Alert
-            onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-            severity={snackbar.severity}
-            sx={{ width: "100%" }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+        <ManagerBookingCalendar />
       </Box>
     </ManagerLayout>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
-import BranchesComponent from "../../components/branches/BranchesComponent";
+import BranchesComponent from "../../components/branches/BranchesComponentUser";
 import { BRANCHES_URL } from "../../config/apiEndpoints";
 
 const UserBranchesPage = () => {
@@ -12,7 +12,7 @@ const UserBranchesPage = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch(BRANCHES_URL);
+        const response = await fetch(`${BRANCHES_URL}/all`);
         if (!response.ok) {
           throw new Error(`Failed to fetch branches: ${response.status}`);
         }
@@ -59,7 +59,14 @@ const UserBranchesPage = () => {
   return (
     <UserLayout>
       <Box sx={{ p: 2 }}>
-        <BranchesComponent branches={branches} />
+        <BranchesComponent
+          branches={branches.map((branch) => ({
+            ...branch,
+            openHours: branch.openHours || "N/A",
+            closeHours: branch.closeHours || "N/A",
+          }))}
+          isManager={false}
+        />
       </Box>
     </UserLayout>
   );
