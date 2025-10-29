@@ -1,15 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
+import { USERS_URL, VEHICLES_URL } from "../../config/apiEndpoints";
 import { Modal, Button, TextField, FormControl, InputLabel, Select, MenuItem, Box, Typography, Grid, Chip, IconButton, Paper, Alert, Divider, Card, CardContent, FormControlLabel, Checkbox, Stack, Fade } from "@mui/material";
 import { Close, DirectionsCar, Build, PhotoCamera, KeyboardArrowDown } from "@mui/icons-material";
 
-const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, onSubmit, branchId, dayTimeSlots = [], services, vehicles }) => {
+const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, onSubmit, branchId, dayTimeSlots = [], services }) => {
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const paperRef = useRef(null);
-
-  const defaultVehicles = [
-    { id: 1, type: "Car", year: 2018, make: "Toyota", model: "Corolla", plateNumber: "PLT-1001", chassisNumber: "CHASSIS1001" },
-    { id: 2, type: "Car", year: 2020, make: "Honda", model: "Civic", plateNumber: "PLT-1002", chassisNumber: "CHASSIS1002" },
-  ];
 
   const defaultServices = [
     { id: 1, name: "Oil Change", price: 29.99, durationMinutes: 30 },
@@ -42,10 +38,9 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     { id: 5, name: "West", address: "500 West Ln", phone: "555-4005", email: null, mapLink: null, openHours: null, closeHours: null, createdAt: null, updatedAt: null, managerId: 15, managerName: "mgr5" },
   ]);
 
-  const [existingVehicles] = useState(() => {
-    const src = Array.isArray(vehicles) && vehicles.length ? vehicles : defaultVehicles;
-    return src.map((v) => ({ id: v.id, make: v.make, model: v.model, year: v.year, type: v.type || v.vehicleType || "", licensePlate: v.plateNumber || v.licensePlate, vin: v.chassisNumber || v.vin }));
-  });
+  // User's vehicles fetched from API
+  const [userVehicles, setUserVehicles] = useState([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(false);
 
   const [serviceTypes] = useState(() => {
     const src = Array.isArray(services) && services.length ? services : defaultServices;
@@ -57,7 +52,6 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
   // Form data with vehicle selection support
   const [formData, setFormData] = useState({ 
     vehicleId: "", 
-    vehicleType: "", 
     serviceType: "", 
     timeSlot: "", 
     customerInfo: { 
@@ -68,22 +62,14 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     manualBranchName: "",
     notes: ""
   });
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [loadingCustomer, setLoadingCustomer] = useState(false);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (selectedTimeSlot?.time) setFormData((p) => ({ ...p, timeSlot: selectedTimeSlot.time }));
   }, [selectedTimeSlot]);
-
-  // Auto-fill vehicle type when existing vehicle is selected
-  useEffect(() => {
-    if (!formData.vehicleId) return;
-    const sel = existingVehicles.find((v) => v.id === formData.vehicleId || v.id === Number(formData.vehicleId));
-    if (sel && sel.type) {
-      setFormData((p) => ({ ...p, vehicleType: sel.type }));
-      if (errors.vehicleType) setErrors((prev) => ({ ...prev, vehicleType: "" }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.vehicleId]);
 
   // Auto-select branch when manual name matches
   useEffect(() => {
@@ -132,8 +118,8 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
 
   const validateForm = () => {
     const newErrors = {};
-    // Require either selected existing vehicle or a vehicle type
-    if (!formData.vehicleType && !formData.vehicleId) newErrors.vehicleType = "Please select a vehicle type or choose an existing vehicle";
+    // Require vehicle selection
+    if (!formData.vehicleId) newErrors.vehicleId = "Please select a vehicle";
     if (!formData.serviceType) newErrors.serviceType = "Please select a service type";
     if (!formData.timeSlot) newErrors.timeSlot = "Please select a time slot";
     // Require either a branch selection or a manual branch name
@@ -141,18 +127,114 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
       newErrors.branchId = "Please select a branch or enter one manually";
       newErrors.manualBranchName = "Please select a branch or enter one manually";
     }
-    if (!formData.customerInfo.name) newErrors.customerName = "Name is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Fetch logged-in user info using id from localStorage when modal opens
+  useEffect(() => {
+    if (!open) return;
+
+    // Read authUser from localStorage (your app stores it under 'authUser')
+    const raw = localStorage.getItem("authUser");
+    if (!raw) {
+      // nothing stored; clear fields
+      setCustomerName("");
+      setCustomerPhone("");
+      setLoadingCustomer(false);
+      setUserVehicles([]);
+      return;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (err) {
+      console.error("Failed to parse authUser from localStorage", err);
+      setCustomerName("");
+      setCustomerPhone("");
+      setLoadingCustomer(false);
+      setUserVehicles([]);
+      return;
+    }
+
+    // Immediate fallback: show username right away if available
+    if (parsed.username) {
+      setCustomerName(parsed.username);
+    } else if (parsed.email) {
+      setCustomerName(parsed.email);
+    }
+
+    // If there's an id, fetch the full user record from backend to get phoneNumber
+    if (parsed.id) {
+      setLoadingCustomer(true);
+
+      // Build fetch options. If you have an auth token, read it here and include it:
+      const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      fetch(`${USERS_URL}/${parsed.id}`, { headers })
+        .then(async (res) => {
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(`Failed to load user: ${res.status} ${text}`);
+          }
+          return res.json();
+        })
+        .then((user) => {
+          // backend UserDTO uses field name phoneNumber
+          if (user.username) setCustomerName(user.username);
+          if (user.phoneNumber) setCustomerPhone(user.phoneNumber);
+        })
+        .catch((err) => {
+          console.error("Error fetching user details:", err);
+          // keep username fallback from localStorage; clear phone if none
+          setCustomerPhone((prev) => prev || "");
+        })
+        .finally(() => setLoadingCustomer(false));
+
+      // Fetch user's vehicles
+      setLoadingVehicles(true);
+      fetch(`${VEHICLES_URL}/user/${parsed.id}`, { headers })
+        .then(async (res) => {
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(`Failed to load vehicles: ${res.status} ${text}`);
+          }
+          return res.json();
+        })
+        .then((vehicles) => {
+          // Map backend vehicle data to our format
+          const mapped = vehicles.map((v) => ({
+            id: v.id,
+            make: v.make || "",
+            model: v.model || "",
+            year: v.year || "",
+            type: v.type || v.vehicleType || "",
+            licensePlate: v.licensePlate || v.plateNumber || "",
+            vin: v.vin || v.chassisNumber || ""
+          }));
+          setUserVehicles(mapped);
+        })
+        .catch((err) => {
+          console.error("Error fetching user vehicles:", err);
+          setUserVehicles([]);
+        })
+        .finally(() => setLoadingVehicles(false));
+    } else {
+      setLoadingCustomer(false);
+      setLoadingVehicles(false);
+    }
+  }, [open]); // run when the modal opens
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
     
-    const selectedVehicle = existingVehicles.find((v) => v.id === formData.vehicleId || v.id === Number(formData.vehicleId));
+    const selectedVehicle = userVehicles.find((v) => v.id === formData.vehicleId || v.id === Number(formData.vehicleId));
     const vehicleText = selectedVehicle 
       ? `${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.licensePlate})` 
-      : formData.vehicleType || "";
+      : "";
     
     const selectedServiceDef = serviceTypes.find((s) => s.id === formData.serviceType);
     
@@ -181,15 +263,15 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     // Build payload matching backend CreateBookingRequest DTO
     const bookingPayload = {
       branch: chosenBranchId,                    // Long branchId
-      customer: formData.customerInfo.name,      // String (username or name)
+      customer: customerName,                    // String (username or name) - from fetched data
       service: formData.serviceType,             // Long serviceId or String serviceName
       date: formattedDate,                       // String date (YYYY-MM-DD)
       time: formData.timeSlot,                   // String time (e.g., "09:00 AM")
       vehicle: vehicleText,                      // String vehicle description
       status: "PENDING",                         // String status
       notes: formData.notes || "",               // String notes
-      customerName: formData.customerInfo.name,  // String customerName
-      customerPhone: formData.customerInfo.phone || "", // String customerPhone
+      customerName: customerName,                // String customerName - from fetched data
+      customerPhone: customerPhone || "",        // String customerPhone - from fetched data
       totalPrice: selectedServiceDef?.price || null     // BigDecimal totalPrice
     };
     
@@ -208,7 +290,6 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
   const handleClose = () => {
     setFormData({ 
       vehicleId: "", 
-      vehicleType: "", 
       serviceType: "", 
       timeSlot: "", 
       customerInfo: { 
@@ -265,42 +346,19 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
         )}
 
         <Box sx={{ mt: 2 }}>
-          {/* Customer Information Section */}
+          {/* Customer Information (auto-filled) */}
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
               <DirectionsCar /> Customer Information
             </Typography>
-            <Stack spacing={2.5}>
-              <TextField
-                fullWidth
-                label="Full Name *"
-                value={formData.customerInfo.name}
-                onChange={(e) => handleNestedInputChange("customerInfo", "name", e.target.value)}
-                error={!!errors.customerName}
-                helperText={errors.customerName}
-                InputProps={{
-                  sx: { fontSize: '16px' }
-                }}
-                InputLabelProps={{
-                  sx: { fontSize: '16px' }
-                }}
-              />
-
-              <TextField
-                fullWidth
-                label="Phone Number"
-                value={formData.customerInfo.phone}
-                onChange={(e) => handleNestedInputChange("customerInfo", "phone", e.target.value)}
-                error={!!errors.customerPhone}
-                helperText={errors.customerPhone}
-                placeholder="e.g., +1 234 567 8900"
-                InputProps={{
-                  sx: { fontSize: '16px' }
-                }}
-                InputLabelProps={{
-                  sx: { fontSize: '16px' }
-                }}
-              />
+            <Stack spacing={1}>
+              {/* We no longer show editable name/phone fields. These are auto-filled from the logged-in user. */}
+              <Typography variant="body2">
+                Customer: <strong>{loadingCustomer ? "(loading...)" : (customerName || "(not signed in)")}</strong>
+              </Typography>
+              <Typography variant="body2">
+                Phone: <strong>{loadingCustomer ? "-" : (customerPhone || "-")}</strong>
+              </Typography>
 
               <FormControl fullWidth error={!!errors.branchId}>
                 <InputLabel>Branch *</InputLabel>
@@ -358,12 +416,13 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
               <DirectionsCar /> Vehicle Information
             </Typography>
             <Stack spacing={2.5}>
-              <FormControl fullWidth>
-                <InputLabel>Select Vehicle (optional)</InputLabel>
+              <FormControl fullWidth error={!!errors.vehicleId}>
+                <InputLabel>Select Your Vehicle *</InputLabel>
                 <Select 
                   value={formData.vehicleId} 
-                  label="Select Vehicle (optional)" 
+                  label="Select Your Vehicle *" 
                   onChange={(e) => handleInputChange("vehicleId", e.target.value)}
+                  disabled={loadingVehicles}
                   MenuProps={{
                     PaperProps: {
                       style: {
@@ -373,35 +432,22 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
                   }}
                 >
                   <MenuItem value="">
-                    <em>None - Enter vehicle type manually</em>
+                    <em>{loadingVehicles ? "Loading your vehicles..." : "Select a vehicle"}</em>
                   </MenuItem>
-                  {existingVehicles.map((v) => (
+                  {userVehicles.length === 0 && !loadingVehicles && (
+                    <MenuItem disabled>
+                      <em>No vehicles found. Please add a vehicle first.</em>
+                    </MenuItem>
+                  )}
+                  {userVehicles.map((v) => (
                     <MenuItem key={v.id} value={v.id}>
                       {v.make} {v.model} ({v.year}) — {v.licensePlate}
                     </MenuItem>
                   ))}
                 </Select>
-              </FormControl>
-
-              <FormControl fullWidth error={!!errors.vehicleType}>
-                <InputLabel>Vehicle Type *</InputLabel>
-                <Select 
-                  value={formData.vehicleType} 
-                  onChange={(e) => handleInputChange("vehicleType", e.target.value)} 
-                  label="Vehicle Type *"
-                >
-                  <MenuItem value="">
-                    <em>Select vehicle type</em>
-                  </MenuItem>
-                  {["Car", "Truck", "SUV", "Van"].map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.vehicleType && (
+                {errors.vehicleId && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                    {errors.vehicleType}
+                    {errors.vehicleId}
                   </Typography>
                 )}
               </FormControl>
