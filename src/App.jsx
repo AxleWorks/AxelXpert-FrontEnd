@@ -13,7 +13,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 // Auth Components
 import SignIn from "./components/auth/SignIn";
 import Signup from "./components/auth/Signup";
-import ForgetPassword from "./pages/ForgetPassword";
+import ForgetPassword from "./pages/Authentication/ForgetPassword";
 
 // User Pages
 import UserDashboardPage from "./pages/user/UserDashboardPage";

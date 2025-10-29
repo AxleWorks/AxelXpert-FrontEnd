@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { TextField, Button, Typography, Box } from "@mui/material";
-import AuthLayout from "../components/auth/AuthLayout";
-import AuthBranding from "../components/auth/AuthBranding";
-import AuthFormContainer from "../components/auth/AuthFormContainer";
+import AuthLayout from "../../components/auth/AuthLayout";
+import AuthBranding from "../../components/auth/AuthBranding";
+import AuthFormContainer from "../../components/auth/AuthFormContainer";
 import { Link } from "react-router-dom";
 
 const ForgetPassword = () => {
