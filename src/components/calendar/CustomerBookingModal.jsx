@@ -53,7 +53,6 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
   const [formData, setFormData] = useState({ 
     vehicleId: "", 
     serviceType: "", 
-    timeSlot: "", 
     customerInfo: { 
       name: "", 
       phone: "" 
@@ -66,10 +65,6 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
   const [customerPhone, setCustomerPhone] = useState("");
   const [loadingCustomer, setLoadingCustomer] = useState(false);
   const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (selectedTimeSlot?.time) setFormData((p) => ({ ...p, timeSlot: selectedTimeSlot.time }));
-  }, [selectedTimeSlot]);
 
   // Auto-select branch when manual name matches
   useEffect(() => {
@@ -121,7 +116,6 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     // Require vehicle selection
     if (!formData.vehicleId) newErrors.vehicleId = "Please select a vehicle";
     if (!formData.serviceType) newErrors.serviceType = "Please select a service type";
-    if (!formData.timeSlot) newErrors.timeSlot = "Please select a time slot";
     // Require either a branch selection or a manual branch name
     if (!formData.branchId && !formData.manualBranchName) {
       newErrors.branchId = "Please select a branch or enter one manually";
@@ -249,24 +243,53 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     const chosenBranch = branches.find((b) => b.id === chosenBranchId) || branches.find((b) => b.id === Number(chosenBranchId)) || null;
     const chosenBranchName = manualName || chosenBranch?.name || "";
     
-    // Format date to YYYY-MM-DD in LOCAL timezone (not UTC)
+    // Format date and time for backend
     let formattedDate;
+    let formattedTime = selectedTimeSlot?.time || "09:00 AM"; // Default to 9 AM if no time slot selected
+    let formattedDateTime; // Combined datetime string
+    
     if (selectedDate instanceof Date) {
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
       formattedDate = `${year}-${month}-${day}`;
+      
+      // Convert time from "09:00 AM" to 24-hour format HH:mm:ss
+      const timeMatch = formattedTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      if (timeMatch) {
+        let hours = parseInt(timeMatch[1]);
+        const minutes = timeMatch[2];
+        const period = timeMatch[3].toUpperCase();
+        
+        // Convert to 24-hour format
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        
+        const hoursStr = String(hours).padStart(2, '0');
+        formattedTime = `${hoursStr}:${minutes}`; // HH:mm format (without seconds)
+      } else {
+        // Fallback if time format doesn't match - use 9 AM
+        formattedTime = "09:00";
+      }
+      
+      // Create combined datetime string (ISO 8601 format: YYYY-MM-DDTHH:mm:ss)
+      formattedDateTime = `${formattedDate}T${formattedTime}:00`;
     } else {
       formattedDate = selectedDate;
+      // Ensure we have a valid time even if date is a string
+      if (!formattedTime || formattedTime === "") {
+        formattedTime = "09:00";
+      }
+      formattedDateTime = `${formattedDate}T${formattedTime}:00`;
     }
     
     // Build payload matching backend CreateBookingRequest DTO
     const bookingPayload = {
       branch: chosenBranchId,                    // Long branchId
       customer: customerName,                    // String (username or name) - from fetched data
-      service: formData.serviceType,             // Long serviceId or String serviceName
+      service: String(formData.serviceType),     // String serviceId (convert to string)
       date: formattedDate,                       // String date (YYYY-MM-DD)
-      time: formData.timeSlot,                   // String time (e.g., "09:00 AM")
+      time: formattedTime,                       // String time (HH:mm:ss format)
       vehicle: vehicleText,                      // String vehicle description
       status: "PENDING",                         // String status
       notes: formData.notes || "",               // String notes
@@ -274,6 +297,11 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
       customerPhone: customerPhone || "",        // String customerPhone - from fetched data
       totalPrice: selectedServiceDef?.price || null     // BigDecimal totalPrice
     };
+    
+    console.log("Booking payload being sent:", JSON.stringify(bookingPayload, null, 2));
+    console.log("Selected time slot:", selectedTimeSlot);
+    console.log("Formatted date:", formattedDate);
+    console.log("Formatted time:", formattedTime);
     
     try {
       // Call the onSubmit callback with formatted data
@@ -291,7 +319,6 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     setFormData({ 
       vehicleId: "", 
       serviceType: "", 
-      timeSlot: "", 
       customerInfo: { 
         name: "", 
         phone: "" 
@@ -495,36 +522,6 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
                 )}
               </FormControl>
 
-              <FormControl fullWidth error={!!errors.timeSlot}>
-                <InputLabel>Time Slot *</InputLabel>
-                <Select 
-                  value={formData.timeSlot} 
-                  onChange={(e) => handleInputChange("timeSlot", e.target.value)} 
-                  label="Time Slot *"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                      }
-                    }
-                  }}
-                >
-                  <MenuItem value="">
-                    <em>Select time slot</em>
-                  </MenuItem>
-                  {(dayTimeSlots.length ? dayTimeSlots : defaultTimeSlots).map((time) => (
-                    <MenuItem key={time} value={time}>
-                      {time}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.timeSlot && (
-                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                    {errors.timeSlot}
-                  </Typography>
-                )}
-              </FormControl>
-
               <TextField
                 fullWidth
                 label="Additional Notes"
@@ -563,7 +560,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
           </Box>
         </Box>
 
-        {formData.serviceType && formData.timeSlot && (
+        {formData.serviceType && (
           <Alert severity="info" icon={<Build />} sx={{ mt: 3, borderRadius: 2 }}>
             <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
               Booking Summary
@@ -573,7 +570,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
                 <strong>Date:</strong> {formatDate(selectedDate)}
               </Typography>
               <Typography component="li" variant="body2">
-                <strong>Time:</strong> {formData.timeSlot}
+                <strong>Time:</strong> {selectedTimeSlot?.time || "Not specified"}
               </Typography>
               <Typography component="li" variant="body2">
                 <strong>Service:</strong> {selectedService?.name}
@@ -596,7 +593,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
             onClick={handleSubmit} 
             variant="contained" 
             size="large"
-            disabled={!formData.serviceType || !formData.timeSlot}
+            disabled={!formData.serviceType || !formData.vehicleId}
             sx={{ minWidth: 160 }}
           >
             Book Appointment
