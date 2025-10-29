@@ -9,13 +9,26 @@ const UserBranchesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch(`${BRANCHES_URL}/all`);
+        const response = await fetch(`${BRANCHES_URL}/all`
+          ,
+           {
+          headers: {
+            Authorization:
+            
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+          },
+        }
+      );
+
         if (!response.ok) {
           throw new Error(`Failed to fetch branches: ${response.status}`);
         }
+
         const data = await response.json();
         setBranches(data);
         setLoading(false);

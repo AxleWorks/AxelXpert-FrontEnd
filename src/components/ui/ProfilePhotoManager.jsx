@@ -108,7 +108,10 @@ const ProfilePhotoManager = ({
       const response = await fetch(`${API_BASE}/api/users/${userId}/profile-image`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
+          Authorization:
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+                "Content-Type": "application/json",
         },
         body: JSON.stringify({
           profileImageUrl: uploadResult.data.url,
@@ -173,6 +176,10 @@ const ProfilePhotoManager = ({
       // Delete from backend first
       const response = await fetch(`${API_BASE}/api/users/${userId}/profile-image`, {
         method: 'DELETE',
+        Authorization:
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+                "Content-Type": "application/json",
       });
 
       if (!response.ok) {

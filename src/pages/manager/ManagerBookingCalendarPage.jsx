@@ -83,6 +83,11 @@ const ManagerBookingCalendarPage = () => {
       try {
         const res = await fetch(`${BRANCHES_URL}/all`, {
           signal: ac.signal,
+          
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+          
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -111,6 +116,11 @@ const ManagerBookingCalendarPage = () => {
       try {
         const res = await fetch(EMPLOYEES_URL, {
           signal: ac.signal,
+           headers: {
+    Authorization:
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+  },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -145,6 +155,10 @@ const ManagerBookingCalendarPage = () => {
       try {
         const res = await fetch(BOOKINGS_URL, {
           signal: ac.signal,
+  headers: {
+    Authorization: "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+  },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();

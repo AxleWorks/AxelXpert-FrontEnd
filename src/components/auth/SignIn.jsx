@@ -62,6 +62,7 @@ const SignIn = () => {
           username: data.username,
           email: data.email,
           role,
+          JWTToken : data.jwtToken,
         };
 
         console.log("Login successful:", userData);
