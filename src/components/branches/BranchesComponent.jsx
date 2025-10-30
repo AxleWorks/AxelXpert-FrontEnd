@@ -19,11 +19,7 @@ import {
   MenuItem,
   InputAdornment,
 } from "@mui/material";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import PhoneIcon from "@mui/icons-material/Phone";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import PersonIcon from "@mui/icons-material/Person";
-import EmailIcon from "@mui/icons-material/Email";
+
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -32,6 +28,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 
 import { USERS_URL } from "../../config/apiEndpoints.jsx";
+import { createAuthenticatedFetchOptions } from "../../utils/jwtUtils.js";
 
 export default function BranchesComponent({
   branches,
@@ -54,7 +51,10 @@ export default function BranchesComponent({
     if (isManager) {
       const fetchManagers = async () => {
         try {
-          const response = await fetch(`${USERS_URL}/managers`);
+          const response = await fetch(
+            `${USERS_URL}/managers`,
+            createAuthenticatedFetchOptions()
+          );
           if (response.ok) {
             const data = await response.json();
             setManagers(data);

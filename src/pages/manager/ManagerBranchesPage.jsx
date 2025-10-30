@@ -3,6 +3,7 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import BranchesComponent from "../../components/branches/BranchesComponent";
 import { BRANCHES_URL } from "../../config/apiEndpoints";
+import { createAuthenticatedFetchOptions } from "../../utils/jwtUtils.js";
 
 const ManagerBranchesPage = () => {
   const [branches, setBranches] = useState([]);
@@ -12,13 +13,10 @@ const ManagerBranchesPage = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch(`${BRANCHES_URL}/all`, {
-        headers: {
-          Authorization: `Bearer ${
-            JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken
-          }`,
-        },
-      });
+        const response = await fetch(
+          `${BRANCHES_URL}/all`,
+          createAuthenticatedFetchOptions()
+        );
         if (!response.ok) {
           throw new Error(`Failed to fetch branches: ${response.status}`);
         }
@@ -37,22 +35,17 @@ const ManagerBranchesPage = () => {
 
   const handleAddBranch = async (newBranch) => {
     try {
-      const response = await fetch(BRANCHES_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization:
-            
-              "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-          
-        },
-        body: JSON.stringify({
-          ...newBranch,
-          openHours: newBranch.openHours,
-          closeHours: newBranch.closeHours,
-        }),
-      });
+      const response = await fetch(
+        BRANCHES_URL,
+        createAuthenticatedFetchOptions({
+          method: "POST",
+          body: JSON.stringify({
+            ...newBranch,
+            openHours: newBranch.openHours,
+            closeHours: newBranch.closeHours,
+          }),
+        })
+      );
 
       if (!response.ok) {
         throw new Error("Failed to add branch");
@@ -67,22 +60,17 @@ const ManagerBranchesPage = () => {
 
   const handleEditBranch = async (updatedBranch) => {
     try {
-      const response = await fetch(`${BRANCHES_URL}/${updatedBranch.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization:
-            
-              "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-          
-        },
-        body: JSON.stringify({
-          ...updatedBranch,
-          openHours: updatedBranch.openHours,
-          closeHours: updatedBranch.closeHours,
-        }),
-      });
+      const response = await fetch(
+        `${BRANCHES_URL}/${updatedBranch.id}`,
+        createAuthenticatedFetchOptions({
+          method: "PUT",
+          body: JSON.stringify({
+            ...updatedBranch,
+            openHours: updatedBranch.openHours,
+            closeHours: updatedBranch.closeHours,
+          }),
+        })
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update branch");
@@ -101,15 +89,12 @@ const ManagerBranchesPage = () => {
 
   const handleDeleteBranch = async (branchId) => {
     try {
-      const response = await fetch(`${BRANCHES_URL}/${branchId}`, {
-        method: "DELETE",
-         headers: {
-            Authorization:
-            
-              "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-          },
-      });
+      const response = await fetch(
+        `${BRANCHES_URL}/${branchId}`,
+        createAuthenticatedFetchOptions({
+          method: "DELETE",
+        })
+      );
 
       if (!response.ok) {
         throw new Error("Failed to delete branch");

@@ -39,7 +39,7 @@ import { Badge } from "../../components/ui/badge";
 import EmployeeProfileModal from "../../components/userManagement/EmployeeProfileModal";
 import EditEmployeeModal from "../../components/userManagement/EditEmployeeModal";
 import AddEmployeeModal from "../../components/userManagement/AddEmployeeModal";
-import axios from "axios";
+import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import { Visibility, Edit, Delete, Block } from "@mui/icons-material";
 import { USERS_URL } from "../../config/apiEndpoints.jsx";
 
@@ -151,7 +151,7 @@ const ManagerUserManagementPage = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get(`${USERS_URL}/all`);
+        const response = await authenticatedAxios.get(`${USERS_URL}/all`);
         setEmployees(response.data);
       } catch (err) {
         console.error("Failed to fetch employees:", err);
@@ -188,7 +188,7 @@ const ManagerUserManagementPage = () => {
   const confirmDelete = async () => {
     if (employeeToDelete) {
       try {
-        await axios.delete(`${USERS_URL}/${employeeToDelete.id}`);
+        await authenticatedAxios.delete(`${USERS_URL}/${employeeToDelete.id}`);
 
         // Success - HTTP 204 No Content
         setEmployees((prev) =>
@@ -258,7 +258,7 @@ const ManagerUserManagementPage = () => {
       const newBlockedStatus = !isCurrentlyBlocked;
 
       try {
-        const response = await axios.put(
+        const response = await authenticatedAxios.put(
           `${USERS_URL}/${employeeToBlock.id}/block`,
           { blocked: newBlockedStatus }
         );
@@ -731,7 +731,7 @@ const ManagerUserManagementPage = () => {
           employee={selectedEmployee}
           onSave={(updated) => {
             // Update user via backend API
-            axios
+            authenticatedAxios
               .put(`${USERS_URL}/${updated.id}`, {
                 username: updated.username,
                 role: updated.role,
