@@ -21,6 +21,7 @@ import {
   Build as BuildIcon,
   Store as StoreIcon,
   Assessment as AssessmentIcon,
+  AccessTime as AttendanceIcon,
 } from "@mui/icons-material";
 
 const DRAWER_WIDTH = 280;
@@ -46,6 +47,7 @@ const menuItems = [
   { text: "Settings", icon: SettingsIcon, path: "/manager/settings" },
   { text: "Services", icon: BuildIcon, path: "/manager/services" },
   { text: "Branches", icon: StoreIcon, path: "/manager/branches" },
+  { text: "Attendance", icon: AttendanceIcon, path: "/manager/attendance" },
   { text: "Reports", icon: AssessmentIcon, path: "/manager/reports" },
 ];
 

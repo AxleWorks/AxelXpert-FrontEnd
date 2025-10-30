@@ -40,6 +40,7 @@ import ManagerReportsPage from "./pages/manager/ManagerReportsPage";
 import ManagerSettingsPage from "./pages/manager/ManagerSettingsPage";
 import ManagerServicesPage from "./pages/manager/ManagerServicesPage";
 import ManagerBranchesPage from "./pages/manager/ManagerBranchesPage";
+import ManagerAttendancePage from "./pages/manager/ManagerAttendancePage";
 
 const App = () => {
   return (
@@ -202,12 +203,19 @@ const App = () => {
                   <ManagerServicesPage />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            />            <Route
               path="/manager/branches"
               element={
                 <ProtectedRoute requiredRole="manager">
                   <ManagerBranchesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manager/attendance"
+              element={
+                <ProtectedRoute requiredRole="manager">
+                  <ManagerAttendancePage />
                 </ProtectedRoute>
               }
             />
