@@ -93,7 +93,7 @@ const SignIn = () => {
     <AuthFormContainer title="Sign In" error={error}>
       <form onSubmit={handleSubmit} noValidate>
         <Typography variant="body2" sx={{ mb: 1, color: "#64748b" }}>
-          Username
+          Email
         </Typography>
         <TextField
           placeholder="Enter your username"
