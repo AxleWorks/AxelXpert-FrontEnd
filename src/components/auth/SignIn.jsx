@@ -62,6 +62,9 @@ const SignIn = () => {
           username: data.username,
           email: data.email,
           role,
+          branchId: data.branchId, // Include branchId from backend response
+          branchName: data.branchName, // Include branchName if available
+          profileImageUrl: data.profileImageUrl, // Include profile image if available
         };
 
         console.log("Login successful:", userData);

@@ -17,7 +17,7 @@ import { Button } from "../../components/ui/button";
 import axios from "axios";
 import { BRANCHES_URL, USERS_URL } from "../../config/apiEndpoints.jsx";
 
-export default function AddEmployeeModal({ open, onClose, onCreate }) {
+export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo }) {
   const [form, setForm] = React.useState({
     email: "",
     role: "",
@@ -28,7 +28,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState("");
 
-  // Fetch branches when modal opens
+  // Fetch all branches when modal opens
   React.useEffect(() => {
     if (open) {
       const fetchBranches = async () => {
@@ -36,6 +36,10 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
         try {
           const response = await axios.get(`${BRANCHES_URL}/all`);
           setBranches(response.data);
+          // Auto-select the manager's branch if available
+          if (managerInfo?.branchName) {
+            setForm((s) => ({ ...s, branch: managerInfo.branchName }));
+          }
         } catch (err) {
           console.error("Failed to fetch branches:", err);
           setError("Failed to load branches");
@@ -45,7 +49,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
       };
       fetchBranches();
     }
-  }, [open]);
+  }, [open, managerInfo?.branchName]);
 
   React.useEffect(() => {
     if (!open) {
@@ -58,8 +62,22 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
     }
   }, [open]);
 
-  const handleChange = (key) => (e) =>
-    setForm((s) => ({ ...s, [key]: e.target.value }));
+  const handleChange = (key) => (e) => {
+    const value = e.target.value;
+    
+    // Validate branch selection
+    if (key === "branch") {
+      if (managerInfo?.branchName && value !== managerInfo.branchName) {
+        setError(`You can only add users to your branch: ${managerInfo.branchName}`);
+        return; // Prevents the selection
+      } else {
+        // Clear error when valid branch is selected or any other valid input
+        setError("");
+      }
+    }
+    
+    setForm((s) => ({ ...s, [key]: value }));
+  };
 
   const handleCreate = async () => {
     // Validation
@@ -75,15 +93,22 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
       return;
     }
 
+    // Validate manager info is available
+    if (!managerInfo?.id) {
+      setError("Manager information not available. Please refresh and try again.");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
     try {
-      // Call backend API to add employee
+      // Call backend API to add employee with managerId
       const response = await axios.post(`${USERS_URL}/add-employee`, {
         email: form.email,
         role: form.role,
         branch: form.branch,
+        managerId: managerInfo.id, // Include the manager's ID
       });
 
       // Success - pass the created employee data to parent
@@ -293,9 +318,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
                 )}
               </Select>
             </FormControl>
-          </Box>
-
-          {error && (
+          </Box>          {error && (
             <Box
               sx={{
                 color: "error.main",

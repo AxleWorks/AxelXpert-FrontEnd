@@ -43,6 +43,7 @@ import AddEmployeeModal from "../../components/userManagement/AddEmployeeModal";
 import axios from "axios";
 import { Visibility, Edit, Delete, Block } from "@mui/icons-material";
 import { USERS_URL } from "../../config/apiEndpoints.jsx";
+import { useAuth } from "../../contexts/AuthContext";
 
 const StatCard = ({
   title,
@@ -128,6 +129,7 @@ const Avatar = ({ name, profileImageUrl }) => {
 };
 
 const ManagerUserManagementPage = () => {
+  const { user } = useAuth(); // Get current manager's info
   const [employees, setEmployees] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -151,8 +153,16 @@ const ManagerUserManagementPage = () => {
 
   useEffect(() => {
     const fetchEmployees = async () => {
+      // Only fetch if we have the manager's branch ID
+      if (!user?.branchId) {
+        setError("Unable to determine branch. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get(`${USERS_URL}/all`);
+        // Use the new endpoint to get only active users from the manager's branch
+        const response = await axios.get(`${USERS_URL}/branch/${user.branchId}/active-users`);
         setEmployees(response.data);
       } catch (err) {
         console.error("Failed to fetch employees:", err);
@@ -163,7 +173,7 @@ const ManagerUserManagementPage = () => {
     };
 
     fetchEmployees();
-  }, []);
+  }, [user?.branchId]);
 
   const handleOpenAdd = () => {
     // helpful console log for debugging in browser
@@ -794,12 +804,13 @@ const ManagerUserManagementPage = () => {
         <AddEmployeeModal
           open={addOpen}
           onClose={() => setAddOpen(false)}
+          managerInfo={user} // Pass the manager's information
           onCreate={(newEmployee) => {
             // Add the new employee returned from the backend to the local state
             setEmployees((prev) => [...prev, newEmployee]);
             setSuccessTitle("Employee added!");
             setSuccessMessage(
-              `${newEmployee.email} has been added successfully. Login credentials have been sent.`
+              `Login credentials have been sent.`
             );
             setShowSuccess(true);
             setAddOpen(false);
