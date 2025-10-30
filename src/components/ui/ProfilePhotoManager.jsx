@@ -113,19 +113,19 @@ const ProfilePhotoManager = ({
       }
 
       // Save the Cloudinary URL to backend
-      const response = await fetch(
-        `${API_BASE}${API_PREFIX}/users/${userId}/profile-image`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            profileImageUrl: uploadResult.data.url,
-            cloudinaryPublicId: uploadResult.data.publicId,
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE}/api/users/${userId}/profile-image`, {
+        method: 'PUT',
+        headers: {
+          Authorization:
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+                "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          profileImageUrl: uploadResult.data.url,
+          cloudinaryPublicId: uploadResult.data.publicId
+        })
+      });
 
       setUploadProgress(100);
 
@@ -184,12 +184,13 @@ const ProfilePhotoManager = ({
       const publicId = extractPublicIdFromUrl(currentImageUrl);
 
       // Delete from backend first
-      const response = await fetch(
-        `${API_BASE}${API_PREFIX}/users/${userId}/profile-image`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`${API_BASE}/api/users/${userId}/profile-image`, {
+        method: 'DELETE',
+        Authorization:
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+                "Content-Type": "application/json",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to delete profile image from database");
