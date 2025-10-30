@@ -16,7 +16,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     { id: 6, name: "AC Service", price: 99.99, durationMinutes: 60 },
   ];
 
-  // Branch list (fallback). Replace with prop or API if available.
+  // Branch list for dropdown selection. Replace with prop or API if available.
   const [branches] = useState([
     {
       id: 1,
@@ -57,8 +57,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
       name: "", 
       phone: "" 
     }, 
-    branchId: branchId || "", 
-    manualBranchName: "",
+    branchId: branchId || "",
     notes: ""
   });
   const [customerName, setCustomerName] = useState("");
@@ -66,14 +65,8 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
   const [loadingCustomer, setLoadingCustomer] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Auto-select branch when manual name matches
-  useEffect(() => {
-    const name = formData.manualBranchName?.trim();
-    if (!name) return;
-    const matched = branches.find((b) => b.name?.toLowerCase() === name.toLowerCase());
-    if (matched) setFormData((p) => ({ ...p, branchId: matched.id }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.manualBranchName]);
+  // Auto-select branch when modal opens - removed since no branch input needed
+  // useEffect removed
 
   // Check if scroll indicator should be shown
   useEffect(() => {
@@ -116,11 +109,8 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     // Require vehicle selection
     if (!formData.vehicleId) newErrors.vehicleId = "Please select a vehicle";
     if (!formData.serviceType) newErrors.serviceType = "Please select a service type";
-    // Require either a branch selection or a manual branch name
-    if (!formData.branchId && !formData.manualBranchName) {
-      newErrors.branchId = "Please select a branch or enter one manually";
-      newErrors.manualBranchName = "Please select a branch or enter one manually";
-    }
+    // Require branch selection
+    if (!formData.branchId) newErrors.branchId = "Please select a branch";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -232,16 +222,10 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     
     const selectedServiceDef = serviceTypes.find((s) => s.id === formData.serviceType);
     
-    // Determine branch id: prefer selected id, then try to infer from manualBranchName (case-insensitive)
-    let chosenBranchId = formData.branchId || branchId || null;
-    const manualName = formData.manualBranchName?.trim();
-    if (manualName) {
-      const matched = branches.find((b) => b.name?.toLowerCase() === manualName.toLowerCase());
-      if (matched) chosenBranchId = matched.id;
-    }
-    
+    // Use the selected branch from the form
+    const chosenBranchId = formData.branchId || branchId;
     const chosenBranch = branches.find((b) => b.id === chosenBranchId) || branches.find((b) => b.id === Number(chosenBranchId)) || null;
-    const chosenBranchName = manualName || chosenBranch?.name || "";
+    const chosenBranchName = chosenBranch?.name || "";
     
     // Format date and time for backend
     let formattedDate;
@@ -323,8 +307,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
         name: "", 
         phone: "" 
       }, 
-      branchId: branchId || "", 
-      manualBranchName: "",
+      branchId: branchId || "",
       notes: ""
     });
     setErrors({});
@@ -416,22 +399,6 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
                   </Typography>
                 )}
               </FormControl>
-
-              <TextField
-                fullWidth
-                label="Branch (or enter manually)"
-                value={formData.manualBranchName}
-                onChange={(e) => handleInputChange("manualBranchName", e.target.value)}
-                placeholder="Type a branch name if not listed"
-                error={!!errors.manualBranchName}
-                helperText={errors.manualBranchName || "Auto-selects from dropdown if name matches"}
-                InputProps={{
-                  sx: { fontSize: '16px' }
-                }}
-                InputLabelProps={{
-                  sx: { fontSize: '16px' }
-                }}
-              />
             </Stack>
           </Box>
 
