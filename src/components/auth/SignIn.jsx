@@ -61,7 +61,7 @@ const SignIn = () => {
         if (setAuthUser) setAuthUser(data.accessToken);
 
         // Get user role from JWT token to determine navigation
-        const payload = JSON.parse(atob(data.accessToken.split('.')[1]));
+        const payload = JSON.parse(atob(data.accessToken.split(".")[1]));
         const role = String(payload.role || "").toLowerCase();
 
         const roleMap = {

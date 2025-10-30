@@ -80,11 +80,14 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
 
     try {
       // Call backend API to add employee
-      const response = await authenticatedAxios.post(`${USERS_URL}/add-employee`, {
-        email: form.email,
-        role: form.role,
-        branch: form.branch,
-      });
+      const response = await authenticatedAxios.post(
+        `${USERS_URL}/add-employee`,
+        {
+          email: form.email,
+          role: form.role,
+          branch: form.branch,
+        }
+      );
 
       // Success - pass the created employee data to parent
       onCreate(response.data);

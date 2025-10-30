@@ -10,7 +10,10 @@ import { ConfirmationDialog } from "../ui/dialog";
 import ProfilePhotoManager from "../ui/ProfilePhotoManager";
 import { Box, Typography, CircularProgress, IconButton } from "@mui/material";
 import { API_BASE, API_PREFIX } from "../../config/apiEndpoints";
-import { getCurrentUser, createAuthenticatedFetchOptions } from "../../utils/jwtUtils";
+import {
+  getCurrentUser,
+  createAuthenticatedFetchOptions,
+} from "../../utils/jwtUtils";
 
 const SettingsComponent = ({ role = "user" }) => {
   const [loading, setLoading] = useState(true);
@@ -50,7 +53,10 @@ const SettingsComponent = ({ role = "user" }) => {
   // Fetch user details from API
   const fetchUserDetails = async (userId) => {
     try {
-      const response = await fetch(`${API_BASE}/api/users/${userId}`, createAuthenticatedFetchOptions());
+      const response = await fetch(
+        `${API_BASE}/api/users/${userId}`,
+        createAuthenticatedFetchOptions()
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch user details");
       }

@@ -10,20 +10,20 @@
 export const decodeJWTToken = (token) => {
   try {
     if (!token || typeof token !== "string") return null;
-    
+
     // JWT has 3 parts separated by dots: header.payload.signature
     const parts = token.split(".");
     if (parts.length !== 3) return null;
-    
+
     // Decode the payload (second part)
     const payload = parts[1];
-    
+
     // Add padding if needed (base64url might not have padding)
     const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
-    
+
     // Decode base64url to JSON
     const decoded = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
-    
+
     return JSON.parse(decoded);
   } catch (error) {
     console.error("Error decoding JWT token:", error);
@@ -40,7 +40,7 @@ export const isTokenExpired = (token) => {
   try {
     const payload = decodeJWTToken(token);
     if (!payload || !payload.exp) return true;
-    
+
     // exp is in seconds, Date.now() is in milliseconds
     const currentTime = Math.floor(Date.now() / 1000);
     return payload.exp < currentTime;
@@ -59,7 +59,7 @@ export const getUserDataFromToken = (token) => {
   try {
     const payload = decodeJWTToken(token);
     if (!payload) return null;
-    
+
     return {
       id: payload.id,
       username: payload.sub, // JWT standard field for subject (username)
@@ -83,7 +83,7 @@ export const getStoredAccessToken = () => {
   try {
     const authUser = localStorage.getItem("authUser");
     if (!authUser) return null;
-    
+
     const userData = JSON.parse(authUser);
     return userData.accessToken || null;
   } catch (error) {
@@ -106,10 +106,10 @@ export const storeAccessToken = (accessToken) => {
     } catch (e) {
       // ignore parsing errors
     }
-    
+
     // Add access token to auth user data
     authUser.accessToken = accessToken;
-    
+
     // Store back to localStorage
     localStorage.setItem("authUser", JSON.stringify(authUser));
   } catch (error) {
@@ -165,7 +165,7 @@ export const isAuthenticated = () => {
  */
 export const createAuthenticatedFetchOptions = (options = {}) => {
   const authHeader = getAuthHeader();
-  
+
   return {
     ...options,
     headers: {
@@ -185,6 +185,6 @@ export const validateToken = (token) => {
   if (!token || isTokenExpired(token)) {
     return null;
   }
-  
+
   return getUserDataFromToken(token);
 };

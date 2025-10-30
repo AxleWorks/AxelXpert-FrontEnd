@@ -10,11 +10,13 @@ const UserBranchesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch(`${BRANCHES_URL}/all`, createAuthenticatedFetchOptions());
+        const response = await fetch(
+          `${BRANCHES_URL}/all`,
+          createAuthenticatedFetchOptions()
+        );
 
         if (!response.ok) {
           throw new Error(`Failed to fetch branches: ${response.status}`);

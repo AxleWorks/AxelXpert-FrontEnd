@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { 
-  getCurrentUser, 
-  isAuthenticated as checkTokenAuth, 
-  storeAccessToken, 
-  clearStoredToken 
+import {
+  getCurrentUser,
+  isAuthenticated as checkTokenAuth,
+  storeAccessToken,
+  clearStoredToken,
 } from "../utils/jwtUtils";
 
 const AuthContext = createContext();
@@ -31,10 +31,10 @@ export const AuthProvider = ({ children }) => {
 
     // Check auth status on mount and periodically
     checkAuth();
-    
+
     // Optional: Set up interval to check token expiration periodically
     const interval = setInterval(checkAuth, 60000); // Check every minute
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Store the access token
       storeAccessToken(accessToken);
-      
+
       // Get user data from the token and update state
       const userData = getCurrentUser();
       setUser(userData);

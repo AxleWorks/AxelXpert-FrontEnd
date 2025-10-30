@@ -64,7 +64,9 @@ const BranchesComponent = () => {
   const fetchBranches = async () => {
     try {
       setLoading(true);
-      const response = await authenticatedAxios.get(`${API_BASE}${API_PREFIX}/branches`);
+      const response = await authenticatedAxios.get(
+        `${API_BASE}${API_PREFIX}/branches`
+      );
       setBranches(response.data);
       setFilteredBranches(response.data);
     } catch (error) {
@@ -152,7 +154,9 @@ const BranchesComponent = () => {
 
   const handleDelete = async () => {
     try {
-      await authenticatedAxios.delete(`${API_BASE}${API_PREFIX}/branches/${branchToDelete}`);
+      await authenticatedAxios.delete(
+        `${API_BASE}${API_PREFIX}/branches/${branchToDelete}`
+      );
       fetchBranches();
       setConfirmDialogOpen(false);
       setBranchToDelete(null);
@@ -171,7 +175,10 @@ const BranchesComponent = () => {
         );
       } else {
         // Add new branch
-        await authenticatedAxios.post(`${API_BASE}${API_PREFIX}/branches`, formData);
+        await authenticatedAxios.post(
+          `${API_BASE}${API_PREFIX}/branches`,
+          formData
+        );
       }
       fetchBranches();
       setEditDialogOpen(false);

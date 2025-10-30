@@ -1,8 +1,8 @@
 /**
  * Axios utility for authenticated API requests
  */
-import axios from 'axios';
-import { getAuthHeader, clearStoredToken } from './jwtUtils.js';
+import axios from "axios";
+import { getAuthHeader, clearStoredToken } from "./jwtUtils.js";
 
 // Create an axios instance with authentication interceptors
 const createAuthenticatedAxios = () => {
@@ -31,7 +31,7 @@ const createAuthenticatedAxios = () => {
       if (error.response?.status === 401) {
         // Token expired or invalid, clear stored token and redirect to login
         clearStoredToken();
-        window.location.href = '/signin';
+        window.location.href = "/signin";
       }
       return Promise.reject(error);
     }

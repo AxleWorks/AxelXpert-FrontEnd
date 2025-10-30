@@ -31,7 +31,9 @@ const UserVehiclesPage = () => {
           setVehicles([]);
           return;
         }
-        const response = await authenticatedAxios.get(`${VEHICLES_URL}/user/${userId}`);
+        const response = await authenticatedAxios.get(
+          `${VEHICLES_URL}/user/${userId}`
+        );
         setVehicles(Array.isArray(response.data) ? response.data : []); // Ensure vehicles is always an array
       } catch (error) {
         console.error("Error fetching vehicles:", error);
@@ -77,20 +79,17 @@ const UserVehiclesPage = () => {
           `${VEHICLES_URL}/${formData.id}`,
           formData
         );
-
       } else {
         // Create new vehicle
-        await authenticatedAxios.post(
-          VEHICLES_URL,
-          {
-            ...formData,
-            userId: userId,
-          }
-        );
-
+        await authenticatedAxios.post(VEHICLES_URL, {
+          ...formData,
+          userId: userId,
+        });
       }
       handleCloseDialog();
-      const response = await authenticatedAxios.get(`${VEHICLES_URL}/user/${userId}`);
+      const response = await authenticatedAxios.get(
+        `${VEHICLES_URL}/user/${userId}`
+      );
       setVehicles(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error saving vehicle:", error);

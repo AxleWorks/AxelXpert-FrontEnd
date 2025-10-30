@@ -13,7 +13,10 @@ const ManagerBranchesPage = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch(`${BRANCHES_URL}/all`, createAuthenticatedFetchOptions());
+        const response = await fetch(
+          `${BRANCHES_URL}/all`,
+          createAuthenticatedFetchOptions()
+        );
         if (!response.ok) {
           throw new Error(`Failed to fetch branches: ${response.status}`);
         }
@@ -32,14 +35,17 @@ const ManagerBranchesPage = () => {
 
   const handleAddBranch = async (newBranch) => {
     try {
-      const response = await fetch(BRANCHES_URL, createAuthenticatedFetchOptions({
-        method: "POST",
-        body: JSON.stringify({
-          ...newBranch,
-          openHours: newBranch.openHours,
-          closeHours: newBranch.closeHours,
-        }),
-      }));
+      const response = await fetch(
+        BRANCHES_URL,
+        createAuthenticatedFetchOptions({
+          method: "POST",
+          body: JSON.stringify({
+            ...newBranch,
+            openHours: newBranch.openHours,
+            closeHours: newBranch.closeHours,
+          }),
+        })
+      );
 
       if (!response.ok) {
         throw new Error("Failed to add branch");
@@ -54,14 +60,17 @@ const ManagerBranchesPage = () => {
 
   const handleEditBranch = async (updatedBranch) => {
     try {
-      const response = await fetch(`${BRANCHES_URL}/${updatedBranch.id}`, createAuthenticatedFetchOptions({
-        method: "PUT",
-        body: JSON.stringify({
-          ...updatedBranch,
-          openHours: updatedBranch.openHours,
-          closeHours: updatedBranch.closeHours,
-        }),
-      }));
+      const response = await fetch(
+        `${BRANCHES_URL}/${updatedBranch.id}`,
+        createAuthenticatedFetchOptions({
+          method: "PUT",
+          body: JSON.stringify({
+            ...updatedBranch,
+            openHours: updatedBranch.openHours,
+            closeHours: updatedBranch.closeHours,
+          }),
+        })
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update branch");
@@ -80,9 +89,12 @@ const ManagerBranchesPage = () => {
 
   const handleDeleteBranch = async (branchId) => {
     try {
-      const response = await fetch(`${BRANCHES_URL}/${branchId}`, createAuthenticatedFetchOptions({
-        method: "DELETE",
-      }));
+      const response = await fetch(
+        `${BRANCHES_URL}/${branchId}`,
+        createAuthenticatedFetchOptions({
+          method: "DELETE",
+        })
+      );
 
       if (!response.ok) {
         throw new Error("Failed to delete branch");
