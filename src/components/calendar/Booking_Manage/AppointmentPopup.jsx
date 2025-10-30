@@ -22,6 +22,7 @@ import AssignEmployeeSection from "./ui/AssignEmployeeSection";
 import { API_BASE, API_PREFIX } from "../../../config/apiEndpoints.jsx";
 import AppointmentActions from "./ui/AppointmentActions";
 import RejectionDialog from "./ui/RejectionDialog";
+import { getAuthHeader } from "../../../utils/jwtUtils";
 
 const style = {
   position: "absolute",
@@ -80,9 +81,13 @@ export default function AppointmentPopup({
     }
 
     try {
+      const authHeader = getAuthHeader();
       const res = await fetch(`${apiBase}/bookings/${appointment.id}/assign`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(authHeader && { Authorization: authHeader }),
+        },
         body: JSON.stringify({ employeeId: employee.id }),
       });
 
@@ -112,9 +117,13 @@ export default function AppointmentPopup({
 
     setIsRejecting(true);
     try {
+      const authHeader = getAuthHeader();
       const res = await fetch(`${apiBase}/bookings/${appointment.id}/reject`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(authHeader && { Authorization: authHeader }),
+        },
         body: JSON.stringify({ reason: reason.trim() }),
       });
 
