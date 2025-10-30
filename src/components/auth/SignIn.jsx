@@ -13,7 +13,7 @@ import {
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import axios from "axios";
+import { publicAxios } from "../../utils/axiosConfig.js";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
@@ -32,7 +32,7 @@ const SignIn = () => {
     let mounted = true;
     (async () => {
       try {
-        await axios.get(`${AUTH_URL}/status`);
+        await publicAxios.get(`${AUTH_URL}/status`);
       } catch (e) {
         // ignore - used only for quick healthcheck
       }
@@ -46,35 +46,23 @@ const SignIn = () => {
     setError(null);
 
     try {
-      // call backend login endpoint and expect LoginResponse {id, username, email, role}
-      const res = await axios.post(`${AUTH_URL}/login`, {
+      // call backend login endpoint and expect LoginResponse with accessToken
+      const res = await publicAxios.post(`${AUTH_URL}/login`, {
         email: username,
         password,
       });
 
-      // If backend returns an object with user data, save it and update context/localStorage
+      // If backend returns accessToken, store it and decode user data
       const data = res && res.data;
-      if (data && typeof data === "object" && data.username) {
-        // normalize role to lowercase because ProtectedRoute expects 'user'|'employee'|'manager'
-        const role = String(data.role || "").toLowerCase();
-        const userData = {
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          role,
-          JWTToken : data.jwtToken,
-        };
+      if (data && typeof data === "object" && data.accessToken) {
+        console.log("Login successful, access token received");
 
-        console.log("Login successful:", userData);
+        // Store access token and let AuthContext decode user data from JWT
+        if (setAuthUser) setAuthUser(data.accessToken);
 
-        // save to localStorage
-        try {
-          localStorage.setItem("authUser", JSON.stringify(userData));
-        } catch (e) {
-          // ignore storage errors
-        }
-
-        if (setAuthUser) setAuthUser(userData);
+        // Get user role from JWT token to determine navigation
+        const payload = JSON.parse(atob(data.accessToken.split('.')[1]));
+        const role = String(payload.role || "").toLowerCase();
 
         const roleMap = {
           user: "/user/dashboard",

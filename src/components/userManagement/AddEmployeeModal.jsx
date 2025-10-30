@@ -14,7 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Button } from "../../components/ui/button";
-import axios from "axios";
+import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import { BRANCHES_URL, USERS_URL } from "../../config/apiEndpoints.jsx";
 
 export default function AddEmployeeModal({ open, onClose, onCreate }) {
@@ -34,7 +34,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
       const fetchBranches = async () => {
         setLoading(true);
         try {
-          const response = await axios.get(`${BRANCHES_URL}/all`);
+          const response = await authenticatedAxios.get(`${BRANCHES_URL}/all`);
           setBranches(response.data);
         } catch (err) {
           console.error("Failed to fetch branches:", err);
@@ -80,7 +80,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
 
     try {
       // Call backend API to add employee
-      const response = await axios.post(`${USERS_URL}/add-employee`, {
+      const response = await authenticatedAxios.post(`${USERS_URL}/add-employee`, {
         email: form.email,
         role: form.role,
         branch: form.branch,

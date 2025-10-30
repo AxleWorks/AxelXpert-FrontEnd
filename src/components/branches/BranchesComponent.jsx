@@ -32,6 +32,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 
 import { USERS_URL } from "../../config/apiEndpoints.jsx";
+import { createAuthenticatedFetchOptions } from "../../utils/jwtUtils.js";
 
 export default function BranchesComponent({
   branches,
@@ -54,7 +55,7 @@ export default function BranchesComponent({
     if (isManager) {
       const fetchManagers = async () => {
         try {
-          const response = await fetch(`${USERS_URL}/managers`);
+          const response = await fetch(`${USERS_URL}/managers`, createAuthenticatedFetchOptions());
           if (response.ok) {
             const data = await response.json();
             setManagers(data);

@@ -3,6 +3,7 @@ import { Box, CircularProgress } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
 import BranchesComponent from "../../components/branches/BranchesComponentUser";
 import { BRANCHES_URL } from "../../config/apiEndpoints";
+import { createAuthenticatedFetchOptions } from "../../utils/jwtUtils.js";
 
 const UserBranchesPage = () => {
   const [branches, setBranches] = useState([]);
@@ -13,17 +14,7 @@ const UserBranchesPage = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch(`${BRANCHES_URL}/all`
-          ,
-           {
-          headers: {
-            Authorization:
-            
-              "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-          },
-        }
-      );
+        const response = await fetch(`${BRANCHES_URL}/all`, createAuthenticatedFetchOptions());
 
         if (!response.ok) {
           throw new Error(`Failed to fetch branches: ${response.status}`);
