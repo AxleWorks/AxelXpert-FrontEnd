@@ -44,12 +44,14 @@ const menuItems = [
     icon: PeopleIcon,
     path: "/manager/user-management",
   },
-  { text: "Settings", icon: SettingsIcon, path: "/manager/settings" },
   { text: "Services", icon: BuildIcon, path: "/manager/services" },
   { text: "Branches", icon: StoreIcon, path: "/manager/branches" },
   { text: "Attendance", icon: AttendanceIcon, path: "/manager/attendance" },
   { text: "Reports", icon: AssessmentIcon, path: "/manager/reports" },
 ];
+
+// Settings menu item (separate for bottom positioning)
+const settingsMenuItem = { text: "Settings", icon: SettingsIcon, path: "/manager/settings" };
 
 const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
   const location = useLocation();
@@ -143,14 +145,19 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
             Manager Panel
           </Typography>
         </Box>
-      </Toolbar>
-
-      {/* Menu Items */}
+      </Toolbar>      {/* Menu Items */}
       <Box sx={{ flexGrow: 1, overflowY: "auto", p: 1 }}>
         <List disablePadding sx={{ mt: 2 }}>
           {menuItems.map((item) => (
             <MenuItem key={item.text} item={item} />
           ))}
+        </List>
+      </Box>
+
+      {/* Settings - Bottom positioned */}
+      <Box sx={{ p: 1, borderTop: `1px solid ${theme.palette.divider}` }}>
+        <List disablePadding>
+          <MenuItem key={settingsMenuItem.text} item={settingsMenuItem} />
         </List>
       </Box>
 
