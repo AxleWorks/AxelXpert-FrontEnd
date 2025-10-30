@@ -37,6 +37,8 @@ import {
   validateImageFile,
   generateCloudinaryUrl,
 } from "../../utils/cloudinaryUtils";
+import { getAuthHeader } from "../../utils/jwtUtils";
+import { authenticatedAxios } from "../../utils/axiosConfig";
 
 const ProfilePhotoManager = ({
   currentImageUrl,
@@ -91,6 +93,8 @@ const ProfilePhotoManager = ({
     setIsUploading(true);
     setUploadProgress(0);
 
+    let uploadResult = null;
+
     try {
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
@@ -101,7 +105,7 @@ const ProfilePhotoManager = ({
       }, 200);
 
       // Upload to Cloudinary first
-      const uploadResult = await uploadImageToCloudinary(selectedFile, {
+      uploadResult = await uploadImageToCloudinary(selectedFile, {
         folder: `profile_photos/user_${userId}`,
       });
 
@@ -113,29 +117,17 @@ const ProfilePhotoManager = ({
       }
 
       // Save the Cloudinary URL to backend
-      const response = await fetch(`${API_BASE}/api/users/${userId}/profile-image`, {
-        method: 'PUT',
-        headers: {
-          Authorization:
-              "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-                "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await authenticatedAxios.put(
+        `${API_BASE}/api/users/${userId}/profile-image`,
+        {
           profileImageUrl: uploadResult.data.url,
-          cloudinaryPublicId: uploadResult.data.publicId
-        })
-      });
+          cloudinaryPublicId: uploadResult.data.publicId,
+        }
+      );
 
       setUploadProgress(100);
 
-      if (!response.ok) {
-        // If backend save fails, try to delete the uploaded image from Cloudinary
-        await deleteImageFromCloudinary(uploadResult.data.publicId);
-        throw new Error("Failed to save profile image to database");
-      }
-
-      const updatedUser = await response.json();
+      const updatedUser = response.data;
 
       // Call parent callback
       if (onImageUpdate) {
@@ -165,8 +157,18 @@ const ProfilePhotoManager = ({
       handleCloseDialog();
     } catch (error) {
       console.error("Upload error:", error);
+
+      // If backend save fails, try to delete the uploaded image from Cloudinary
+      if (uploadResult?.success && uploadResult.data?.publicId) {
+        await deleteImageFromCloudinary(uploadResult.data.publicId);
+      }
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to save profile image to database";
       toast.error("Upload failed", {
-        description: error.message || "Please try again later.",
+        description: errorMessage,
       });
     } finally {
       setIsUploading(false);
@@ -184,17 +186,9 @@ const ProfilePhotoManager = ({
       const publicId = extractPublicIdFromUrl(currentImageUrl);
 
       // Delete from backend first
-      const response = await fetch(`${API_BASE}/api/users/${userId}/profile-image`, {
-        method: 'DELETE',
-        Authorization:
-              "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-                "Content-Type": "application/json",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete profile image from database");
-      }
+      const response = await authenticatedAxios.delete(
+        `${API_BASE}/api/users/${userId}/profile-image`
+      );
 
       // Delete from Cloudinary if we have a public ID
       if (publicId) {
@@ -208,7 +202,7 @@ const ProfilePhotoManager = ({
         }
       }
 
-      const updatedUser = await response.json();
+      const updatedUser = response.data;
 
       // Call parent callback
       if (onImageUpdate) {
@@ -234,8 +228,12 @@ const ProfilePhotoManager = ({
       setMenuAnchorEl(null);
     } catch (error) {
       console.error("Delete error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to delete profile image from database";
       toast.error("Delete failed", {
-        description: error.message || "Please try again later.",
+        description: errorMessage,
       });
     } finally {
       setIsDeleting(false);
