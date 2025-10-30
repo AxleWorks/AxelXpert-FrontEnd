@@ -15,13 +15,17 @@ const PDFReportTemplate = forwardRef(
 
       // Parse booking date - be flexible with date parsing
       const bookingDate = new Date(
-        appointment.startAt || appointment.date || appointment.createdAt || appointment.updatedAt || new Date()
+        appointment.startAt ||
+          appointment.date ||
+          appointment.createdAt ||
+          appointment.updatedAt ||
+          new Date()
       );
 
       // Date range filtering
       const startDate = new Date(filters.startDate);
       const endDate = new Date(filters.endDate);
-      
+
       const dateInRange =
         isNaN(bookingDate.getTime()) ||
         (bookingDate >= startDate && bookingDate <= endDate);
@@ -30,13 +34,17 @@ const PDFReportTemplate = forwardRef(
       const branchMatch =
         filters.branch === "all" ||
         appointment.branchId?.toString() === filters.branch ||
-        appointment.branchName?.toLowerCase().includes(filters.branch.toLowerCase());
+        appointment.branchName
+          ?.toLowerCase()
+          .includes(filters.branch.toLowerCase());
 
       // Service type filtering
       const serviceMatch =
         filters.serviceType === "all" ||
         appointment.serviceId?.toString() === filters.serviceType ||
-        appointment.serviceName?.toLowerCase().includes(filters.serviceType.toLowerCase());
+        appointment.serviceName
+          ?.toLowerCase()
+          .includes(filters.serviceType.toLowerCase());
 
       return dateInRange && branchMatch && serviceMatch;
     });
@@ -149,7 +157,9 @@ const PDFReportTemplate = forwardRef(
             </div>
             <div>
               <strong style={{ color: "#000" }}>Total Records:</strong>{" "}
-              <span style={{ color: "#333" }}>{filteredAppointments.length}</span>
+              <span style={{ color: "#333" }}>
+                {filteredAppointments.length}
+              </span>
             </div>
           </div>
         </div>
