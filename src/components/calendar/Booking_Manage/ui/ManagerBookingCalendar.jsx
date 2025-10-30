@@ -6,8 +6,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Select,
-  MenuItem,
   Button,
   Snackbar,
   Alert,
@@ -17,6 +15,7 @@ import CalendarHeader from "../CalendarHeader";
 import { API_BASE, API_PREFIX } from "../../../../config/apiEndpoints.jsx";
 import CalendarGrid from "../CalendarGrid";
 import AppointmentPopup from "../AppointmentPopup";
+import { getAuthHeader } from "../../../../utils/jwtUtils";
 
 function getStatusColor(mode, status) {
   const dark = mode === "dark";
@@ -57,8 +56,12 @@ export default function ManagerBookingCalendar({
     const ac = new AbortController();
     async function loadBranches() {
       try {
+        const authHeader = getAuthHeader();
         const res = await fetch(`${apiBase}/branches/all`, {
           signal: ac.signal,
+          headers: {
+            ...(authHeader && { Authorization: authHeader }),
+          },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -83,8 +86,12 @@ export default function ManagerBookingCalendar({
     const ac = new AbortController();
     async function loadEmployees() {
       try {
+        const authHeader = getAuthHeader();
         const res = await fetch(`${apiBase}/users/employees`, {
           signal: ac.signal,
+          headers: {
+            ...(authHeader && { Authorization: authHeader }),
+          },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -115,8 +122,12 @@ export default function ManagerBookingCalendar({
     const ac = new AbortController();
     async function loadBookings() {
       try {
+        const authHeader = getAuthHeader();
         const res = await fetch(`${apiBase}/bookings/all`, {
           signal: ac.signal,
+          headers: {
+            ...(authHeader && { Authorization: authHeader }),
+          },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
