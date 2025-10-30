@@ -17,7 +17,7 @@ import {
   CalendarToday as CalendarMonth,
 } from "@mui/icons-material";
 
-const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} }) => {
+const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {}, selectedBranch, branchName }) => {
   const theme = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -133,14 +133,20 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
   const days = getDaysInMonth(currentDate);
 
   return (
-    <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-      {/* Calendar Header */}
+    <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>      {/* Calendar Header */}
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <CalendarMonth sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>
-            {months[currentDate.getMonth()]} {currentDate.getFullYear()}
-          </Typography>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+              {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+            </Typography>
+            {branchName && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                {branchName} Branch Calendar
+              </Typography>
+            )}
+          </Box>
         </Box>
         
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -160,7 +166,7 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
             <ChevronRight />
           </IconButton>
         </Box>
-      </Box>      {/* Legend */}
+      </Box>{/* Legend */}
       <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
         <Chip
           size="small"

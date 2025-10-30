@@ -49,7 +49,7 @@ import {
 // import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 // import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
-const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAttendance }) => {
+const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAttendance, selectedBranch, branchName }) => {
   const theme = useTheme();
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [editData, setEditData] = useState({});
@@ -179,10 +179,9 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
   }
 
   return (
-    <Box>
-      {/* Header with Date and Stats */}
+    <Box>      {/* Header with Date and Stats */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
+        <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
           Attendance for {selectedDate.toLocaleDateString('en-US', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -190,6 +189,11 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
             day: 'numeric' 
           })}
         </Typography>
+        {branchName && (
+          <Typography variant="h6" color="primary" sx={{ fontWeight: 500, mb: 2 }}>
+            {branchName} Branch
+          </Typography>
+        )}
 
         {/* Quick Stats Cards */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
