@@ -28,7 +28,7 @@ import {
   PlusIcon,
 } from "lucide-react";
 import { API_BASE, API_PREFIX, USERS_URL } from "../../config/apiEndpoints";
-import axios from "axios";
+import { authenticatedAxios } from "../../utils/axiosConfig.js";
 
 const BranchesComponent = () => {
   const [branches, setBranches] = useState([]);
@@ -64,7 +64,9 @@ const BranchesComponent = () => {
   const fetchBranches = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE}${API_PREFIX}/branches`);
+      const response = await authenticatedAxios.get(
+        `${API_BASE}${API_PREFIX}/branches`
+      );
       setBranches(response.data);
       setFilteredBranches(response.data);
     } catch (error) {
@@ -152,7 +154,9 @@ const BranchesComponent = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${API_BASE}${API_PREFIX}/branches/${branchToDelete}`);
+      await authenticatedAxios.delete(
+        `${API_BASE}${API_PREFIX}/branches/${branchToDelete}`
+      );
       fetchBranches();
       setConfirmDialogOpen(false);
       setBranchToDelete(null);
@@ -165,13 +169,16 @@ const BranchesComponent = () => {
     try {
       if (selectedBranch) {
         // Edit existing branch
-        await axios.put(
+        await authenticatedAxios.put(
           `${API_BASE}${API_PREFIX}/branches/${selectedBranch.id}`,
           formData
         );
       } else {
         // Add new branch
-        await axios.post(`${API_BASE}${API_PREFIX}/branches`, formData);
+        await authenticatedAxios.post(
+          `${API_BASE}${API_PREFIX}/branches`,
+          formData
+        );
       }
       fetchBranches();
       setEditDialogOpen(false);

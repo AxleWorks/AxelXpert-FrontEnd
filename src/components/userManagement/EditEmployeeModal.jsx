@@ -13,7 +13,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Button } from "../ui/button";
-import axios from "axios";
+import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import { BRANCHES_URL, USERS_URL } from "../../config/apiEndpoints.jsx";
 
 export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
@@ -36,8 +36,8 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
       // Fetch fresh employee data
       setLoading(true);
       Promise.all([
-        axios.get(`${USERS_URL}/${employee.id}`),
-        axios.get(`${BRANCHES_URL}/all`),
+        authenticatedAxios.get(`${USERS_URL}/${employee.id}`),
+        authenticatedAxios.get(`${BRANCHES_URL}/all`),
       ])
         .then(([userResponse, branchesResponse]) => {
           const userData = userResponse.data;

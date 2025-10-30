@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import axios from "axios";
+import { publicAxios } from "../../utils/axiosConfig.js";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
@@ -30,7 +30,7 @@ const SignIn = () => {
     let mounted = true;
     (async () => {
       try {
-        await axios.get(`${AUTH_URL}/status`);
+        await publicAxios.get(`${AUTH_URL}/status`);
       } catch (e) {
         // ignore - used only for quick healthcheck
       }
@@ -153,7 +153,7 @@ const SignIn = () => {
     <AuthFormContainer title="Sign In" error={error}>
       <form onSubmit={handleSubmit} noValidate>
         <Typography variant="body2" sx={{ mb: 1, color: "#64748b" }}>
-          Username
+          Email
         </Typography>
         <TextField
           placeholder="Enter your username"

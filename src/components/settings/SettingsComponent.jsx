@@ -10,6 +10,10 @@ import { ConfirmationDialog } from "../ui/dialog";
 import ProfilePhotoManager from "../ui/ProfilePhotoManager";
 import { Box, Typography, CircularProgress, IconButton } from "@mui/material";
 import { API_BASE, API_PREFIX } from "../../config/apiEndpoints";
+import {
+  getCurrentUser,
+  createAuthenticatedFetchOptions,
+} from "../../utils/jwtUtils";
 
 const SettingsComponent = ({ role = "user" }) => {
   const [loading, setLoading] = useState(true);
@@ -41,28 +45,18 @@ const SettingsComponent = ({ role = "user" }) => {
     onConfirm: null,
   });
 
-  // Get logged-in user data from localStorage
+  // Get logged-in user data using JWT utils
   const getLoggedInUser = () => {
-    try {
-      const authUser = localStorage.getItem("authUser");
-      return authUser ? JSON.parse(authUser) : null;
-    } catch (error) {
-      console.error("Error parsing authUser from localStorage:", error);
-      return null;
-    }
+    return getCurrentUser();
   };
 
   // Fetch user details from API
   const fetchUserDetails = async (userId) => {
     try {
-      const response = await fetch(`${API_BASE}/api/users/${userId}`,
-           {
-          headers: {
-            Authorization:
-              "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-          },
-        });
+      const response = await fetch(
+        `${API_BASE}/api/users/${userId}`,
+        createAuthenticatedFetchOptions()
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch user details");
       }
@@ -134,13 +128,8 @@ const SettingsComponent = ({ role = "user" }) => {
           const response = await fetch(
             `${API_BASE}${API_PREFIX}/users/${userDetails.id}`,
             {
+              ...createAuthenticatedFetchOptions(),
               method: "PUT",
-              headers: {
-                     Authorization:
-              `Bearer ` +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-                "Content-Type": "application/json",
-              },
               body: JSON.stringify({
                 username: formData.username,
                 email: formData.email,
@@ -158,16 +147,9 @@ const SettingsComponent = ({ role = "user" }) => {
           const updatedUser = await response.json();
           setUserDetails(updatedUser);
 
-          // Update localStorage if username or email changed
-          const authUser = getLoggedInUser();
-          if (authUser) {
-            const updatedAuthUser = {
-              ...authUser,
-              username: updatedUser.username,
-              email: updatedUser.email,
-            };
-            localStorage.setItem("authUser", JSON.stringify(updatedAuthUser));
-          }
+          // Note: With JWT, user info is stored in the token
+          // No need to manually update localStorage for username/email changes
+          // The JWT token would need to be refreshed by the backend for these changes to take effect
 
           toast.success("Profile updated!", {
             description: "Your profile has been updated successfully.",
@@ -214,13 +196,8 @@ const SettingsComponent = ({ role = "user" }) => {
           const response = await fetch(
             `${API_BASE}${API_PREFIX}/users/${userDetails.id}/password`,
             {
+              ...createAuthenticatedFetchOptions(),
               method: "PUT",
-              headers: {
- Authorization:
-              "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-                "Content-Type": "application/json",
-              },
               body: JSON.stringify({
                 currentPassword: passwordData.currentPassword,
                 newPassword: passwordData.newPassword,
@@ -272,13 +249,8 @@ const SettingsComponent = ({ role = "user" }) => {
           const response = await fetch(
             `${API_BASE}${API_PREFIX}/users/${userDetails.id}`,
             {
+              ...createAuthenticatedFetchOptions(),
               method: "DELETE",
-              headers: {
-                 Authorization:
-              "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-                "Content-Type": "application/json",
-              },
             }
           );
 
