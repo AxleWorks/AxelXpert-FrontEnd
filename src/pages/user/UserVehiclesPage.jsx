@@ -30,7 +30,13 @@ const UserVehiclesPage = () => {
           setVehicles([]);
           return;
         }
-        const response = await axios.get(`${VEHICLES_URL}/user/${userId}`);
+        const response = await axios.get(`${VEHICLES_URL}/user/${userId}`, {
+          headers: {
+            Authorization:
+              `Bearer ` +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+          },
+        });
         setVehicles(Array.isArray(response.data) ? response.data : []); // Ensure vehicles is always an array
       } catch (error) {
         console.error("Error fetching vehicles:", error);
@@ -72,16 +78,44 @@ const UserVehiclesPage = () => {
 
       if (formData.id) {
         // Update vehicle
-        await axios.put(`${VEHICLES_URL}/${formData.id}`, formData);
+     const token = JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken;
+
+await axios.put(
+  `${VEHICLES_URL}/${formData.id}`,
+  formData,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+
       } else {
         // Create new vehicle
-        await axios.post(VEHICLES_URL, {
-          ...formData,
-          userId: userId,
-        });
+      await axios.post(
+  VEHICLES_URL,
+  {
+    ...formData,
+    userId: userId,
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${
+        JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken
+      }`,
+    },
+  }
+);
+
       }
       handleCloseDialog();
-      const response = await axios.get(`${VEHICLES_URL}/user/${userId}`);
+      const response = await axios.get(`${VEHICLES_URL}/user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${
+            JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken
+          }`,
+        },
+      });
       setVehicles(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error saving vehicle:", error);
@@ -90,7 +124,13 @@ const UserVehiclesPage = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${VEHICLES_URL}/${id}`);
+      await axios.delete(`${VEHICLES_URL}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${
+            JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken
+          }`,
+        },
+      });
       setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id));
     } catch (error) {
       console.error("Error deleting vehicle:", error);

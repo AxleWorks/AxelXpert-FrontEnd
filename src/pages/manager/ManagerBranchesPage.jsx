@@ -12,7 +12,13 @@ const ManagerBranchesPage = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch(`${BRANCHES_URL}/all`);
+        const response = await fetch(`${BRANCHES_URL}/all`, {
+        headers: {
+          Authorization: `Bearer ${
+            JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken
+          }`,
+        },
+      });
         if (!response.ok) {
           throw new Error(`Failed to fetch branches: ${response.status}`);
         }
@@ -35,6 +41,11 @@ const ManagerBranchesPage = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization:
+            
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+          
         },
         body: JSON.stringify({
           ...newBranch,
@@ -60,6 +71,11 @@ const ManagerBranchesPage = () => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization:
+            
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+          
         },
         body: JSON.stringify({
           ...updatedBranch,
@@ -87,6 +103,12 @@ const ManagerBranchesPage = () => {
     try {
       const response = await fetch(`${BRANCHES_URL}/${branchId}`, {
         method: "DELETE",
+         headers: {
+            Authorization:
+            
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+          },
       });
 
       if (!response.ok) {

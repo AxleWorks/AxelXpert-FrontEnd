@@ -55,7 +55,14 @@ const SettingsComponent = ({ role = "user" }) => {
   // Fetch user details from API
   const fetchUserDetails = async (userId) => {
     try {
-      const response = await fetch(`${API_BASE}${API_PREFIX}/users/${userId}`);
+      const response = await fetch(`${API_BASE}/api/users/${userId}`,
+           {
+          headers: {
+            Authorization:
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
+          },
+        });
       if (!response.ok) {
         throw new Error("Failed to fetch user details");
       }
@@ -129,6 +136,9 @@ const SettingsComponent = ({ role = "user" }) => {
             {
               method: "PUT",
               headers: {
+                     Authorization:
+              `Bearer ` +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
@@ -206,6 +216,9 @@ const SettingsComponent = ({ role = "user" }) => {
             {
               method: "PUT",
               headers: {
+ Authorization:
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
@@ -261,6 +274,9 @@ const SettingsComponent = ({ role = "user" }) => {
             {
               method: "DELETE",
               headers: {
+                 Authorization:
+              "Bearer " +
+              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
                 "Content-Type": "application/json",
               },
             }
