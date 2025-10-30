@@ -9,6 +9,38 @@ const PDFReportTemplate = forwardRef(
     const currentDate = new Date().toLocaleDateString();
     const reportTitle = "AxleXpert - Appointment Reports";
 
+    // Filter appointments based on the current filters
+    const filteredAppointments = appointments.filter((appointment) => {
+      if (!appointment) return false;
+
+      // Parse booking date - be flexible with date parsing
+      const bookingDate = new Date(
+        appointment.startAt || appointment.date || appointment.createdAt || appointment.updatedAt || new Date()
+      );
+
+      // Date range filtering
+      const startDate = new Date(filters.startDate);
+      const endDate = new Date(filters.endDate);
+      
+      const dateInRange =
+        isNaN(bookingDate.getTime()) ||
+        (bookingDate >= startDate && bookingDate <= endDate);
+
+      // Branch filtering
+      const branchMatch =
+        filters.branch === "all" ||
+        appointment.branchId?.toString() === filters.branch ||
+        appointment.branchName?.toLowerCase().includes(filters.branch.toLowerCase());
+
+      // Service type filtering
+      const serviceMatch =
+        filters.serviceType === "all" ||
+        appointment.serviceId?.toString() === filters.serviceType ||
+        appointment.serviceName?.toLowerCase().includes(filters.serviceType.toLowerCase());
+
+      return dateInRange && branchMatch && serviceMatch;
+    });
+
     return (
       <div
         ref={ref}
@@ -117,7 +149,7 @@ const PDFReportTemplate = forwardRef(
             </div>
             <div>
               <strong style={{ color: "#000" }}>Total Records:</strong>{" "}
-              <span style={{ color: "#333" }}>{appointments.length}</span>
+              <span style={{ color: "#333" }}>{filteredAppointments.length}</span>
             </div>
           </div>
         </div>
@@ -364,8 +396,8 @@ const PDFReportTemplate = forwardRef(
               </tr>
             </thead>
             <tbody>
-              {appointments.length > 0 ? (
-                appointments.map((appointment, index) => (
+              {filteredAppointments.length > 0 ? (
+                filteredAppointments.map((appointment, index) => (
                   <tr
                     key={index}
                     style={{
