@@ -56,7 +56,10 @@ const App = () => {
     <ThemeProvider>
       <AuthProvider>
         <ToastProvider>
-          <Router>
+          <Router future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
                 {/* Auth routes */}
