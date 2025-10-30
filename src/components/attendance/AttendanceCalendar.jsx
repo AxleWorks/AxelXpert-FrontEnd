@@ -4,23 +4,22 @@ import {
   Paper,
   Typography,
   IconButton,
-  Grid,
   Chip,
   useTheme,
   Button,
+  Stack,
   Tooltip,
 } from "@mui/material";
 import {
   ChevronLeft,
   ChevronRight,
   Today,
-  CalendarMonth,
+  CalendarToday as CalendarMonth,
 } from "@mui/icons-material";
 
 const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} }) => {
   const theme = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState("month"); // month, week
 
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -34,27 +33,54 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const firstDayWeekday = firstDay.getDay();
     const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
 
     const days = [];
     
-    // Add empty cells for days before month starts
-    for (let i = 0; i < firstDayWeekday; i++) {
-      days.push(null);
+    // Previous month's last days
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      const dayDate = new Date(year, month - 1, prevMonthLastDay - i);
+      days.push({
+        date: dayDate,
+        dayNumber: dayDate.getDate(),
+        isCurrentMonth: false,
+        attendanceData: null,
+      });
     }
     
-    // Add days of the month
+    // Current month days
     for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(year, month, day));
+      const dayDate = new Date(year, month, day);
+      const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      days.push({
+        date: dayDate,
+        dayNumber: day,
+        isCurrentMonth: true,
+        attendanceData: attendanceData[dateKey] || null,
+      });
+    }
+    
+    // Next month's first days to fill the grid
+    const remaining = 42 - days.length;
+    for (let day = 1; day <= remaining; day++) {
+      const dayDate = new Date(year, month + 1, day);
+      days.push({
+        date: dayDate,
+        dayNumber: day,
+        isCurrentMonth: false,
+        attendanceData: null,
+      });
     }
     
     return days;
   };
-
   const formatDateKey = (date) => {
-    if (!date) return "";
-    return date.toISOString().split('T')[0];
+    if (!date || !date.date) return "";
+    const actualDate = date.date || date;
+    if (typeof actualDate.toISOString !== 'function') return "";
+    return actualDate.toISOString().split('T')[0];
   };
 
   const getAttendanceStats = (date) => {
@@ -69,11 +95,10 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
 
     return { total, present, late, absent, onLeave };
   };
-
-  const getAttendanceColor = (date) => {
-    if (!date) return "transparent";
+  const getAttendanceColor = (dayData) => {
+    if (!dayData || !dayData.date) return "transparent";
     
-    const stats = getAttendanceStats(date);
+    const stats = getAttendanceStats(dayData);
     if (stats.total === 0) return theme.palette.grey[100];
     
     const attendanceRate = (stats.present + stats.late) / stats.total;
@@ -94,16 +119,15 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
   const goToToday = () => {
     setCurrentDate(new Date());
   };
-
-  const isToday = (date) => {
-    if (!date) return false;
+  const isToday = (dayData) => {
+    if (!dayData || !dayData.date) return false;
     const today = new Date();
-    return date.toDateString() === today.toDateString();
+    return dayData.date.toDateString() === today.toDateString();
   };
 
-  const isSelected = (date) => {
-    if (!date || !selectedDate) return false;
-    return date.toDateString() === selectedDate.toDateString();
+  const isSelected = (dayData) => {
+    if (!dayData || !dayData.date || !selectedDate) return false;
+    return dayData.date.toDateString() === selectedDate.toDateString();
   };
 
   const days = getDaysInMonth(currentDate);
@@ -155,97 +179,92 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
           label="Low Attendance (<70%)"
           sx={{ bgcolor: theme.palette.error.light, color: "white" }}
         />
+      </Box>      {/* Days of Week Header */}
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 1, mb: 1 }}>
+        {daysOfWeek.map((day) => (
+          <Box key={day} sx={{ textAlign: "center", py: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: theme.palette.text.secondary }}>
+              {day}
+            </Typography>
+          </Box>
+        ))}
       </Box>
 
-      {/* Days of Week Header */}
-      <Grid container spacing={1} sx={{ mb: 1 }}>
-        {daysOfWeek.map((day) => (
-          <Grid item xs key={day}>
-            <Box sx={{ textAlign: "center", py: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: theme.palette.text.secondary }}>
-                {day}
-              </Typography>
-            </Box>
-          </Grid>
-        ))}
-      </Grid>
-
       {/* Calendar Grid */}
-      <Grid container spacing={1}>
-        {days.map((date, index) => {
-          const stats = date ? getAttendanceStats(date) : null;
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 1 }}>
+        {days.map((dayData, index) => {
+          const stats = dayData ? getAttendanceStats(dayData) : null;
           
           return (
-            <Grid item xs key={index}>
-              <Tooltip
-                title={
-                  date && stats
-                    ? `${date.getDate()}/${date.getMonth() + 1}: ${stats.present} Present, ${stats.late} Late, ${stats.absent} Absent, ${stats.onLeave} On Leave`
-                    : ""
-                }
-                arrow
+            <Tooltip
+              key={index}
+              title={
+                dayData && dayData.date && stats
+                  ? `${dayData.date.getDate()}/${dayData.date.getMonth() + 1}: ${stats.present} Present, ${stats.late} Late, ${stats.absent} Absent, ${stats.onLeave} On Leave`
+                  : ""
+              }
+              arrow
+            >
+              <Box
+                sx={{
+                  height: 120,
+                  border: 1,
+                  borderColor: theme.palette.divider,
+                  borderRadius: 2,
+                  cursor: dayData && dayData.date ? "pointer" : "default",
+                  bgcolor: dayData ? getAttendanceColor(dayData) : "transparent",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative",
+                  transition: "all 0.2s ease",
+                  opacity: dayData && dayData.isCurrentMonth ? 1 : 0.3,
+                  "&:hover": dayData && dayData.date ? {
+                    transform: "scale(1.02)",
+                    boxShadow: theme.shadows[4],
+                  } : {},
+                  ...(isSelected(dayData) && {
+                    border: 2,
+                    borderColor: theme.palette.primary.main,
+                    boxShadow: theme.shadows[4],
+                  }),
+                  ...(isToday(dayData) && {
+                    border: 2,
+                    borderColor: theme.palette.secondary.main,
+                  }),
+                }}
+                onClick={() => dayData && dayData.date && onDateSelect(dayData.date)}
               >
-                <Box
-                  sx={{
-                    height: 80,
-                    border: 1,
-                    borderColor: theme.palette.divider,
-                    borderRadius: 2,
-                    cursor: date ? "pointer" : "default",
-                    bgcolor: date ? getAttendanceColor(date) : "transparent",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    position: "relative",
-                    transition: "all 0.2s ease",
-                    "&:hover": date ? {
-                      transform: "scale(1.02)",
-                      boxShadow: theme.shadows[4],
-                    } : {},
-                    ...(isSelected(date) && {
-                      border: 2,
-                      borderColor: theme.palette.primary.main,
-                      boxShadow: theme.shadows[4],
-                    }),
-                    ...(isToday(date) && {
-                      border: 2,
-                      borderColor: theme.palette.secondary.main,
-                    }),
-                  }}
-                  onClick={() => date && onDateSelect(date)}
-                >
-                  {date && (
-                    <>
+                {dayData && dayData.date && (
+                  <>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: isToday(dayData) ? 700 : isSelected(dayData) ? 600 : 500,
+                        color: isToday(dayData) ? theme.palette.secondary.main : "inherit",
+                      }}
+                    >
+                      {dayData.dayNumber}
+                    </Typography>
+                    {stats && stats.total > 0 && (
                       <Typography
-                        variant="body2"
+                        variant="caption"
                         sx={{
-                          fontWeight: isToday(date) ? 700 : isSelected(date) ? 600 : 500,
-                          color: isToday(date) ? theme.palette.secondary.main : "inherit",
+                          fontSize: "0.75rem",
+                          fontWeight: 500,
+                          mt: 0.5,
                         }}
                       >
-                        {date.getDate()}
+                        {stats.present}/{stats.total}
                       </Typography>
-                      {stats && stats.total > 0 && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontSize: "0.65rem",
-                            color: theme.palette.text.secondary,
-                            mt: 0.5,
-                          }}
-                        >
-                          {stats.present + stats.late}/{stats.total}
-                        </Typography>
-                      )}
-                    </>
-                  )}
-                </Box>
-              </Tooltip>
-            </Grid>
+                    )}
+                  </>
+                )}
+              </Box>
+            </Tooltip>
           );
-        })}
-      </Grid>
+        })}      </Box>
     </Paper>
   );
 };

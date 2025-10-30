@@ -6,52 +6,22 @@ import {
   Typography,
   Tabs,
   Tab,
-  useTheme,
-  Fab,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Grid,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
+  useTheme,  Button,
   Alert,
 } from "@mui/material";
-import {
-  Add as AddIcon,
-  Download as DownloadIcon,
-  Upload as UploadIcon,
-  Refresh as RefreshIcon,
-} from "@mui/icons-material";
+
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import AttendanceCalendar from "../../components/attendance/AttendanceCalendar";
 import EmployeeAttendanceDetails from "../../components/attendance/EmployeeAttendanceDetails";
 import AttendanceStatistics from "../../components/attendance/AttendanceStatistics";
-import EmployeeManagementPanel from "../../components/attendance/EmployeeManagementPanel";
-import AttendanceAdvancedFeatures from "../../components/attendance/AttendanceAdvancedFeatures";
 import AttendanceReports from "../../components/attendance/AttendanceReports";
 
 const ManagerAttendancePage = () => {
   const theme = useTheme();
   const [selectedDate, setSelectedDate] = useState(null);
-  const [activeTab, setActiveTab] = useState(0);
-  const [attendanceData, setAttendanceData] = useState({});
+  const [activeTab, setActiveTab] = useState(0);  const [attendanceData, setAttendanceData] = useState({});
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [addEmployeeDialogOpen, setAddEmployeeDialogOpen] = useState(false);
-  const [newEmployee, setNewEmployee] = useState({
-    name: "",
-    employeeId: "",
-    department: "",
-    position: "",
-    email: "",
-    phone: "",
-  });
 
   // Mock data - Replace with actual API calls
   useEffect(() => {
@@ -205,48 +175,10 @@ const ManagerAttendancePage = () => {
     }
   };
 
-  const handleAddEmployee = () => {
-    const newEmp = {
-      ...newEmployee,
-      id: `EMP${String(employees.length + 1).padStart(3, '0')}`,
-      avatar: null,
-    };
-    
-    setEmployees([...employees, newEmp]);
-    setAddEmployeeDialogOpen(false);
-    setNewEmployee({
-      name: "",
-      employeeId: "",
-      department: "",
-      position: "",
-      email: "",
-      phone: "",
-    });
-  };
-
   const getSelectedDateEmployees = () => {
     if (!selectedDate) return [];
     const dateKey = selectedDate.toISOString().split('T')[0];
     return attendanceData[dateKey]?.employees || [];
-  };
-
-  const handleExportData = () => {
-    // Implement export functionality
-    console.log("Exporting attendance data...");
-  };
-
-  const handleImportData = () => {
-    // Implement import functionality
-    console.log("Importing attendance data...");
-  };
-
-  const handleRefreshData = () => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      loadMockData();
-      setLoading(false);
-    }, 1000);
   };
 
   return (
@@ -260,32 +192,6 @@ const ManagerAttendancePage = () => {
           <Typography variant="body1" color="text.secondary">
             Track and manage employee attendance, punctuality, and working hours
           </Typography>
-        </Box>
-
-        {/* Action Buttons */}
-        <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={handleExportData}
-          >
-            Export Data
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<UploadIcon />}
-            onClick={handleImportData}
-          >
-            Import Data
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={handleRefreshData}
-            disabled={loading}
-          >
-            Refresh
-          </Button>
         </Box>
 
         {/* Main Content */}
@@ -306,15 +212,8 @@ const ManagerAttendancePage = () => {
             <Tab 
               label={`Employee Details${selectedDate ? ` - ${selectedDate.toLocaleDateString()}` : ''}`}
               sx={{ textTransform: "none", fontWeight: 600 }}
-            />
-            <Tab 
+            />            <Tab 
               label="Statistics" 
-              sx={{ textTransform: "none", fontWeight: 600 }}
-            />            <Tab 
-              label="Employee Management" 
-              sx={{ textTransform: "none", fontWeight: 600 }}
-            />            <Tab 
-              label="Advanced Features" 
               sx={{ textTransform: "none", fontWeight: 600 }}
             />
             <Tab 
@@ -349,34 +248,9 @@ const ManagerAttendancePage = () => {
                   employees={employees}
                 />
               </Box>
-            )}            {activeTab === 3 && (
-              <Box>
-                <EmployeeManagementPanel
-                  employees={employees}
-                  onUpdateEmployee={(employeeId, updatedData) => {
-                    const updatedEmployees = employees.map(emp => 
-                      emp.id === employeeId ? { ...emp, ...updatedData } : emp
-                    );
-                    setEmployees(updatedEmployees);
-                  }}
-                />
-              </Box>
-            )}            {activeTab === 4 && (
-              <Box>
-                <AttendanceAdvancedFeatures
-                  employees={employees}
-                  attendanceData={attendanceData}
-                  onUpdateEmployee={(employeeId, updatedData) => {
-                    const updatedEmployees = employees.map(emp => 
-                      emp.id === employeeId ? { ...emp, ...updatedData } : emp
-                    );
-                    setEmployees(updatedEmployees);
-                  }}
-                />
-              </Box>
             )}
 
-            {activeTab === 5 && (
+            {activeTab === 3 && (
               <Box>
                 <AttendanceReports
                   employees={employees}
@@ -386,102 +260,6 @@ const ManagerAttendancePage = () => {
             )}
           </Box>
         </Paper>
-
-        {/* Floating Action Button */}
-        <Fab
-          color="primary"
-          aria-label="add employee"
-          sx={{
-            position: "fixed",
-            bottom: 24,
-            right: 24,
-          }}
-          onClick={() => setAddEmployeeDialogOpen(true)}
-        >
-          <AddIcon />
-        </Fab>
-
-        {/* Add Employee Dialog */}
-        <Dialog 
-          open={addEmployeeDialogOpen} 
-          onClose={() => setAddEmployeeDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Add New Employee</DialogTitle>
-          <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Employee Name"
-                  value={newEmployee.name}
-                  onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Employee ID"
-                  value={newEmployee.employeeId}
-                  onChange={(e) => setNewEmployee({ ...newEmployee, employeeId: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Department</InputLabel>
-                  <Select
-                    value={newEmployee.department}
-                    label="Department"
-                    onChange={(e) => setNewEmployee({ ...newEmployee, department: e.target.value })}
-                  >
-                    <MenuItem value="Technical">Technical</MenuItem>
-                    <MenuItem value="Customer Service">Customer Service</MenuItem>
-                    <MenuItem value="Administration">Administration</MenuItem>
-                    <MenuItem value="Sales">Sales</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Position"
-                  value={newEmployee.position}
-                  onChange={(e) => setNewEmployee({ ...newEmployee, position: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  type="email"
-                  value={newEmployee.email}
-                  onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Phone"
-                  value={newEmployee.phone}
-                  onChange={(e) => setNewEmployee({ ...newEmployee, phone: e.target.value })}
-                />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setAddEmployeeDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAddEmployee} 
-              variant="contained"
-              disabled={!newEmployee.name || !newEmployee.employeeId}
-            >
-              Add Employee
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Container>
     </ManagerLayout>
   );
