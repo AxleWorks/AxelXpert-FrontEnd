@@ -208,16 +208,8 @@ const ManagerAttendancePage = () => {
             <Tab 
               label="Calendar View" 
               sx={{ textTransform: "none", fontWeight: 600 }}
-            />
-            <Tab 
-              label={`Employee Details${selectedDate ? ` - ${selectedDate.toLocaleDateString()}` : ''}`}
-              sx={{ textTransform: "none", fontWeight: 600 }}
             />            <Tab 
-              label="Statistics" 
-              sx={{ textTransform: "none", fontWeight: 600 }}
-            />
-            <Tab 
-              label="Reports & Analytics" 
+              label={`Employee Details${selectedDate ? ` - ${selectedDate.toLocaleDateString()}` : ''}`}
               sx={{ textTransform: "none", fontWeight: 600 }}
             />
           </Tabs>
@@ -240,24 +232,7 @@ const ManagerAttendancePage = () => {
                   employees={getSelectedDateEmployees()}
                   onUpdateAttendance={handleUpdateAttendance}
                 />
-              </Box>
-            )}            {activeTab === 2 && (
-              <Box>
-                <AttendanceStatistics
-                  attendanceData={attendanceData}
-                  employees={employees}
-                />
-              </Box>
-            )}
-
-            {activeTab === 3 && (
-              <Box>
-                <AttendanceReports
-                  employees={employees}
-                  attendanceData={attendanceData}
-                />
-              </Box>
-            )}
+              </Box>            )}
           </Box>
         </Paper>
       </Container>
