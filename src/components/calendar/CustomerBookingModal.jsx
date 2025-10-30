@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { USERS_URL, VEHICLES_URL } from "../../config/apiEndpoints";
-import { Modal, Button, TextField, FormControl, InputLabel, Select, MenuItem, Box, Typography, Grid, Chip, IconButton, Paper, Alert, Divider, Card, CardContent, FormControlLabel, Checkbox, Stack, Fade } from "@mui/material";
-import { Close, DirectionsCar, Build, PhotoCamera, KeyboardArrowDown } from "@mui/icons-material";
+import { Modal, Button, TextField, FormControl, InputLabel, Select, MenuItem, Box, Typography, Grid, Chip, IconButton, Paper, Alert, Divider, Card, CardContent, FormControlLabel, Checkbox, Stack, Fade, Snackbar } from "@mui/material";
+import { Close, DirectionsCar, Build, PhotoCamera, KeyboardArrowDown, CheckCircle, Error, Warning, Info } from "@mui/icons-material";
 
 const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, onSubmit, branchId, dayTimeSlots = [], services }) => {
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
@@ -65,6 +65,13 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
   const [loadingCustomer, setLoadingCustomer] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info" // success, error, warning, info
+  });
+
   // Auto-select branch when modal opens - removed since no branch input needed
   // useEffect removed
 
@@ -104,6 +111,15 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
   const handleNestedInputChange = (parent, field, value) => setFormData((prev) => ({ ...prev, [parent]: { ...prev[parent], [field]: value } }));
   // no image upload in simplified form
 
+  // Snackbar helper functions
+  const showSnackbar = (message, severity = "info") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const hideSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
   const validateForm = () => {
     const newErrors = {};
     // Require vehicle selection
@@ -127,6 +143,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
       setCustomerPhone("");
       setLoadingCustomer(false);
       setUserVehicles([]);
+      showSnackbar("Please sign in to book an appointment", "warning");
       return;
     }
 
@@ -139,6 +156,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
       setCustomerPhone("");
       setLoadingCustomer(false);
       setUserVehicles([]);
+      showSnackbar("Authentication data is invalid. Please sign in again.", "error");
       return;
     }
 
@@ -152,6 +170,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
     // If there's an id, fetch the full user record from backend to get phoneNumber
     if (parsed.id) {
       setLoadingCustomer(true);
+      showSnackbar("Loading customer information...", "info");
 
       // Build fetch options. If you have an auth token, read it here and include it:
       const token = localStorage.getItem("token") || localStorage.getItem("authToken");
@@ -170,9 +189,11 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
           // backend UserDTO uses field name phoneNumber
           if (user.username) setCustomerName(user.username);
           if (user.phoneNumber) setCustomerPhone(user.phoneNumber);
+          showSnackbar("Customer information loaded successfully", "success");
         })
         .catch((err) => {
           console.error("Error fetching user details:", err);
+          showSnackbar("Failed to load customer information", "error");
           // keep username fallback from localStorage; clear phone if none
           setCustomerPhone((prev) => prev || "");
         })
@@ -180,6 +201,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
 
       // Fetch user's vehicles
       setLoadingVehicles(true);
+      showSnackbar("Loading your vehicles...", "info");
       fetch(`${VEHICLES_URL}/user/${parsed.id}`, { headers })
         .then(async (res) => {
           if (!res.ok) {
@@ -200,9 +222,15 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
             vin: v.vin || v.chassisNumber || ""
           }));
           setUserVehicles(mapped);
+          if (mapped.length === 0) {
+            showSnackbar("No vehicles found. Please add a vehicle first.", "warning");
+          } else {
+            showSnackbar(`${mapped.length} vehicle(s) loaded successfully`, "success");
+          }
         })
         .catch((err) => {
           console.error("Error fetching user vehicles:", err);
+          showSnackbar("Failed to load vehicles", "error");
           setUserVehicles([]);
         })
         .finally(() => setLoadingVehicles(false));
@@ -213,7 +241,12 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
   }, [open]); // run when the modal opens
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      showSnackbar("Please fill in all required fields", "error");
+      return;
+    }
+    
+    showSnackbar("Creating booking...", "info");
     
     const selectedVehicle = userVehicles.find((v) => v.id === formData.vehicleId || v.id === Number(formData.vehicleId));
     const vehicleText = selectedVehicle 
@@ -291,10 +324,12 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
       // Call the onSubmit callback with formatted data
       await onSubmit(bookingPayload);
       
+      showSnackbar("Booking created successfully!", "success");
       // Close modal on success
       handleClose();
     } catch (error) {
       console.error("Error submitting booking:", error);
+      showSnackbar("Failed to create booking. Please try again.", "error");
       setErrors({ submit: "Failed to create booking. Please try again." });
     }
   };
@@ -311,6 +346,8 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
       notes: ""
     });
     setErrors({});
+    // Hide snackbar when closing
+    hideSnackbar();
     onClose();
   };
 
@@ -348,12 +385,6 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
           <IconButton onClick={handleClose} color="inherit"><Close /></IconButton>
         </Stack>
         <Divider sx={{ mb: 2 }} />
-
-        {errors.submit && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {errors.submit}
-          </Alert>
-        )}
 
         <Box sx={{ mt: 2 }}>
           {/* Customer Information (auto-filled) */}
@@ -599,6 +630,33 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
             <KeyboardArrowDown sx={{ color: 'white' }} />
           </Box>
         </Fade>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={hideSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={hideSnackbar} 
+            severity={snackbar.severity} 
+            sx={{ 
+              width: '100%',
+              '& .MuiAlert-icon': {
+                fontSize: '1.2rem'
+              }
+            }}
+            iconMapping={{
+              success: <CheckCircle fontSize="inherit" />,
+              error: <Error fontSize="inherit" />,
+              warning: <Warning fontSize="inherit" />,
+              info: <Info fontSize="inherit" />
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Paper>
     </Modal>
   );

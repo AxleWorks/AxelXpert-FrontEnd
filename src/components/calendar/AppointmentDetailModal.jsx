@@ -13,6 +13,13 @@ import {
   CardContent,
   Button,
   Fade,
+  Snackbar,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import {
   Close,
@@ -30,12 +37,23 @@ import {
   Cancel,
   KeyboardArrowDown,
   Delete,
+  Error,
+  Warning,
+  Info,
 } from "@mui/icons-material";
 
 const AppointmentDetailModal = ({ open, onClose, appointment, onDelete }) => {
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const paperRef = useRef(null);
+
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info" // success, error, warning, info
+  });
 
   useEffect(() => {
     const checkScroll = () => {
@@ -54,6 +72,15 @@ const AppointmentDetailModal = ({ open, onClose, appointment, onDelete }) => {
     return () => clearTimeout(timer);
   }, [open, appointment]);
 
+  // Snackbar helper functions
+  const showSnackbar = (message, severity = "info") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const hideSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
   const handleScroll = () => {
     if (paperRef.current) {
       const { scrollTop } = paperRef.current;
@@ -67,21 +94,24 @@ const AppointmentDetailModal = ({ open, onClose, appointment, onDelete }) => {
   const handleDelete = async () => {
     if (!appointment?.id) return;
     
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this appointment? This action cannot be undone."
-    );
-    
-    if (!confirmDelete) return;
+    setDeleteConfirmOpen(true);
+  };
 
+  const confirmDelete = async () => {
     try {
       setDeleting(true);
+      setDeleteConfirmOpen(false);
+      showSnackbar("Deleting appointment...", "info");
+      
       console.log("Deleting appointment ID:", appointment.id);
       await onDelete(appointment.id);
+      
+      showSnackbar("Appointment deleted successfully", "success");
       onClose();
     } catch (error) {
       console.error("Error deleting appointment:", error);
       const errorMessage = error.message || "Failed to delete appointment. Please try again.";
-      window.alert(`Delete failed: ${errorMessage}`);
+      showSnackbar(`Delete failed: ${errorMessage}`, "error");
     } finally {
       setDeleting(false);
     }
@@ -453,6 +483,58 @@ const AppointmentDetailModal = ({ open, onClose, appointment, onDelete }) => {
             </Box>
           </Box>
         </Fade>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteConfirmOpen}
+          onClose={() => setDeleteConfirmOpen(false)}
+          aria-labelledby="delete-dialog-title"
+          aria-describedby="delete-dialog-description"
+        >
+          <DialogTitle id="delete-dialog-title">
+            Confirm Delete
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="delete-dialog-description">
+              Are you sure you want to delete this appointment? This action cannot be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmDelete} color="error" variant="contained">
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={hideSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={hideSnackbar} 
+            severity={snackbar.severity} 
+            sx={{ 
+              width: '100%',
+              '& .MuiAlert-icon': {
+                fontSize: '1.2rem'
+              }
+            }}
+            iconMapping={{
+              success: <CheckCircle fontSize="inherit" />,
+              error: <Error fontSize="inherit" />,
+              warning: <Warning fontSize="inherit" />,
+              info: <Info fontSize="inherit" />
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Paper>
     </Modal>
   );

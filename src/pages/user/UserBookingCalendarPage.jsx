@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Typography, Paper, Box, Container, useTheme, CircularProgress, Alert } from "@mui/material";
+import { Typography, Paper, Box, Container, useTheme, CircularProgress, Alert, Snackbar } from "@mui/material";
+import { CheckCircle, Error, Warning, Info } from "@mui/icons-material";
 import UserLayout from "../../layouts/user/UserLayout";
 import CalendarHeader from "../../components/calendar/Booking_Manage/CalendarHeader";
 import CalendarGrid from "../../components/calendar/Booking_Manage/CalendarGrid";
@@ -22,6 +23,13 @@ const UserBookingCalendarPage = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info" // success, error, warning, info
+  });
 
   // Default 4 slots for every day
   const DEFAULT_DAY_TIMES = ["09:00 AM", "11:00 AM", "01:00 PM", "03:00 PM"];
@@ -262,6 +270,15 @@ const UserBookingCalendarPage = () => {
     setIsBookingModalOpen(true);
   };
 
+  // Snackbar helper functions
+  const showSnackbar = (message, severity = "info") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const hideSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
   const handleBookingSubmit = async (bookingData) => {
     try {
       // The bookingData from CustomerBookingModal is already formatted correctly
@@ -291,10 +308,10 @@ const UserBookingCalendarPage = () => {
       setSelectedTimeSlot(null);
       
       // Success notification
-      window.alert("Booking created successfully!");
+      showSnackbar("Booking created successfully!", "success");
     } catch (err) {
       console.error("Error creating booking", err);
-      window.alert("Error creating booking: " + (err.message || "Please try again."));
+      showSnackbar("Error creating booking: " + (err.message || "Please try again."), "error");
       throw err; // Re-throw so modal can handle it
     }
   };
@@ -318,7 +335,7 @@ const UserBookingCalendarPage = () => {
       setBookings((prev) => prev.filter((booking) => booking.id !== appointmentId));
       
       // Show success message
-      window.alert("Appointment deleted successfully!");
+      showSnackbar("Appointment deleted successfully!", "success");
     } catch (error) {
       console.error("Error deleting appointment:", error);
       // Re-throw with more context
@@ -407,6 +424,33 @@ const UserBookingCalendarPage = () => {
           appointment={selectedAppointment}
           onDelete={handleDeleteAppointment}
         />
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={hideSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={hideSnackbar} 
+            severity={snackbar.severity} 
+            sx={{ 
+              width: '100%',
+              '& .MuiAlert-icon': {
+                fontSize: '1.2rem'
+              }
+            }}
+            iconMapping={{
+              success: <CheckCircle fontSize="inherit" />,
+              error: <Error fontSize="inherit" />,
+              warning: <Warning fontSize="inherit" />,
+              info: <Info fontSize="inherit" />
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </UserLayout>
   );

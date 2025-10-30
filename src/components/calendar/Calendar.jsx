@@ -10,14 +10,20 @@ import {
   useMediaQuery,
   Tooltip,
   Fade,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   ChevronLeft,
   ChevronRight,
   Today,
+  CheckCircle,
+  Error,
+  Warning,
+  Info,
 } from '@mui/icons-material';
 import CalendarDay from './CalendarDay';
-import BookingModal from './BookingModal';
+import CustomerBookingModal from './CustomerBookingModal';
 import './Calendar.css';
 
 const Calendar = ({ branchId, availableSlots = [], existingBookings = [] }) => {
@@ -33,10 +39,26 @@ const Calendar = ({ branchId, availableSlots = [], existingBookings = [] }) => {
   // keep a local copy so we can append new pending bookings immediately
   const [bookings, setBookings] = useState(existingBookings);
 
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info" // success, error, warning, info
+  });
+
   useEffect(() => {
     // if parent props change, refresh local state
     setBookings(existingBookings);
   }, [existingBookings]);
+
+  // Snackbar helper functions
+  const showSnackbar = (message, severity = "info") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const hideSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
 
   // Get first day of current month
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -106,26 +128,35 @@ const Calendar = ({ branchId, availableSlots = [], existingBookings = [] }) => {
   };
 
   const handleBookingSubmit = (bookingData) => {
-    // TODO: send to backend; for now optimistic update local calendar
-    const newBooking = {
-      id: Date.now(),
-      date: bookingData.date?.toISOString?.() || new Date(bookingData.date).toISOString(),
-      time: bookingData.time || bookingData.timeSlot,
-      service: bookingData.service,
-      status: 'Pending',
-      customer: bookingData.customer,
-      vehicle: bookingData.vehicle,
-      branch: bookingData.branch,
-      notes: bookingData.notes,
-    };
+    try {
+      showSnackbar("Creating booking...", "info");
+      
+      // TODO: send to backend; for now optimistic update local calendar
+      const newBooking = {
+        id: Date.now(),
+        date: bookingData.date?.toISOString?.() || new Date(bookingData.date).toISOString(),
+        time: bookingData.time || bookingData.timeSlot,
+        service: bookingData.service,
+        status: 'Pending',
+        customer: bookingData.customer,
+        vehicle: bookingData.vehicle,
+        branch: bookingData.branch,
+        notes: bookingData.notes,
+      };
 
-    setBookings((prev) => [...prev, newBooking]);
-    console.log('Booking submitted (pending):', newBooking);
+      setBookings((prev) => [...prev, newBooking]);
+      console.log('Booking submitted (pending):', newBooking);
+      
+      showSnackbar("Booking created successfully!", "success");
 
-    // Close the modal
-    setIsBookingModalOpen(false);
-    setSelectedDate(null);
-    setSelectedTimeSlot(null);
+      // Close the modal
+      setIsBookingModalOpen(false);
+      setSelectedDate(null);
+      setSelectedTimeSlot(null);
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      showSnackbar("Failed to create booking. Please try again.", "error");
+    }
   };
 
   const getBookingsForDate = (date) => {
@@ -365,7 +396,7 @@ const Calendar = ({ branchId, availableSlots = [], existingBookings = [] }) => {
       </Paper>
 
       {/* Booking Modal */}
-      <BookingModal
+      <CustomerBookingModal
         open={isBookingModalOpen}
         onClose={() => {
           setIsBookingModalOpen(false);
@@ -377,6 +408,33 @@ const Calendar = ({ branchId, availableSlots = [], existingBookings = [] }) => {
         onSubmit={handleBookingSubmit}
         branchId={branchId}
       />
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={hideSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={hideSnackbar} 
+          severity={snackbar.severity} 
+          sx={{ 
+            width: '100%',
+            '& .MuiAlert-icon': {
+              fontSize: '1.2rem'
+            }
+          }}
+          iconMapping={{
+            success: <CheckCircle fontSize="inherit" />,
+            error: <Error fontSize="inherit" />,
+            warning: <Warning fontSize="inherit" />,
+            info: <Info fontSize="inherit" />
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
