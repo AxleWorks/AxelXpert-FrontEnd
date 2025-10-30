@@ -731,7 +731,7 @@ const ManagerUserManagementPage = () => {
           employee={selectedEmployee}
           onSave={(updated) => {
             // Update user via backend API
-            axios
+            authenticatedAxios
               .put(`${USERS_URL}/${updated.id}`, {
                 username: updated.username,
                 role: updated.role,
