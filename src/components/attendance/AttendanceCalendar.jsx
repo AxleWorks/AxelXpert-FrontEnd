@@ -94,18 +94,18 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
     const onLeave = dayData.employees?.filter(emp => emp.status === 'leave').length || 0;
 
     return { total, present, late, absent, onLeave };
-  };
-  const getAttendanceColor = (dayData) => {
+  };  const getAttendanceColor = (dayData) => {
     if (!dayData || !dayData.date) return "transparent";
     
     const stats = getAttendanceStats(dayData);
-    if (stats.total === 0) return theme.palette.grey[100];
+    if (stats.total === 0) return theme.palette.grey[200];
     
     const attendanceRate = (stats.present + stats.late) / stats.total;
     
-    if (attendanceRate >= 0.9) return theme.palette.success.light;
-    if (attendanceRate >= 0.7) return theme.palette.warning.light;
-    return theme.palette.error.light;
+    // Using vibrant, rich colors instead of light ones
+    if (attendanceRate >= 0.9) return "#22c55e"; // Rich green
+    if (attendanceRate >= 0.7) return "#f59e0b"; // Rich amber/orange
+    return "#ef4444"; // Rich red
   };
 
   const navigateMonth = (direction) => {
@@ -160,26 +160,39 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
             <ChevronRight />
           </IconButton>
         </Box>
-      </Box>
-
-      {/* Legend */}
+      </Box>      {/* Legend */}
       <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
         <Chip
           size="small"
           label="High Attendance (90%+)"
-          sx={{ bgcolor: theme.palette.success.light, color: "white" }}
+          sx={{ 
+            bgcolor: "#22c55e", 
+            color: "white",
+            fontWeight: 600,
+            boxShadow: "0 2px 4px rgba(34, 197, 94, 0.3)"
+          }}
         />
         <Chip
           size="small"
           label="Medium Attendance (70-89%)"
-          sx={{ bgcolor: theme.palette.warning.light, color: "white" }}
+          sx={{ 
+            bgcolor: "#f59e0b", 
+            color: "white",
+            fontWeight: 600,
+            boxShadow: "0 2px 4px rgba(245, 158, 11, 0.3)"
+          }}
         />
         <Chip
           size="small"
           label="Low Attendance (<70%)"
-          sx={{ bgcolor: theme.palette.error.light, color: "white" }}
+          sx={{ 
+            bgcolor: "#ef4444", 
+            color: "white",
+            fontWeight: 600,
+            boxShadow: "0 2px 4px rgba(239, 68, 68, 0.3)"
+          }}
         />
-      </Box>      {/* Days of Week Header */}
+      </Box>{/* Days of Week Header */}
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 1, mb: 1 }}>
         {daysOfWeek.map((day) => (
           <Box key={day} sx={{ textAlign: "center", py: 1 }}>
@@ -204,8 +217,7 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
                   : ""
               }
               arrow
-            >
-              <Box
+            >              <Box
                 sx={{
                   height: 120,
                   border: 1,
@@ -220,29 +232,41 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
                   position: "relative",
                   transition: "all 0.2s ease",
                   opacity: dayData && dayData.isCurrentMonth ? 1 : 0.3,
+                  // Add subtle gradient and shadow for rich appearance
+                  backgroundImage: dayData && stats && stats.total > 0 ? 
+                    `linear-gradient(135deg, ${getAttendanceColor(dayData)}, ${getAttendanceColor(dayData)}dd)` : 
+                    "none",
+                  boxShadow: dayData && stats && stats.total > 0 ? 
+                    `0 2px 8px ${getAttendanceColor(dayData)}40` : 
+                    "none",
                   "&:hover": dayData && dayData.date ? {
-                    transform: "scale(1.02)",
-                    boxShadow: theme.shadows[4],
+                    transform: "scale(1.05)",
+                    boxShadow: dayData && stats && stats.total > 0 ? 
+                      `0 4px 16px ${getAttendanceColor(dayData)}60` : 
+                      theme.shadows[4],
+                    zIndex: 1,
                   } : {},
                   ...(isSelected(dayData) && {
-                    border: 2,
-                    borderColor: theme.palette.primary.main,
-                    boxShadow: theme.shadows[4],
+                    border: 3,
+                    borderColor: "#6366f1", // Indigo color for selection
+                    boxShadow: "0 0 0 2px rgba(99, 102, 241, 0.3)",
                   }),
                   ...(isToday(dayData) && {
-                    border: 2,
-                    borderColor: theme.palette.secondary.main,
+                    border: 3,
+                    borderColor: "#8b5cf6", // Purple color for today
+                    boxShadow: "0 0 0 2px rgba(139, 92, 246, 0.3)",
                   }),
                 }}
                 onClick={() => dayData && dayData.date && onDateSelect(dayData.date)}
-              >
-                {dayData && dayData.date && (
+              >                {dayData && dayData.date && (
                   <>
                     <Typography
                       variant="body2"
                       sx={{
-                        fontWeight: isToday(dayData) ? 700 : isSelected(dayData) ? 600 : 500,
-                        color: isToday(dayData) ? theme.palette.secondary.main : "inherit",
+                        fontWeight: isToday(dayData) ? 700 : isSelected(dayData) ? 600 : 600,
+                        color: stats && stats.total > 0 ? "white" : "inherit",
+                        textShadow: stats && stats.total > 0 ? "0 1px 2px rgba(0,0,0,0.3)" : "none",
+                        fontSize: "1rem",
                       }}
                     >
                       {dayData.dayNumber}
@@ -252,8 +276,14 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {} })
                         variant="caption"
                         sx={{
                           fontSize: "0.75rem",
-                          fontWeight: 500,
+                          fontWeight: 600,
                           mt: 0.5,
+                          color: "white",
+                          textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                          bgcolor: "rgba(0,0,0,0.2)",
+                          borderRadius: 1,
+                          px: 0.5,
+                          py: 0.25,
                         }}
                       >
                         {stats.present}/{stats.total}
