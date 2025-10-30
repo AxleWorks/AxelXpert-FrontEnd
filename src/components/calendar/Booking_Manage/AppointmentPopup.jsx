@@ -84,7 +84,7 @@ export default function AppointmentPopup({
       const authHeader = getAuthHeader();
       const res = await fetch(`${apiBase}/bookings/${appointment.id}/assign`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           ...(authHeader && { Authorization: authHeader }),
         },
@@ -120,7 +120,7 @@ export default function AppointmentPopup({
       const authHeader = getAuthHeader();
       const res = await fetch(`${apiBase}/bookings/${appointment.id}/reject`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           ...(authHeader && { Authorization: authHeader }),
         },
