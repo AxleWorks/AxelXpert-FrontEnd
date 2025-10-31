@@ -7,41 +7,39 @@ import {
   Button,
   Box,
   Typography,
-  TextField,
   IconButton,
-  Checkbox,
-  FormControlLabel,
   CircularProgress,
   Paper,
-  Divider,
   Alert,
+  Divider,
+  useTheme,
+  alpha,
 } from "@mui/material";
-import {
-  Add,
-  Edit,
-  Delete,
-  Save,
-  Cancel,
-  DragIndicator,
-} from "@mui/icons-material";
+import { Add, Close, CheckCircle, InfoOutlined } from "@mui/icons-material";
 import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import { SERVICES_URL } from "../../config/apiEndpoints.jsx";
-
-const emptySubTask = {
-  title: "",
-  description: "",
-  orderIndex: 1,
-  isMandatory: true,
-};
+import SubTaskFormDialog from "./SubTaskFormDialog";
+import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import SubTaskCard from "./SubTaskCard";
 
 const ManageSubTasksModal = ({ open, onClose, service }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
+
   const [subTasks, setSubTasks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [newSubTask, setNewSubTask] = useState(null);
-  const [formData, setFormData] = useState(emptySubTask);
+  const [success, setSuccess] = useState(null);
+
+  // Form dialog state
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [formMode, setFormMode] = useState("add"); // "add" or "edit"
+  const [editingSubTask, setEditingSubTask] = useState(null);
+
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingSubTask, setDeletingSubTask] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (open && service?.id) {
@@ -76,41 +74,25 @@ const ManageSubTasksModal = ({ open, onClose, service }) => {
       subTasks.length > 0
         ? Math.max(...subTasks.map((st) => st.orderIndex))
         : 0;
-    setFormData({
-      ...emptySubTask,
+    setEditingSubTask({
+      title: "",
+      description: "",
       orderIndex: maxOrder + 1,
+      isMandatory: true,
     });
-    setNewSubTask(true);
+    setFormMode("add");
+    setFormDialogOpen(true);
   };
 
   const handleEdit = (subTask) => {
-    setFormData(subTask);
-    setEditingId(subTask.id);
-    setNewSubTask(false);
+    setEditingSubTask(subTask);
+    setFormMode("edit");
+    setFormDialogOpen(true);
   };
 
-  const handleCancelEdit = () => {
-    setFormData(emptySubTask);
-    setEditingId(null);
-    setNewSubTask(null);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleSave = async () => {
-    if (!formData.title.trim()) {
-      setError("Title is required");
-      return;
-    }
-
-    setSaving(true);
+  const handleSaveSubTask = async (formData) => {
     setError(null);
+    setSuccess(null);
     try {
       const payload = {
         title: formData.title,
@@ -119,280 +101,325 @@ const ManageSubTasksModal = ({ open, onClose, service }) => {
         isMandatory: formData.isMandatory,
       };
 
-      if (newSubTask) {
-        // Add new subtask
+      if (formMode === "add") {
         await authenticatedAxios.post(
           `${SERVICES_URL}/${service.id}/subtasks`,
           payload
         );
+        setSuccess("SubTask added successfully!");
       } else {
-        // Update existing subtask
         await authenticatedAxios.patch(
-          `${SERVICES_URL}/subtasks/${editingId}`,
+          `${SERVICES_URL}/subtasks/${editingSubTask.id}`,
           payload
         );
+        setSuccess("SubTask updated successfully!");
       }
 
       await fetchSubTasks();
-      handleCancelEdit();
+      setFormDialogOpen(false);
+      setEditingSubTask(null);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error saving subtask:", err);
       setError(
         err.response?.data?.message || err.message || "Failed to save subtask"
       );
-    } finally {
-      setSaving(false);
+      throw err;
     }
   };
 
-  const handleDelete = async (subTaskId) => {
-    if (!window.confirm("Are you sure you want to delete this subtask?"))
-      return;
+  const handleDeleteClick = (subTask) => {
+    setDeletingSubTask(subTask);
+    setDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
+    setError(null);
+    setSuccess(null);
     try {
-      await authenticatedAxios.delete(`${SERVICES_URL}/subtasks/${subTaskId}`);
+      await authenticatedAxios.delete(
+        `${SERVICES_URL}/subtasks/${deletingSubTask.id}`
+      );
       await fetchSubTasks();
-      setError(null);
+      setDeleteDialogOpen(false);
+      setDeletingSubTask(null);
+      setSuccess("SubTask deleted successfully!");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error deleting subtask:", err);
       setError(
         err.response?.data?.message || err.message || "Failed to delete subtask"
       );
+    } finally {
+      setDeleting(false);
     }
   };
 
   const handleClose = () => {
-    handleCancelEdit();
     setError(null);
+    setSuccess(null);
     onClose();
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        <Box>
-          <Typography variant="h6" fontWeight={600}>
-            Manage SubTasks
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {service?.name} - Define the steps for this service
-          </Typography>
-        </Box>
-      </DialogTitle>
-      <DialogContent>
-        {loading ? (
+    <>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: isDark ? "grey.900" : "background.paper",
+            backgroundImage: "none",
+            maxHeight: "90vh",
+          },
+        }}
+        slotProps={{
+          backdrop: {
+            sx: {
+              backdropFilter: "blur(8px)",
+              backgroundColor: isDark
+                ? "rgba(0, 0, 0, 0.7)"
+                : "rgba(0, 0, 0, 0.5)",
+            },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: isDark
+              ? `linear-gradient(135deg, ${alpha(
+                  theme.palette.primary.dark,
+                  0.2
+                )} 0%, ${alpha(theme.palette.primary.main, 0.1)} 100%)`
+              : `linear-gradient(135deg, ${alpha(
+                  theme.palette.primary.light,
+                  0.15
+                )} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
+            borderBottom: 1,
+            borderColor: "divider",
+            pb: 2,
+          }}
+        >
           <Box
             display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight={200}
+            justifyContent="space-between"
+            alignItems="flex-start"
           >
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Box sx={{ mt: 1 }}>
-            {error && (
-              <Alert
-                severity="error"
-                sx={{ mb: 2 }}
-                onClose={() => setError(null)}
-              >
-                {error}
-              </Alert>
-            )}
-
-            {/* Add New Button */}
-            {!newSubTask && !editingId && (
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleAddNew}
-                sx={{ mb: 2 }}
-              >
-                Add New Subtask
-              </Button>
-            )}
-
-            {/* Add/Edit Form */}
-            {(newSubTask || editingId) && (
-              <Paper sx={{ p: 2, mb: 2, bgcolor: "grey.50" }}>
-                <Typography variant="subtitle2" fontWeight={600} mb={2}>
-                  {newSubTask ? "New SubTask" : "Edit SubTask"}
+            <Box flex={1}>
+              <Typography variant="h5" fontWeight={700} gutterBottom>
+                Manage SubTasks
+              </Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography
+                  variant="body1"
+                  fontWeight={600}
+                  sx={{ color: isDark ? "primary.light" : "primary.main" }}
+                >
+                  {service?.name}
                 </Typography>
-                <TextField
-                  fullWidth
-                  label="Title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                  sx={{ mb: 2 }}
-                  size="small"
-                />
-                <TextField
-                  fullWidth
-                  label="Description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  multiline
-                  rows={2}
-                  sx={{ mb: 2 }}
-                  size="small"
-                />
-                <Box display="flex" gap={2} mb={2}>
-                  <TextField
-                    label="Order"
-                    name="orderIndex"
-                    type="number"
-                    value={formData.orderIndex}
-                    onChange={handleInputChange}
-                    inputProps={{ min: 1 }}
-                    size="small"
-                    sx={{ width: 120 }}
+                <Typography variant="body2" color="text.secondary">
+                  • Define the steps for this service
+                </Typography>
+              </Box>
+            </Box>
+            <IconButton
+              edge="end"
+              color="inherit"
+              onClick={handleClose}
+              aria-label="close"
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+
+        <DialogContent sx={{ pt: 3, pb: 2 }}>
+          {loading ? (
+            <Box
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+              minHeight={300}
+              gap={2}
+            >
+              <CircularProgress size={48} />
+              <Typography variant="body2" color="text.secondary">
+                Loading subtasks...
+              </Typography>
+            </Box>
+          ) : (
+            <Box>
+              {/* Success Message */}
+              {success && (
+                <Alert
+                  severity="success"
+                  icon={<CheckCircle />}
+                  sx={{ mb: 2.5 }}
+                  onClose={() => setSuccess(null)}
+                >
+                  {success}
+                </Alert>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <Alert
+                  severity="error"
+                  sx={{ mb: 2.5 }}
+                  onClose={() => setError(null)}
+                >
+                  {error}
+                </Alert>
+              )}
+
+              {/* Header with Add Button */}
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={2.5}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  {subTasks.length === 0
+                    ? "No subtasks yet"
+                    : `${subTasks.length} subtask${
+                        subTasks.length !== 1 ? "s" : ""
+                      } defined`}
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={handleAddNew}
+                  disableElevation
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    fontWeight: 600,
+                  }}
+                >
+                  Add SubTask
+                </Button>
+              </Box>
+
+              {/* SubTasks List */}
+              {subTasks.length === 0 ? (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 6,
+                    textAlign: "center",
+                    bgcolor: isDark ? "grey.900" : "grey.50",
+                    border: 2,
+                    borderStyle: "dashed",
+                    borderColor: isDark ? "grey.800" : "grey.300",
+                    borderRadius: 3,
+                  }}
+                >
+                  <InfoOutlined
+                    sx={{
+                      fontSize: 56,
+                      color: isDark ? "grey.700" : "grey.400",
+                      mb: 2,
+                    }}
                   />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={formData.isMandatory}
-                        onChange={handleInputChange}
-                        name="isMandatory"
-                      />
-                    }
-                    label="Mandatory"
-                  />
-                </Box>
-                <Box display="flex" gap={1}>
-                  <Button
-                    variant="contained"
-                    startIcon={<Save />}
-                    onClick={handleSave}
-                    disabled={saving}
-                    size="small"
+                  <Typography
+                    variant="h6"
+                    color="text.secondary"
+                    fontWeight={600}
+                    gutterBottom
                   >
-                    {saving ? "Saving..." : "Save"}
-                  </Button>
+                    No subtasks defined yet
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={3}>
+                    Break down this service into actionable steps that employees
+                    can follow
+                  </Typography>
                   <Button
                     variant="outlined"
-                    startIcon={<Cancel />}
-                    onClick={handleCancelEdit}
-                    disabled={saving}
-                    size="small"
+                    startIcon={<Add />}
+                    onClick={handleAddNew}
+                    sx={{ textTransform: "none" }}
                   >
-                    Cancel
+                    Create Your First SubTask
                   </Button>
-                </Box>
-              </Paper>
-            )}
-
-            {/* SubTasks List */}
-            <Box>
-              {subTasks.length === 0 ? (
-                <Paper sx={{ p: 3, textAlign: "center", bgcolor: "grey.50" }}>
-                  <Typography color="text.secondary">
-                    No subtasks defined yet. Click "Add New Subtask" to get
-                    started.
-                  </Typography>
                 </Paper>
               ) : (
                 <Box>
-                  {subTasks.map((subTask, index) => (
-                    <Paper
+                  {subTasks.map((subTask) => (
+                    <SubTaskCard
                       key={subTask.id}
-                      sx={{
-                        p: 2,
-                        mb: 1.5,
-                        border: "1px solid",
-                        borderColor: "divider",
-                        "&:hover": {
-                          bgcolor: "grey.50",
-                        },
-                      }}
-                    >
-                      <Box display="flex" alignItems="flex-start" gap={1}>
-                        <DragIndicator sx={{ color: "grey.400", mt: 0.5 }} />
-                        <Box sx={{ flex: 1 }}>
-                          <Box
-                            display="flex"
-                            alignItems="center"
-                            gap={1}
-                            mb={0.5}
-                          >
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                bgcolor: "primary.main",
-                                color: "white",
-                                px: 1,
-                                py: 0.25,
-                                borderRadius: 1,
-                                fontSize: "0.75rem",
-                                fontWeight: 600,
-                              }}
-                            >
-                              #{subTask.orderIndex}
-                            </Typography>
-                            <Typography variant="subtitle2" fontWeight={600}>
-                              {subTask.title}
-                            </Typography>
-                            {subTask.isMandatory && (
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  bgcolor: "error.light",
-                                  color: "error.dark",
-                                  px: 1,
-                                  py: 0.25,
-                                  borderRadius: 1,
-                                  fontSize: "0.65rem",
-                                  fontWeight: 600,
-                                }}
-                              >
-                                MANDATORY
-                              </Typography>
-                            )}
-                          </Box>
-                          {subTask.description && (
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{ ml: 4 }}
-                            >
-                              {subTask.description}
-                            </Typography>
-                          )}
-                        </Box>
-                        <Box>
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => handleEdit(subTask)}
-                            disabled={newSubTask || editingId !== null}
-                          >
-                            <Edit fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDelete(subTask.id)}
-                            disabled={newSubTask || editingId !== null}
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    </Paper>
+                      subTask={subTask}
+                      onEdit={handleEdit}
+                      onDelete={handleDeleteClick}
+                      disabled={formDialogOpen || deleteDialogOpen}
+                    />
                   ))}
                 </Box>
               )}
             </Box>
-          </Box>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
-      </DialogActions>
-    </Dialog>
+          )}
+        </DialogContent>
+
+        <Divider />
+
+        <DialogActions
+          sx={{
+            px: 3,
+            py: 2,
+            bgcolor: isDark
+              ? alpha(theme.palette.background.paper, 0.5)
+              : "grey.50",
+          }}
+        >
+          <Button
+            onClick={handleClose}
+            variant="contained"
+            disableElevation
+            sx={{
+              bgcolor: isDark ? "grey.800" : "grey.200",
+              color: isDark ? "grey.100" : "grey.900",
+              "&:hover": {
+                bgcolor: isDark ? "grey.700" : "grey.300",
+              },
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Form Dialog (Add/Edit) */}
+      <SubTaskFormDialog
+        open={formDialogOpen}
+        onClose={() => {
+          setFormDialogOpen(false);
+          setEditingSubTask(null);
+        }}
+        onSave={handleSaveSubTask}
+        initialData={editingSubTask}
+        mode={formMode}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setDeletingSubTask(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        subTaskTitle={deletingSubTask?.title}
+        loading={deleting}
+      />
+    </>
   );
 };
 
