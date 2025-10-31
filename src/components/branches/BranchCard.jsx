@@ -395,7 +395,9 @@ const BranchCard = ({ branch, onEdit, onDelete, isManager }) => {
           {branch.email && (
             <IconButton
               size="medium"
-              onClick={() => window.open(`mailto:${branch.email}`, "_self")}
+              onClick={() => {
+                window.location.href = `mailto:${branch.email}`;
+              }}
               sx={{
                 color: isDark ? "warning.light" : "warning.main",
                 border: 1,
