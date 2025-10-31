@@ -51,7 +51,7 @@ const SignIn = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${AUTH_URL}/login`, {
+      const res = await publicAxios.post(`${AUTH_URL}/login`, {
         email: formData.email,
         password: formData.password,
       });
@@ -88,7 +88,7 @@ const SignIn = () => {
 
           // Update context if available
           if (setAuthUser) {
-            setAuthUser(userData);
+            setAuthUser(userData.accessToken);
           }
 
           // Navigate based on role
