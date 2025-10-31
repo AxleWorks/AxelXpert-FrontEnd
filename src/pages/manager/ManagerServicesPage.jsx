@@ -3,24 +3,19 @@ import {
   Typography,
   Paper,
   Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   CircularProgress,
   Button,
-  IconButton,
   Alert,
+  Grid,
 } from "@mui/material";
-import { Edit, Delete, Add, ListAlt } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 import { SERVICES_URL } from "../../config/apiEndpoints.jsx";
 import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import ManageSubTasksModal from "../../components/services/ManageSubTasksModal";
 import ServiceFormDialog from "../../components/services/ServiceFormDialog";
 import DeleteServiceDialog from "../../components/services/DeleteServiceDialog";
+import ServiceCard from "../../components/services/ServiceCard";
 
 const ManagerServicesPage = () => {
   const [services, setServices] = useState([]);
@@ -194,108 +189,101 @@ const ManagerServicesPage = () => {
         )}
 
         {/* Search Section */}
-        <Paper sx={{ mb: 2, p: 1.5, borderRadius: 2, boxShadow: 0 }}>
-          <input
-            type="text"
-            placeholder="Search services..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 14px",
-              borderRadius: 6,
-              border: "1px solid #d1d5db",
-              fontSize: 16,
-              outline: "none",
-            }}
-          />
-        </Paper>
-        <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
-          <Box display="flex" justifyContent="flex-end" mb={2}>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={handleAddNew}
-              disableElevation
-              sx={{
-                borderRadius: 2,
-                textTransform: "none",
-                fontWeight: 600,
-                px: 2.5,
-                py: 1,
+        <Box display="flex" gap={2} mb={3} alignItems="center">
+          <Paper sx={{ flex: 1, p: 1.5, borderRadius: 2, boxShadow: 0 }}>
+            <input
+              type="text"
+              placeholder="Search services..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: 6,
+                border: "1px solid #d1d5db",
+                fontSize: 16,
+                outline: "none",
               }}
-            >
-              Add Service
-            </Button>
+            />
+          </Paper>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleAddNew}
+            disableElevation
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 600,
+              px: 3,
+              py: 1.5,
+              whiteSpace: "nowrap",
+            }}
+          >
+            Add Service
+          </Button>
+        </Box>
+
+        {/* Services Grid */}
+        {loading ? (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight={400}
+          >
+            <CircularProgress size={48} />
           </Box>
-          {loading ? (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              minHeight={120}
+        ) : filteredServices.length === 0 ? (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 8,
+              textAlign: "center",
+              borderRadius: 3,
+              border: 2,
+              borderStyle: "dashed",
+              borderColor: "grey.300",
+            }}
+          >
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              fontWeight={600}
+              gutterBottom
             >
-              <CircularProgress />
-            </Box>
-          ) : error ? (
-            <Typography color="error">{error}</Typography>
-          ) : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Price</TableCell>
-                    <TableCell>Duration (min)</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell align="center">SubTasks</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredServices.map((service) => (
-                    <TableRow key={service.id}>
-                      <TableCell>{service.name}</TableCell>
-                      <TableCell>${service.price.toFixed(2)}</TableCell>
-                      <TableCell>{service.durationMinutes}</TableCell>
-                      <TableCell>{service.description || "-"}</TableCell>
-                      <TableCell align="center">
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<ListAlt />}
-                          onClick={() => handleManageSubTasks(service)}
-                          sx={{
-                            textTransform: "none",
-                            borderRadius: 1.5,
-                          }}
-                        >
-                          Manage
-                        </Button>
-                      </TableCell>
-                      <TableCell align="right">
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleEdit(service)}
-                          size="small"
-                        >
-                          <Edit />
-                        </IconButton>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDeleteClick(service)}
-                          size="small"
-                        >
-                          <Delete />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </Paper>
+              {search ? "No services found" : "No services yet"}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={3}>
+              {search
+                ? "Try adjusting your search terms"
+                : "Get started by adding your first service"}
+            </Typography>
+            {!search && (
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={handleAddNew}
+                sx={{ textTransform: "none" }}
+              >
+                Add Your First Service
+              </Button>
+            )}
+          </Paper>
+        ) : (
+          <Grid container spacing={3}>
+            {filteredServices.map((service) => (
+              <Grid item xs={12} sm={6} md={4} key={service.id}>
+                <ServiceCard
+                  service={service}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteClick}
+                  onManageSubTasks={handleManageSubTasks}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        )}
 
         {/* Service Form Dialog (Add/Edit) */}
         <ServiceFormDialog
