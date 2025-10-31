@@ -310,83 +310,41 @@ const BranchCard = ({ branch, onEdit, onDelete, isManager }) => {
           </Box>
         )}
 
-        {/* Contact Info Grid */}
-        <Box display="flex" flexDirection="column" gap={1.5}>
-          {/* Phone */}
-          {branch.phone && (
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={1.5}
+        {/* Phone */}
+        {branch.phone && (
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={1.5}
+            sx={{
+              bgcolor: isDark
+                ? alpha(theme.palette.background.paper, 0.4)
+                : "grey.50",
+              px: 2,
+              py: 1.25,
+              borderRadius: 2,
+              borderLeft: 4,
+              borderColor: isDark ? "success.dark" : "success.light",
+            }}
+          >
+            <Phone
               sx={{
-                bgcolor: isDark
-                  ? alpha(theme.palette.background.paper, 0.4)
-                  : "grey.50",
-                px: 2,
-                py: 1,
-                borderRadius: 2,
-                borderLeft: 4,
-                borderColor: isDark ? "success.dark" : "success.light",
+                fontSize: 18,
+                color: isDark ? "grey.500" : "grey.400",
+              }}
+            />
+            <Typography
+              variant="body2"
+              sx={{
+                color: isDark ? "grey.300" : "grey.700",
+                fontSize: "0.9rem",
+                fontWeight: 500,
               }}
             >
-              <Phone
-                sx={{
-                  fontSize: 18,
-                  color: isDark ? "grey.500" : "grey.400",
-                }}
-              />
-              <Typography
-                variant="body2"
-                sx={{
-                  color: isDark ? "grey.300" : "grey.700",
-                  fontSize: "0.85rem",
-                  fontWeight: 500,
-                }}
-              >
-                {branch.phone}
-              </Typography>
-            </Box>
-          )}
-
-          {/* Email */}
-          {branch.email && (
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={1.5}
-              sx={{
-                bgcolor: isDark
-                  ? alpha(theme.palette.background.paper, 0.4)
-                  : "grey.50",
-                px: 2,
-                py: 1,
-                borderRadius: 2,
-                borderLeft: 4,
-                borderColor: isDark ? "info.dark" : "info.light",
-              }}
-            >
-              <Email
-                sx={{
-                  fontSize: 18,
-                  color: isDark ? "grey.500" : "grey.400",
-                }}
-              />
-              <Typography
-                variant="body2"
-                sx={{
-                  color: isDark ? "grey.300" : "grey.700",
-                  fontSize: "0.85rem",
-                  fontWeight: 500,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {branch.email}
-              </Typography>
-            </Box>
-          )}
-        </Box>
+              {branch.phone}
+            </Typography>
+          </Box>
+        )}
       </CardContent>
 
       {/* Actions */}
@@ -405,33 +363,60 @@ const BranchCard = ({ branch, onEdit, onDelete, isManager }) => {
             : alpha(theme.palette.success.main, 0.02),
         }}
       >
-        {/* Map Link - Available for all users */}
-        {branch.mapLink ? (
-          <IconButton
-            size="medium"
-            onClick={() => window.open(branch.mapLink, "_blank")}
-            sx={{
-              color: isDark ? "success.light" : "success.main",
-              border: 1,
-              borderColor: isDark
-                ? alpha(theme.palette.success.dark, 0.3)
-                : alpha(theme.palette.success.main, 0.2),
-              borderRadius: 1.5,
-              transition: "all 0.2s ease",
-              "&:hover": {
-                bgcolor: isDark
-                  ? alpha(theme.palette.success.dark, 0.2)
-                  : alpha(theme.palette.success.light, 0.2),
-                borderColor: theme.palette.success.main,
-                transform: "translateY(-2px)",
-              },
-            }}
-          >
-            <Map fontSize="small" />
-          </IconButton>
-        ) : (
-          <Box />
-        )}
+        {/* Contact & Map Icons - Available for all users */}
+        <Box display="flex" gap={1}>
+          {/* Map Link */}
+          {branch.mapLink && (
+            <IconButton
+              size="medium"
+              onClick={() => window.open(branch.mapLink, "_blank")}
+              sx={{
+                color: isDark ? "success.light" : "success.main",
+                border: 1,
+                borderColor: isDark
+                  ? alpha(theme.palette.success.dark, 0.3)
+                  : alpha(theme.palette.success.main, 0.2),
+                borderRadius: 1.5,
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  bgcolor: isDark
+                    ? alpha(theme.palette.success.dark, 0.2)
+                    : alpha(theme.palette.success.light, 0.2),
+                  borderColor: theme.palette.success.main,
+                  transform: "translateY(-2px)",
+                },
+              }}
+            >
+              <Map fontSize="small" />
+            </IconButton>
+          )}
+
+          {/* Email Link */}
+          {branch.email && (
+            <IconButton
+              size="medium"
+              onClick={() => window.open(`mailto:${branch.email}`, "_self")}
+              sx={{
+                color: isDark ? "warning.light" : "warning.main",
+                border: 1,
+                borderColor: isDark
+                  ? alpha(theme.palette.warning.dark, 0.3)
+                  : alpha(theme.palette.warning.main, 0.2),
+                borderRadius: 1.5,
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  bgcolor: isDark
+                    ? alpha(theme.palette.warning.dark, 0.2)
+                    : alpha(theme.palette.warning.light, 0.2),
+                  borderColor: theme.palette.warning.main,
+                  transform: "translateY(-2px)",
+                },
+              }}
+            >
+              <Email fontSize="small" />
+            </IconButton>
+          )}
+        </Box>
 
         {/* Manager Actions */}
         {isManager && (
