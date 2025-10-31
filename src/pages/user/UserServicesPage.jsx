@@ -90,7 +90,12 @@ const UserServicesPage = () => {
               borderColor: "error.main",
             }}
           >
-            <Typography variant="h6" color="error" fontWeight={600} gutterBottom>
+            <Typography
+              variant="h6"
+              color="error"
+              fontWeight={600}
+              gutterBottom
+            >
               Error Loading Services
             </Typography>
             <Typography variant="body2" color="text.secondary">

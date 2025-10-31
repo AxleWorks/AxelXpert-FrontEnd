@@ -80,7 +80,12 @@ const UserServiceCard = ({ service }) => {
         }}
       >
         {/* Service Name */}
-        <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={2.5}>
+        <Box
+          display="flex"
+          alignItems="flex-start"
+          justifyContent="space-between"
+          mb={2.5}
+        >
           <Typography
             variant="h6"
             fontWeight={700}
