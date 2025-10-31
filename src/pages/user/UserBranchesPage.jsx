@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
-import BranchesComponent from "../../components/branches/BranchesComponentUser";
+import BranchesComponent from "../../components/branches/BranchesComponent";
 import { BRANCHES_URL } from "../../config/apiEndpoints";
 import { createAuthenticatedFetchOptions } from "../../utils/jwtUtils.js";
 
@@ -65,14 +65,7 @@ const UserBranchesPage = () => {
   return (
     <UserLayout>
       <Box sx={{ p: 2 }}>
-        <BranchesComponent
-          branches={branches.map((branch) => ({
-            ...branch,
-            openHours: branch.openHours || "N/A",
-            closeHours: branch.closeHours || "N/A",
-          }))}
-          isManager={false}
-        />
+        <BranchesComponent branches={branches} isManager={false} />
       </Box>
     </UserLayout>
   );

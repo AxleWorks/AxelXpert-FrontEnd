@@ -11,12 +11,18 @@ import {
   MenuItem,
   FormControl,
   CircularProgress,
+  IconButton,
+  useTheme,
+  alpha,
 } from "@mui/material";
+import { Close } from "@mui/icons-material";
 import { Button } from "../ui/button";
 import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import { BRANCHES_URL, USERS_URL } from "../../config/apiEndpoints.jsx";
 
 export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
   const [form, setForm] = React.useState({
     username: "",
     role: "",
@@ -121,23 +127,31 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
       borderRadius: 2,
       backgroundColor: "background.paper",
       "& fieldset": {
-        borderColor: "rgba(0, 0, 0, 0.12)",
+        borderColor: isDark
+          ? "rgba(255, 255, 255, 0.12)"
+          : "rgba(0, 0, 0, 0.12)",
       },
       "&:hover fieldset": {
-        borderColor: "rgba(0, 0, 0, 0.23)",
+        borderColor: isDark
+          ? "rgba(255, 255, 255, 0.23)"
+          : "rgba(0, 0, 0, 0.23)",
       },
       "&.Mui-focused fieldset": {
         borderColor: "#0b75d9",
       },
       "&.Mui-disabled": {
-        backgroundColor: "rgba(0, 0, 0, 0.02)",
+        backgroundColor: isDark
+          ? "rgba(255, 255, 255, 0.02)"
+          : "rgba(0, 0, 0, 0.02)",
       },
     },
     "& .MuiInputBase-input": {
       padding: "12px 14px",
     },
     "& .MuiInputBase-input.Mui-disabled": {
-      WebkitTextFillColor: "rgba(0, 0, 0, 0.6)",
+      WebkitTextFillColor: isDark
+        ? "rgba(255, 255, 255, 0.6)"
+        : "rgba(0, 0, 0, 0.6)",
     },
   };
 
@@ -157,8 +171,22 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
         fullWidth
         PaperProps={{
           sx: {
+            bgcolor: isDark ? "grey.900" : "background.paper",
+            backgroundImage: "none",
             borderRadius: 3,
-            p: 1,
+            boxShadow: isDark
+              ? "0 20px 60px rgba(0, 0, 0, 0.6)"
+              : "0 20px 60px rgba(0, 0, 0, 0.15)",
+          },
+        }}
+        slotProps={{
+          backdrop: {
+            sx: {
+              backdropFilter: "blur(10px)",
+              backgroundColor: isDark
+                ? "rgba(0, 0, 0, 0.75)"
+                : "rgba(0, 0, 0, 0.4)",
+            },
           },
         }}
       >
@@ -178,21 +206,70 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
       fullWidth
       PaperProps={{
         sx: {
+          bgcolor: isDark ? "grey.900" : "background.paper",
+          backgroundImage: "none",
           borderRadius: 3,
-          p: 1,
+          boxShadow: isDark
+            ? "0 20px 60px rgba(0, 0, 0, 0.6)"
+            : "0 20px 60px rgba(0, 0, 0, 0.15)",
+        },
+      }}
+      slotProps={{
+        backdrop: {
+          sx: {
+            backdropFilter: "blur(10px)",
+            backgroundColor: isDark
+              ? "rgba(0, 0, 0, 0.75)"
+              : "rgba(0, 0, 0, 0.4)",
+          },
         },
       }}
     >
       <DialogTitle
         sx={{
-          fontSize: "1.5rem",
-          fontWeight: 600,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           pb: 2,
           pt: 3,
           px: 3,
+          borderBottom: 1,
+          borderColor: isDark ? "grey.800" : "grey.200",
+          bgcolor: isDark
+            ? alpha(theme.palette.primary.dark, 0.05)
+            : alpha(theme.palette.primary.light, 0.05),
         }}
       >
-        Edit Profile
+        <Box
+          sx={{
+            fontSize: "1.35rem",
+            fontWeight: 700,
+            color: isDark ? "grey.50" : "grey.900",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Edit Profile
+        </Box>
+        <IconButton
+          edge="end"
+          color="inherit"
+          onClick={onClose}
+          aria-label="close"
+          size="small"
+          sx={{
+            color: isDark ? "grey.400" : "grey.600",
+            transition: "all 0.2s ease",
+            "&:hover": {
+              color: isDark ? "grey.100" : "grey.900",
+              bgcolor: isDark
+                ? alpha(theme.palette.error.dark, 0.2)
+                : alpha(theme.palette.error.light, 0.15),
+              transform: "rotate(90deg)",
+            },
+          }}
+        >
+          <Close fontSize="small" />
+        </IconButton>
       </DialogTitle>
       <DialogContent sx={{ px: 3, py: 2 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
