@@ -27,15 +27,13 @@ const SignIn = () => {
 
   useEffect(() => {
     // quick backend status check
-    let mounted = true;
     (async () => {
       try {
         await publicAxios.get(`${AUTH_URL}/status`);
-      } catch (e) {
+      } catch {
         // ignore - used only for quick healthcheck
       }
     })();
-    return () => (mounted = false);
   }, []);
 
   const handleChange = (e) => {
@@ -208,7 +206,7 @@ const SignIn = () => {
 
         <Box sx={{ textAlign: "right", mb: 3 }}>
           <Link
-            to="/forget-password"
+            to="/forgot-password"
             style={{ color: "#3b82f6", textDecoration: "none" }}
           >
             Forgot Password?

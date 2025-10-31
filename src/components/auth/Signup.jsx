@@ -108,7 +108,7 @@ const SignUp = () => {
     (async () => {
       try {
         await publicAxios.get(`${AUTH_URL}/status`);
-      } catch (e) {
+      } catch {
         // ignore
       }
     })();

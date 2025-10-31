@@ -14,6 +14,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SignIn from "./components/auth/SignIn";
 import Signup from "./components/auth/Signup";
 import ForgetPassword from "./pages/Authentication/ForgetPassword";
+import ResetPassword from "./pages/Authentication/ResetPassword";
 
 // Lazy-load all pages
 const UserDashboardPage = lazy(() => import("./pages/user/UserDashboardPage"));
@@ -56,16 +57,14 @@ const App = () => {
     <ThemeProvider>
       <AuthProvider>
         <ToastProvider>
-          <Router future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
-          }}>
+          <Router>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
                 {/* Auth routes */}
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/signup" element={<Signup />} />
-                <Route path="/forget-password" element={<ForgetPassword />} />
+                <Route path="/forgot-password" element={<ForgetPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
 
                 {/* User Routes */}
                 <Route
