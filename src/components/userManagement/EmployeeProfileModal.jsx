@@ -7,12 +7,18 @@ import {
   Box,
   TextField,
   Typography,
+  IconButton,
+  useTheme,
+  alpha,
 } from "@mui/material";
+import { Close } from "@mui/icons-material";
 import { Button } from "../ui/button";
 import axios from "axios";
 import { USERS_URL } from "../../config/apiEndpoints.jsx";
 
 export default function EmployeeProfileModal({ open, onClose, employee }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
   const [userData, setUserData] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
 
@@ -39,18 +45,28 @@ export default function EmployeeProfileModal({ open, onClose, employee }) {
   const inputStyles = {
     "& .MuiOutlinedInput-root": {
       borderRadius: 2,
-      backgroundColor: "rgba(0, 0, 0, 0.02)",
+      backgroundColor: isDark
+        ? "rgba(255, 255, 255, 0.02)"
+        : "rgba(0, 0, 0, 0.02)",
       "& fieldset": {
-        borderColor: "rgba(0, 0, 0, 0.12)",
+        borderColor: isDark
+          ? "rgba(255, 255, 255, 0.12)"
+          : "rgba(0, 0, 0, 0.12)",
       },
       "&:hover fieldset": {
-        borderColor: "rgba(0, 0, 0, 0.12)",
+        borderColor: isDark
+          ? "rgba(255, 255, 255, 0.12)"
+          : "rgba(0, 0, 0, 0.12)",
       },
       "&.Mui-focused fieldset": {
-        borderColor: "rgba(0, 0, 0, 0.12)",
+        borderColor: isDark
+          ? "rgba(255, 255, 255, 0.12)"
+          : "rgba(0, 0, 0, 0.12)",
       },
       "&.Mui-disabled": {
-        backgroundColor: "rgba(0, 0, 0, 0.02)",
+        backgroundColor: isDark
+          ? "rgba(255, 255, 255, 0.02)"
+          : "rgba(0, 0, 0, 0.02)",
       },
     },
     "& .MuiInputBase-input": {
@@ -58,7 +74,9 @@ export default function EmployeeProfileModal({ open, onClose, employee }) {
       cursor: "default",
     },
     "& .MuiInputBase-input.Mui-disabled": {
-      WebkitTextFillColor: "rgba(0, 0, 0, 0.87)",
+      WebkitTextFillColor: isDark
+        ? "rgba(255, 255, 255, 0.87)"
+        : "rgba(0, 0, 0, 0.87)",
     },
   };
 
@@ -78,8 +96,22 @@ export default function EmployeeProfileModal({ open, onClose, employee }) {
         fullWidth
         PaperProps={{
           sx: {
+            bgcolor: isDark ? "grey.900" : "background.paper",
+            backgroundImage: "none",
             borderRadius: 3,
-            p: 1,
+            boxShadow: isDark
+              ? "0 20px 60px rgba(0, 0, 0, 0.6)"
+              : "0 20px 60px rgba(0, 0, 0, 0.15)",
+          },
+        }}
+        slotProps={{
+          backdrop: {
+            sx: {
+              backdropFilter: "blur(10px)",
+              backgroundColor: isDark
+                ? "rgba(0, 0, 0, 0.75)"
+                : "rgba(0, 0, 0, 0.4)",
+            },
           },
         }}
       >
@@ -98,21 +130,70 @@ export default function EmployeeProfileModal({ open, onClose, employee }) {
       fullWidth
       PaperProps={{
         sx: {
+          bgcolor: isDark ? "grey.900" : "background.paper",
+          backgroundImage: "none",
           borderRadius: 3,
-          p: 1,
+          boxShadow: isDark
+            ? "0 20px 60px rgba(0, 0, 0, 0.6)"
+            : "0 20px 60px rgba(0, 0, 0, 0.15)",
+        },
+      }}
+      slotProps={{
+        backdrop: {
+          sx: {
+            backdropFilter: "blur(10px)",
+            backgroundColor: isDark
+              ? "rgba(0, 0, 0, 0.75)"
+              : "rgba(0, 0, 0, 0.4)",
+          },
         },
       }}
     >
       <DialogTitle
         sx={{
-          fontSize: "1.5rem",
-          fontWeight: 600,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           pb: 2,
           pt: 3,
           px: 3,
+          borderBottom: 1,
+          borderColor: isDark ? "grey.800" : "grey.200",
+          bgcolor: isDark
+            ? alpha(theme.palette.info.dark, 0.05)
+            : alpha(theme.palette.info.light, 0.05),
         }}
       >
-        View Profile
+        <Box
+          sx={{
+            fontSize: "1.35rem",
+            fontWeight: 700,
+            color: isDark ? "grey.50" : "grey.900",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          View Profile
+        </Box>
+        <IconButton
+          edge="end"
+          color="inherit"
+          onClick={onClose}
+          aria-label="close"
+          size="small"
+          sx={{
+            color: isDark ? "grey.400" : "grey.600",
+            transition: "all 0.2s ease",
+            "&:hover": {
+              color: isDark ? "grey.100" : "grey.900",
+              bgcolor: isDark
+                ? alpha(theme.palette.error.dark, 0.2)
+                : alpha(theme.palette.error.light, 0.15),
+              transform: "rotate(90deg)",
+            },
+          }}
+        >
+          <Close fontSize="small" />
+        </IconButton>
       </DialogTitle>
       <DialogContent sx={{ px: 3, py: 2 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
@@ -154,7 +235,9 @@ export default function EmployeeProfileModal({ open, onClose, employee }) {
               sx={{
                 ...inputStyles,
                 "& .MuiInputBase-input.Mui-disabled": {
-                  WebkitTextFillColor: "rgba(0, 0, 0, 0.87)",
+                  WebkitTextFillColor: isDark
+                    ? "rgba(255, 255, 255, 0.87)"
+                    : "rgba(0, 0, 0, 0.87)",
                   textTransform: "capitalize",
                 },
               }}
