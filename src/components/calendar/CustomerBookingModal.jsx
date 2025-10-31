@@ -13,6 +13,7 @@ import {
   Chip,
   IconButton,
   Paper,
+  Snackbar,
   Alert,
   Divider,
   Card,
@@ -36,6 +37,7 @@ import {
   BRANCHES_URL,
   VEHICLES_URL,
   SERVICES_URL,
+  USERS_URL,
 } from "../../config/apiEndpoints";
 
 const CustomerBookingModal = ({
@@ -59,6 +61,13 @@ const CustomerBookingModal = ({
   const [apiServices, setApiServices] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const [dataError, setDataError] = useState(null);
+  
+  // Snackbar states
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info", // 'error', 'warning', 'info', 'success'
+  });
 
   const defaultVehicles = [
     {
@@ -120,26 +129,52 @@ const CustomerBookingModal = ({
 
       try {
         // Fetch all data in parallel
-        const [branchesRes, vehiclesRes, servicesRes] = await Promise.all([
-          authenticatedAxios
-            .get(`${BRANCHES_URL}/all`)
-            .catch(() => ({ data: [] })),
-          user?.id
-            ? authenticatedAxios
-                .get(`${VEHICLES_URL}/user/${user.id}`)
-                .catch(() => ({ data: [] }))
-            : Promise.resolve({ data: [] }),
-          authenticatedAxios
-            .get(`${SERVICES_URL}/all`)
-            .catch(() => ({ data: defaultServices })),
-        ]);
+        const [branchesRes, vehiclesRes, servicesRes, userRes] =
+          await Promise.all([
+            authenticatedAxios
+              .get(`${BRANCHES_URL}/all`)
+              .catch(() => ({ data: [] })),
+            user?.id
+              ? authenticatedAxios
+                  .get(`${VEHICLES_URL}/user/${user.id}`)
+                  .catch(() => ({ data: [] }))
+              : Promise.resolve({ data: [] }),
+            authenticatedAxios
+              .get(`${SERVICES_URL}/all`)
+              .catch(() => ({ data: defaultServices })),
+            user?.id
+              ? authenticatedAxios
+                  .get(`${USERS_URL}/${user.id}`)
+                  .catch(() => ({ data: null }))
+              : Promise.resolve({ data: null }),
+          ]);
 
         setBranches(branchesRes.data || []);
         setApiVehicles(vehiclesRes.data || []);
         setApiServices(servicesRes.data || defaultServices);
+
+        // Update customer info with fetched user data
+        if (userRes.data) {
+          setFormData((prev) => ({
+            ...prev,
+            customerInfo: {
+              name:
+                userRes.data.username ||
+                userRes.data.name ||
+                user?.username ||
+                user?.name ||
+                "",
+              phone: userRes.data.phone || userRes.data.phoneNumber || "",
+            },
+          }));
+        }
       } catch (error) {
         console.error("Error fetching modal data:", error);
-        setDataError("Failed to load some data. Please try again.");
+        setSnackbar({
+          open: true,
+          message: "Failed to load some data. Please try again.",
+          severity: "warning",
+        });
       } finally {
         setLoadingData(false);
       }
@@ -315,7 +350,11 @@ const CustomerBookingModal = ({
       handleClose();
     } catch (error) {
       console.error("Error submitting booking:", error);
-      setErrors({ submit: "Failed to create booking. Please try again." });
+      setSnackbar({
+        open: true,
+        message: "Failed to create booking. Please try again.",
+        severity: "error",
+      });
     }
   };
 
@@ -399,18 +438,6 @@ const CustomerBookingModal = ({
           </IconButton>
         </Stack>
         <Divider sx={{ mb: 2 }} />
-
-        {errors.submit && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {errors.submit}
-          </Alert>
-        )}
-
-        {dataError && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            {dataError}
-          </Alert>
-        )}
 
         {loadingData ? (
           <Box
@@ -849,6 +876,22 @@ const CustomerBookingModal = ({
           </Box>
         </Fade>
       </Paper>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Modal>
   );
 };
