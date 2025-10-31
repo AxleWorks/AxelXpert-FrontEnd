@@ -19,10 +19,12 @@ import { Close } from "@mui/icons-material";
 import { Button } from "../../components/ui/button";
 import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import { BRANCHES_URL, USERS_URL } from "../../config/apiEndpoints.jsx";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function AddEmployeeModal({ open, onClose, onCreate }) {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const { user } = useAuth();
   const [form, setForm] = React.useState({
     email: "",
     role: "",
@@ -80,6 +82,15 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
       return;
     }
 
+    // For managers, validate they're adding to their own branch
+    if (user?.role === 'manager' && user?.branchId) {
+      const selectedBranch = branches.find((b) => b.name === form.branch);
+      if (selectedBranch && selectedBranch.id !== user.branchId) {
+        setError("You can only add employees to your own branch");
+        return;
+      }
+    }
+
     setSubmitting(true);
     setError("");
 
@@ -106,6 +117,11 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
           // Bad request - validation error or email exists
           setError(
             err.response.data || "Invalid data. Please check your inputs."
+          );
+        } else if (err.response.status === 403) {
+          // Forbidden - manager trying to add to wrong branch
+          setError(
+            err.response.data || "You can only add employees to your own branch"
           );
         } else if (err.response.status === 500) {
           setError("Server error. Please try again later.");
@@ -272,9 +288,9 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
                     Select role
                   </Typography>
                 </MenuItem>
-                <MenuItem value="USER">User</MenuItem>
-                <MenuItem value="EMPLOYEE">Employee</MenuItem>
-                <MenuItem value="MANAGER">Manager</MenuItem>
+                <MenuItem value="user">User</MenuItem>
+                <MenuItem value="employee">Employee</MenuItem>
+                <MenuItem value="manager">Manager</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -283,6 +299,11 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
           <Box>
             <Typography variant="body2" sx={labelStyles}>
               Branch
+              {user?.role === 'manager' && (
+                <Typography component="span" sx={{ color: "text.secondary", fontSize: "0.75rem", ml: 1 }}>
+                  (You can only add to your branch)
+                </Typography>
+              )}
             </Typography>
             <FormControl
               fullWidth

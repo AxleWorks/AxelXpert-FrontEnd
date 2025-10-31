@@ -36,8 +36,21 @@ const ManagerUserManagementPage = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await authenticatedAxios.get(`${USERS_URL}/all`);
-        setEmployees(response.data);
+        // Fetch all user types: employees, managers, and users
+        const [employeesRes, managersRes, usersRes] = await Promise.all([
+          authenticatedAxios.get(`${USERS_URL}/employees`),
+          authenticatedAxios.get(`${USERS_URL}/managers`),
+          authenticatedAxios.get(`${USERS_URL}/users`)
+        ]);
+        
+        // Combine all user types
+        const allUsers = [
+          ...employeesRes.data,
+          ...managersRes.data,
+          ...usersRes.data
+        ];
+        
+        setEmployees(allUsers);
       } catch (err) {
         console.error("Failed to fetch employees:", err);
         setError("Failed to load employees. Please try again later.");
