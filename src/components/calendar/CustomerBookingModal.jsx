@@ -61,7 +61,7 @@ const CustomerBookingModal = ({
   const [apiServices, setApiServices] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const [dataError, setDataError] = useState(null);
-  
+
   // Snackbar states
   const [snackbar, setSnackbar] = useState({
     open: false,
