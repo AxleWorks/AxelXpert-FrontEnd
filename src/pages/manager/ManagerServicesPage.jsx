@@ -17,11 +17,13 @@ import {
   DialogActions,
   TextField,
   IconButton,
+  Chip,
 } from "@mui/material";
-import { Edit, Delete, Add } from "@mui/icons-material";
+import { Edit, Delete, Add, ListAlt } from "@mui/icons-material";
 import { SERVICES_URL } from "../../config/apiEndpoints.jsx";
 import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
+import ManageSubTasksModal from "../../components/services/ManageSubTasksModal";
 
 const emptyService = {
   name: "",
@@ -39,6 +41,8 @@ const ManagerServicesPage = () => {
   const [currentService, setCurrentService] = useState(emptyService);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [subTasksModalOpen, setSubTasksModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
 
   const fetchServices = async () => {
     setLoading(true);
@@ -128,6 +132,16 @@ const ManagerServicesPage = () => {
     }
   };
 
+  const handleManageSubTasks = (service) => {
+    setSelectedService(service);
+    setSubTasksModalOpen(true);
+  };
+
+  const handleCloseSubTasksModal = () => {
+    setSubTasksModalOpen(false);
+    setSelectedService(null);
+  };
+
   // Filter services by search - ensure services is always an array
   const filteredServices = Array.isArray(services)
     ? services.filter(
@@ -191,6 +205,7 @@ const ManagerServicesPage = () => {
                     <TableCell>Price</TableCell>
                     <TableCell>Duration (min)</TableCell>
                     <TableCell>Description</TableCell>
+                    <TableCell align="center">SubTasks</TableCell>
                     <TableCell align="right">Actions</TableCell>
                   </TableRow>
                 </TableHead>
@@ -201,6 +216,16 @@ const ManagerServicesPage = () => {
                       <TableCell>${service.price.toFixed(2)}</TableCell>
                       <TableCell>{service.durationMinutes}</TableCell>
                       <TableCell>{service.description || "-"}</TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<ListAlt />}
+                          onClick={() => handleManageSubTasks(service)}
+                        >
+                          Manage
+                        </Button>
+                      </TableCell>
                       <TableCell align="right">
                         <IconButton
                           color="primary"
@@ -284,6 +309,13 @@ const ManagerServicesPage = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* SubTasks Management Modal */}
+        <ManageSubTasksModal
+          open={subTasksModalOpen}
+          onClose={handleCloseSubTasksModal}
+          service={selectedService}
+        />
       </Box>
     </ManagerLayout>
   );
