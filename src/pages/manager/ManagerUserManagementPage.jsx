@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from "react";
-import { Box, Typography, Grid } from "@mui/material";
+import { Box, Typography, Grid, CircularProgress, Alert } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import { Button } from "../../components/ui/button";
@@ -229,7 +229,7 @@ const ManagerUserManagementPage = () => {
     setEmployees((prev) => [...prev, newEmployee]);
     setSuccessTitle("Employee added!");
     setSuccessMessage(
-      `${newEmployee.email} has been added successfully. A welcome email with login credentials has been sent.`
+      `Login credentials has been sent to ${newEmployee.email}.`
     );
     setShowSuccess(true);
     setAddOpen(false);
@@ -256,72 +256,72 @@ const ManagerUserManagementPage = () => {
     setShowError(false);
   }, []);
 
-  if (loading) {
-    return (
-      <ManagerLayout>
-        <Box sx={{ p: 4, textAlign: "center" }}>
-          <Typography>Loading...</Typography>
-        </Box>
-      </ManagerLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <ManagerLayout>
-        <Box sx={{ p: 4, textAlign: "center" }}>
-          <Typography color="error">{error}</Typography>
-        </Box>
-      </ManagerLayout>
-    );
-  }
-
   return (
     <ManagerLayout>
-      <Box sx={{ pb: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
-          <div>
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              User Management
-            </Typography>
-            <Typography color="text.secondary">
-              Manage employees and their assignments
-            </Typography>
-          </div>
-          <Button
-            startIcon={<AddIcon />}
-            sx={{
-              backgroundColor: "#0b75d9",
-              color: "white",
-              borderRadius: 2,
-              padding: "8px 16px",
-              textTransform: "none",
-              boxShadow: "none",
-              "&:hover": { backgroundColor: "#0765b6" },
-            }}
-            onClick={handleOpenAdd}
+      <Box>
+        <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
+          User Management
+        </Typography>
+
+        {/* Loading State */}
+        {loading ? (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight={400}
           >
-            Add Employee
-          </Button>
-        </Box>
+            <CircularProgress size={48} />
+          </Box>
+        ) : error ? (
+          /* Error State */
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        ) : (
+          /* Main Content */
+          <>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 3,
+              }}
+            >
+              <Typography color="text.secondary">
+                Manage employees and their assignments
+              </Typography>
+              <Button
+                startIcon={<AddIcon />}
+                sx={{
+                  backgroundColor: "#0b75d9",
+                  color: "white",
+                  borderRadius: 2,
+                  padding: "8px 16px",
+                  textTransform: "none",
+                  boxShadow: "none",
+                  "&:hover": { backgroundColor: "#0765b6" },
+                }}
+                onClick={handleOpenAdd}
+              >
+                Add Employee
+              </Button>
+            </Box>
 
-        <UserManagementStats employees={employees} />
+            <UserManagementStats employees={employees} />
 
-        <EmployeesTable
-          employees={employees}
-          onView={openView}
-          onEdit={openEdit}
-          onDelete={openDeleteDialog}
-          onBlock={openBlockDialog}
-        />
+            <EmployeesTable
+              employees={employees}
+              onView={openView}
+              onEdit={openEdit}
+              onDelete={openDeleteDialog}
+              onBlock={openBlockDialog}
+            />
+          </>
+        )}
 
+        {/* Modals - Always rendered, controlled by state */}
         <EmployeeProfileModal
           open={modalOpen}
           onClose={handleCloseView}
