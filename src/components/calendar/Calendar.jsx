@@ -412,7 +412,7 @@ const Calendar = ({ branchId, availableSlots = [], existingBookings = [] }) => {
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={2000}
         onClose={hideSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

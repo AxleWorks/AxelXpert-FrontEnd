@@ -519,7 +519,7 @@ const AppointmentDetailModal = ({ open, onClose, appointment, onDelete }) => {
         {/* Snackbar for notifications */}
         <Snackbar
           open={snackbar.open}
-          autoHideDuration={6000}
+          autoHideDuration={2000}
           onClose={hideSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
