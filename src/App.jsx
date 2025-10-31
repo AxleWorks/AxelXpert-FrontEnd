@@ -14,6 +14,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SignIn from "./components/auth/SignIn";
 import Signup from "./components/auth/Signup";
 import ForgetPassword from "./pages/ForgetPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // User Pages
 import UserDashboardPage from "./pages/user/UserDashboardPage";
@@ -51,7 +52,8 @@ const App = () => {
             {/* Auth routes */}
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/forget-password" element={<ForgetPassword />} />
+            <Route path="/forgot-password" element={<ForgetPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* User Routes */}
             <Route
