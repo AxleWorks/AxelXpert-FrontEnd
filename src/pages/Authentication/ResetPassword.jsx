@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Typography, Box } from '@mui/material';
-import { publicAxios } from '../utils/axiosConfig';
-import { AUTH_URL } from '../config/apiEndpoints';
-import AuthLayout from '../components/auth/AuthLayout';
-import AuthFormContainer from '../components/auth/AuthFormContainer';
-import AuthBranding from '../components/auth/AuthBranding';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
+import { publicAxios } from '../../utils/axiosConfig';
+import { AUTH_URL } from '../../config/apiEndpoints';
+import AuthLayout from '../../components/auth/AuthLayout';
+import AuthFormContainer from '../../components/auth/AuthFormContainer';
+import AuthBranding from '../../components/auth/AuthBranding';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();

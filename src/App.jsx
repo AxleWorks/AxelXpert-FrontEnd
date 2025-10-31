@@ -13,8 +13,8 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 // Auth Components (keep these eager-loaded since they're small and critical)
 import SignIn from "./components/auth/SignIn";
 import Signup from "./components/auth/Signup";
-import ForgetPassword from "./pages/ForgetPassword";
-import ResetPassword from "./pages/ResetPassword";
+import ForgetPassword from "./pages/Authentication/ForgetPassword";
+import ResetPassword from "./pages/Authentication/ResetPassword";
 
 // Lazy-load all pages
 const UserDashboardPage = lazy(() => import("./pages/user/UserDashboardPage"));
