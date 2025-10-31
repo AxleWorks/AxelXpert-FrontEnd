@@ -11,36 +11,35 @@ import {
   TableRow,
   CircularProgress,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   IconButton,
-  Chip,
+  Alert,
 } from "@mui/material";
 import { Edit, Delete, Add, ListAlt } from "@mui/icons-material";
 import { SERVICES_URL } from "../../config/apiEndpoints.jsx";
 import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import ManageSubTasksModal from "../../components/services/ManageSubTasksModal";
-
-const emptyService = {
-  name: "",
-  price: "",
-  durationMinutes: "",
-  description: "",
-};
+import ServiceFormDialog from "../../components/services/ServiceFormDialog";
+import DeleteServiceDialog from "../../components/services/DeleteServiceDialog";
 
 const ManagerServicesPage = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [currentService, setCurrentService] = useState(emptyService);
-  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(null);
   const [search, setSearch] = useState("");
+
+  // Service form dialog state
+  const [serviceFormOpen, setServiceFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState("add");
+  const [editingService, setEditingService] = useState(null);
+
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingService, setDeletingService] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // SubTasks modal state
   const [subTasksModalOpen, setSubTasksModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
 
@@ -67,68 +66,85 @@ const ManagerServicesPage = () => {
     fetchServices();
   }, []);
 
-  const handleDialogOpen = (service = emptyService) => {
-    setCurrentService(service);
-    setEditMode(!!service.id);
-    setDialogOpen(true);
+  const handleAddNew = () => {
+    setEditingService({
+      name: "",
+      price: "",
+      durationMinutes: "",
+      description: "",
+    });
+    setFormMode("add");
+    setServiceFormOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    setCurrentService(emptyService);
-    setEditMode(false);
+  const handleEdit = (service) => {
+    setEditingService(service);
+    setFormMode("edit");
+    setServiceFormOpen(true);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentService((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
+  const handleSaveService = async (formData) => {
+    setError(null);
+    setSuccess(null);
     try {
       const serviceData = {
-        name: currentService.name,
-        price: parseFloat(currentService.price),
-        durationMinutes: parseInt(currentService.durationMinutes, 10),
-        description: currentService.description,
+        name: formData.name,
+        price: parseFloat(formData.price),
+        durationMinutes: parseInt(formData.durationMinutes, 10),
+        description: formData.description,
       };
 
-      if (editMode) {
+      if (formMode === "add") {
+        await authenticatedAxios.post(SERVICES_URL, serviceData);
+        setSuccess("Service added successfully!");
+      } else {
         await authenticatedAxios.put(
-          `${SERVICES_URL}/${currentService.id}`,
+          `${SERVICES_URL}/${editingService.id}`,
           serviceData
         );
-      } else {
-        await authenticatedAxios.post(SERVICES_URL, serviceData);
+        setSuccess("Service updated successfully!");
       }
 
       await fetchServices();
-      handleDialogClose();
-      setError(null);
+      setServiceFormOpen(false);
+      setEditingService(null);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error saving service:", err);
       setError(
         err.response?.data?.message || err.message || "Failed to save service"
       );
-    } finally {
-      setSaving(false);
+      throw err;
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this service?"))
-      return;
+  const handleDeleteClick = (service) => {
+    setDeletingService(service);
+    setDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
+    setError(null);
+    setSuccess(null);
     try {
-      await authenticatedAxios.delete(`${SERVICES_URL}/${id}`);
+      await authenticatedAxios.delete(`${SERVICES_URL}/${deletingService.id}`);
       await fetchServices();
-      setError(null);
+      setDeleteDialogOpen(false);
+      setDeletingService(null);
+      setSuccess("Service deleted successfully!");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error deleting service:", err);
       setError(
         err.response?.data?.message || err.message || "Failed to delete service"
       );
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -158,6 +174,25 @@ const ManagerServicesPage = () => {
         <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
           Service Management
         </Typography>
+
+        {/* Success Message */}
+        {success && (
+          <Alert
+            severity="success"
+            sx={{ mb: 2 }}
+            onClose={() => setSuccess(null)}
+          >
+            {success}
+          </Alert>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
         {/* Search Section */}
         <Paper sx={{ mb: 2, p: 1.5, borderRadius: 2, boxShadow: 0 }}>
           <input
@@ -180,7 +215,15 @@ const ManagerServicesPage = () => {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => handleDialogOpen()}
+              onClick={handleAddNew}
+              disableElevation
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+                px: 2.5,
+                py: 1,
+              }}
             >
               Add Service
             </Button>
@@ -222,6 +265,10 @@ const ManagerServicesPage = () => {
                           size="small"
                           startIcon={<ListAlt />}
                           onClick={() => handleManageSubTasks(service)}
+                          sx={{
+                            textTransform: "none",
+                            borderRadius: 1.5,
+                          }}
                         >
                           Manage
                         </Button>
@@ -229,14 +276,14 @@ const ManagerServicesPage = () => {
                       <TableCell align="right">
                         <IconButton
                           color="primary"
-                          onClick={() => handleDialogOpen(service)}
+                          onClick={() => handleEdit(service)}
                           size="small"
                         >
                           <Edit />
                         </IconButton>
                         <IconButton
                           color="error"
-                          onClick={() => handleDelete(service.id)}
+                          onClick={() => handleDeleteClick(service)}
                           size="small"
                         >
                           <Delete />
@@ -250,65 +297,29 @@ const ManagerServicesPage = () => {
           )}
         </Paper>
 
-        <Dialog
-          open={dialogOpen}
-          onClose={handleDialogClose}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>{editMode ? "Edit Service" : "Add Service"}</DialogTitle>
-          <DialogContent>
-            <TextField
-              margin="normal"
-              label="Name"
-              name="name"
-              value={currentService.name}
-              onChange={handleInputChange}
-              fullWidth
-              required
-            />
-            <TextField
-              margin="normal"
-              label="Price"
-              name="price"
-              type="number"
-              value={currentService.price}
-              onChange={handleInputChange}
-              fullWidth
-              required
-              inputProps={{ min: 0, step: 0.01 }}
-            />
-            <TextField
-              margin="normal"
-              label="Duration (minutes)"
-              name="durationMinutes"
-              type="number"
-              value={currentService.durationMinutes}
-              onChange={handleInputChange}
-              fullWidth
-              required
-              inputProps={{ min: 1, step: 1 }}
-            />
-            <TextField
-              margin="normal"
-              label="Description"
-              name="description"
-              value={currentService.description || ""}
-              onChange={handleInputChange}
-              fullWidth
-              multiline
-              rows={2}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleDialogClose} disabled={saving}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} variant="contained" disabled={saving}>
-              {saving ? "Saving..." : editMode ? "Update" : "Add"}
-            </Button>
-          </DialogActions>
-        </Dialog>
+        {/* Service Form Dialog (Add/Edit) */}
+        <ServiceFormDialog
+          open={serviceFormOpen}
+          onClose={() => {
+            setServiceFormOpen(false);
+            setEditingService(null);
+          }}
+          onSave={handleSaveService}
+          initialData={editingService}
+          mode={formMode}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteServiceDialog
+          open={deleteDialogOpen}
+          onClose={() => {
+            setDeleteDialogOpen(false);
+            setDeletingService(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          serviceName={deletingService?.name}
+          loading={deleting}
+        />
 
         {/* SubTasks Management Modal */}
         <ManageSubTasksModal
