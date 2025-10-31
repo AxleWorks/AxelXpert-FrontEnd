@@ -401,6 +401,8 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
                 Phone: <strong>{loadingCustomer ? "-" : (customerPhone || "-")}</strong>
               </Typography>
 
+              <Box sx={{ mb: 1.5 }} />
+
               <FormControl fullWidth error={!!errors.branchId}>
                 <InputLabel>Branch *</InputLabel>
                 <Select 
@@ -634,7 +636,7 @@ const CustomerBookingModal = ({ open, onClose, selectedDate, selectedTimeSlot, o
         {/* Snackbar for notifications */}
         <Snackbar
           open={snackbar.open}
-          autoHideDuration={6000}
+          autoHideDuration={2000}
           onClose={hideSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
