@@ -28,10 +28,12 @@ const ServiceCard = ({ service, onEdit, onDelete, onManageSubTasks }) => {
     <Card
       elevation={0}
       sx={{
-        height: 420,
-        minHeight: 320,
-        maxHeight: 350,
         width: 370,
+        minWidth: 370,
+        maxWidth: 370,
+        height: 420,
+        minHeight: 420,
+        maxHeight: 420,
         display: "flex",
         flexDirection: "column",
         border: 1,
