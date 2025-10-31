@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,21 +11,30 @@ import {
   FormControlLabel,
   IconButton,
   useTheme,
+  alpha,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 
 const SubTaskFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
   const theme = useTheme();
-  const [formData, setFormData] = useState(
-    initialData || {
-      title: "",
-      description: "",
-      orderIndex: 1,
-      isMandatory: true,
-    }
-  );
+  const isDark = theme.palette.mode === "dark";
+
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    orderIndex: 1,
+    isMandatory: true,
+  });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+
+  // Reset form when dialog opens or initialData changes
+  useEffect(() => {
+    if (open && initialData) {
+      setFormData(initialData);
+      setErrors({});
+    }
+  }, [open, initialData]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -78,9 +87,9 @@ const SubTaskFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
       fullWidth
       PaperProps={{
         sx: {
-          bgcolor:
-            theme.palette.mode === "dark" ? "grey.900" : "background.paper",
+          bgcolor: isDark ? "grey.900" : "background.paper",
           backgroundImage: "none",
+          borderRadius: 2,
         },
       }}
       slotProps={{
@@ -100,23 +109,40 @@ const SubTaskFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          pb: 1,
+          pb: 2,
+          pt: 2.5,
+          px: 3,
           borderBottom: 1,
           borderColor: "divider",
+          bgcolor: isDark ? "grey.900" : "background.paper",
         }}
       >
-        <Box>{mode === "add" ? "Add New SubTask" : "Edit SubTask"}</Box>
+        <Box
+          sx={{
+            fontSize: "1.25rem",
+            fontWeight: 600,
+          }}
+        >
+          {mode === "add" ? "Add New SubTask" : "Edit SubTask"}
+        </Box>
         <IconButton
           edge="end"
           color="inherit"
           onClick={handleClose}
           aria-label="close"
           size="small"
+          sx={{
+            color: isDark ? "grey.400" : "grey.600",
+            "&:hover": {
+              color: isDark ? "grey.200" : "grey.900",
+              bgcolor: isDark ? "grey.800" : "grey.100",
+            },
+          }}
         >
           <Close />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ pt: 3 }}>
+      <DialogContent sx={{ pt: 3, pb: 2, px: 3, mt: 3 }}>
         <TextField
           fullWidth
           label="Title"
@@ -126,29 +152,30 @@ const SubTaskFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
           required
           error={!!errors.title}
           helperText={errors.title}
-          sx={{ mb: 2.5 }}
+          sx={{ mb: 3, mt: 1 }}
           autoFocus
+          placeholder="e.g., Check oil level"
         />
         <TextField
           fullWidth
           label="Description"
           name="description"
-          value={formData.description}
+          value={formData.description || ""}
           onChange={handleInputChange}
           multiline
           rows={3}
-          sx={{ mb: 2.5 }}
+          sx={{ mb: 3 }}
           placeholder="Describe what needs to be done..."
         />
-        <Box display="flex" gap={3} mb={1}>
+        <Box display="flex" gap={2} mb={1} alignItems="flex-start">
           <TextField
             label="Order"
             name="orderIndex"
             type="number"
             value={formData.orderIndex}
             onChange={handleInputChange}
-            inputProps={{ min: 1 }}
-            sx={{ width: 140 }}
+            inputProps={{ min: 1, step: 1 }}
+            sx={{ width: 120 }}
             error={!!errors.orderIndex}
             helperText={errors.orderIndex}
           />
@@ -164,7 +191,8 @@ const SubTaskFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
             label="Mandatory Step"
             sx={{
               flex: 1,
-              ml: 1,
+              m: 0,
+              mt: 1,
               "& .MuiFormControlLabel-label": {
                 fontSize: "0.95rem",
               },
@@ -175,13 +203,24 @@ const SubTaskFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
       <DialogActions
         sx={{
           px: 3,
-          py: 2,
+          py: 2.5,
           borderTop: 1,
           borderColor: "divider",
-          gap: 1,
+          gap: 1.5,
+          bgcolor: isDark
+            ? alpha(theme.palette.background.paper, 0.5)
+            : "grey.50",
         }}
       >
-        <Button onClick={handleClose} disabled={saving} color="inherit">
+        <Button
+          onClick={handleClose}
+          disabled={saving}
+          color="inherit"
+          sx={{
+            textTransform: "none",
+            fontWeight: 500,
+          }}
+        >
           Cancel
         </Button>
         <Button
@@ -189,6 +228,11 @@ const SubTaskFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
           variant="contained"
           disabled={saving}
           disableElevation
+          sx={{
+            textTransform: "none",
+            fontWeight: 600,
+            px: 3,
+          }}
         >
           {saving
             ? "Saving..."

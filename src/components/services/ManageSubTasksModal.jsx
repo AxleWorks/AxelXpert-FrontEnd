@@ -285,7 +285,8 @@ const ManageSubTasksModal = ({ open, onClose, service }) => {
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
-                mb={2.5}
+                mb={3}
+                mt={2}
               >
                 <Typography variant="body2" color="text.secondary">
                   {subTasks.length === 0
@@ -303,6 +304,8 @@ const ManageSubTasksModal = ({ open, onClose, service }) => {
                     borderRadius: 2,
                     textTransform: "none",
                     fontWeight: 600,
+                    px: 2.5,
+                    py: 1,
                   }}
                 >
                   Add SubTask
