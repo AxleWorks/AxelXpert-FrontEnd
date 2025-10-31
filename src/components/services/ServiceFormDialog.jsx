@@ -142,7 +142,7 @@ const ServiceFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
           <Close />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ pt: 3, pb: 2, px: 3 }}>
+      <DialogContent sx={{ pt: 3, pb: 2, px: 3, mt: 2 }}>
         <TextField
           fullWidth
           label="Service Name"
@@ -152,7 +152,7 @@ const ServiceFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
           required
           error={!!errors.name}
           helperText={errors.name}
-          sx={{ mb: 3 }}
+          sx={{ mb: 3, mt: 2 }}
           autoFocus
           placeholder="e.g., Oil Change"
         />
