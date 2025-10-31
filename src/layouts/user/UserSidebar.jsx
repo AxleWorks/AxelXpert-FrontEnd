@@ -10,8 +10,9 @@ import {
   Box,
   Typography,
   useTheme,
+  Divider,
 } from "@mui/material";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Dashboard as DashboardIcon,
   DirectionsCar as DirectionsCarIcon,
@@ -20,11 +21,13 @@ import {
   Settings as SettingsIcon,
   Store as StoreIcon,
   TrackChanges as TrackChangesIcon,
+  Logout as LogoutIcon,
 } from "@mui/icons-material";
+import { useAuth } from "../../contexts/AuthContext";
 
 const DRAWER_WIDTH = 280;
 
-// User menu configuration (kept pages requested by user)
+// User menu configuration - main navigation items
 const menuItems = [
   { text: "Dashboard", icon: DashboardIcon, path: "/user/dashboard" },
   { text: "Vehicles", icon: DirectionsCarIcon, path: "/user/vehicles" },
@@ -34,7 +37,6 @@ const menuItems = [
     icon: CalendarTodayIcon,
     path: "/user/booking-calendar",
   },
-  { text: "Settings", icon: SettingsIcon, path: "/user/settings" },
   { text: "Branches", icon: StoreIcon, path: "/user/branches" },
   {
     text: "Progress Tracking",
@@ -43,15 +45,27 @@ const menuItems = [
   },
 ];
 
+// Bottom menu items
+const bottomMenuItems = [
+  { text: "Settings", icon: SettingsIcon, path: "/user/settings" },
+];
+
 const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const { clearAuthUser } = useAuth();
 
   const isSelected = (path) => {
     return (
       location.pathname === path || location.pathname.startsWith(path + "/")
     );
+  };
+
+  const handleLogout = () => {
+    clearAuthUser();
+    navigate("/signin");
   };
 
   const MenuItem = ({ item }) => {
@@ -137,7 +151,7 @@ const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
         </Box>
       </Toolbar>
 
-      {/* Menu Items */}
+      {/* Main Menu Items */}
       <Box sx={{ flexGrow: 1, overflowY: "auto", p: 1 }}>
         <List disablePadding sx={{ mt: 2 }}>
           {menuItems.map((item) => (
@@ -146,17 +160,68 @@ const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
         </List>
       </Box>
 
-      {/* Footer */}
-      <Box
-        sx={{
-          p: 2,
-          borderTop: `1px solid ${theme.palette.divider}`,
-          textAlign: "center",
-        }}
-      >
-        <Typography variant="caption" color="text.secondary">
-          User Dashboard v1.0.0
-        </Typography>
+      {/* Bottom Menu Items */}
+      <Box sx={{ p: 1 }}>
+        <Divider sx={{ mb: 1 }} />
+        <List disablePadding>
+          {bottomMenuItems.map((item) => (
+            <MenuItem key={item.text} item={item} />
+          ))}
+
+          {/* Logout Button */}
+          <ListItem disablePadding sx={{ mb: 1.5 }}>
+            <ListItemButton
+              onClick={handleLogout}
+              sx={{
+                mx: 1,
+                borderRadius: 2,
+                minHeight: 48,
+                "&:hover": {
+                  bgcolor: isDark ? "rgba(239, 68, 68, 0.15)" : "#fee2e2",
+                  transform: "translateX(2px)",
+                  transition: "all 0.2s ease-in-out",
+                  "& .MuiListItemIcon-root": { color: "error.main" },
+                  "& .MuiTypography-root": { color: "error.main" },
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 40,
+                  color: theme.palette.text.secondary,
+                }}
+              >
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 500,
+                      color: theme.palette.text.primary,
+                    }}
+                  >
+                    Logout
+                  </Typography>
+                }
+              />
+            </ListItemButton>
+          </ListItem>
+        </List>
+
+        {/* Footer Watermark */}
+        <Box
+          sx={{
+            p: 2,
+            borderTop: `1px solid ${theme.palette.divider}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="caption" color="text.secondary">
+            User Dashboard v1.0.0
+          </Typography>
+        </Box>
       </Box>
     </Box>
   );
