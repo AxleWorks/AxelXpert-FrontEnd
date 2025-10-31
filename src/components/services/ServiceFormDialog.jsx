@@ -90,16 +90,19 @@ const ServiceFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
         sx: {
           bgcolor: isDark ? "grey.900" : "background.paper",
           backgroundImage: "none",
-          borderRadius: 2,
+          borderRadius: 3,
+          boxShadow: isDark
+            ? "0 20px 60px rgba(0, 0, 0, 0.6)"
+            : "0 20px 60px rgba(0, 0, 0, 0.15)",
         },
       }}
       slotProps={{
         backdrop: {
           sx: {
-            backdropFilter: "blur(8px)",
+            backdropFilter: "blur(10px)",
             backgroundColor: isDark
-              ? "rgba(0, 0, 0, 0.7)"
-              : "rgba(0, 0, 0, 0.5)",
+              ? "rgba(0, 0, 0, 0.75)"
+              : "rgba(0, 0, 0, 0.4)",
           },
         },
       }}
@@ -110,17 +113,21 @@ const ServiceFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
           justifyContent: "space-between",
           alignItems: "center",
           pb: 2,
-          pt: 2.5,
+          pt: 3,
           px: 3,
           borderBottom: 1,
-          borderColor: "divider",
-          bgcolor: isDark ? "grey.900" : "background.paper",
+          borderColor: isDark ? "grey.800" : "grey.200",
+          bgcolor: isDark
+            ? alpha(theme.palette.primary.dark, 0.05)
+            : alpha(theme.palette.primary.light, 0.05),
         }}
       >
         <Box
           sx={{
-            fontSize: "1.25rem",
-            fontWeight: 600,
+            fontSize: "1.35rem",
+            fontWeight: 700,
+            color: isDark ? "grey.50" : "grey.900",
+            letterSpacing: "-0.02em",
           }}
         >
           {mode === "add" ? "Add New Service" : "Edit Service"}
@@ -133,16 +140,20 @@ const ServiceFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
           size="small"
           sx={{
             color: isDark ? "grey.400" : "grey.600",
+            transition: "all 0.2s ease",
             "&:hover": {
-              color: isDark ? "grey.200" : "grey.900",
-              bgcolor: isDark ? "grey.800" : "grey.100",
+              color: isDark ? "grey.100" : "grey.900",
+              bgcolor: isDark
+                ? alpha(theme.palette.error.dark, 0.2)
+                : alpha(theme.palette.error.light, 0.15),
+              transform: "rotate(90deg)",
             },
           }}
         >
           <Close />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ pt: 3, pb: 2, px: 3, mt: 2 }}>
+      <DialogContent sx={{ pt: 4, pb: 3, px: 3, mt: 2 }}>
         <TextField
           fullWidth
           label="Service Name"
@@ -152,11 +163,17 @@ const ServiceFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
           required
           error={!!errors.name}
           helperText={errors.name}
-          sx={{ mb: 3, mt: 2 }}
+          sx={{ mb: 3.5, mt: 2 }}
           autoFocus
           placeholder="e.g., Oil Change"
+          InputProps={{
+            sx: {
+              borderRadius: 2,
+              mt: 1,
+            },
+          }}
         />
-        <Box display="flex" gap={2} mb={3}>
+        <Box display="flex" gap={2.5} mb={3.5}>
           <TextField
             label="Price ($)"
             name="price"
@@ -169,6 +186,11 @@ const ServiceFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
             inputProps={{ min: 0, step: 0.01 }}
             sx={{ flex: 1 }}
             placeholder="49.99"
+            InputProps={{
+              sx: {
+                borderRadius: 2,
+              },
+            }}
           />
           <TextField
             label="Duration (min)"
@@ -182,6 +204,11 @@ const ServiceFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
             inputProps={{ min: 1, step: 1 }}
             sx={{ flex: 1 }}
             placeholder="30"
+            InputProps={{
+              sx: {
+                borderRadius: 2,
+              },
+            }}
           />
         </Box>
         <TextField
@@ -191,29 +218,42 @@ const ServiceFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
           value={formData.description || ""}
           onChange={handleInputChange}
           multiline
-          rows={3}
-          placeholder="Describe the service..."
+          rows={4}
+          placeholder="Describe the service in detail..."
+          InputProps={{
+            sx: {
+              borderRadius: 2,
+            },
+          }}
         />
       </DialogContent>
       <DialogActions
         sx={{
           px: 3,
-          py: 2.5,
+          py: 3,
           borderTop: 1,
-          borderColor: "divider",
-          gap: 1.5,
+          borderColor: isDark ? "grey.800" : "grey.200",
+          gap: 2,
           bgcolor: isDark
-            ? alpha(theme.palette.background.paper, 0.5)
-            : "grey.50",
+            ? alpha(theme.palette.background.default, 0.4)
+            : alpha(theme.palette.primary.main, 0.03),
         }}
       >
         <Button
           onClick={handleClose}
           disabled={saving}
           color="inherit"
+          variant="outlined"
           sx={{
             textTransform: "none",
-            fontWeight: 500,
+            fontWeight: 600,
+            px: 3,
+            py: 1,
+            borderRadius: 2,
+            borderWidth: 1.5,
+            "&:hover": {
+              borderWidth: 1.5,
+            },
           }}
         >
           Cancel
@@ -226,7 +266,17 @@ const ServiceFormDialog = ({ open, onClose, onSave, initialData, mode }) => {
           sx={{
             textTransform: "none",
             fontWeight: 600,
-            px: 3,
+            px: 4,
+            py: 1,
+            borderRadius: 2,
+            boxShadow: isDark
+              ? "0 4px 14px rgba(25, 118, 210, 0.4)"
+              : "0 4px 14px rgba(25, 118, 210, 0.3)",
+            "&:hover": {
+              boxShadow: isDark
+                ? "0 6px 20px rgba(25, 118, 210, 0.5)"
+                : "0 6px 20px rgba(25, 118, 210, 0.4)",
+            },
           }}
         >
           {saving

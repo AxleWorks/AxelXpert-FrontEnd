@@ -178,15 +178,19 @@ const ManageSubTasksModal = ({ open, onClose, service }) => {
             bgcolor: isDark ? "grey.900" : "background.paper",
             backgroundImage: "none",
             maxHeight: "90vh",
+            borderRadius: 3,
+            boxShadow: isDark
+              ? "0 20px 60px rgba(0, 0, 0, 0.6)"
+              : "0 20px 60px rgba(0, 0, 0, 0.15)",
           },
         }}
         slotProps={{
           backdrop: {
             sx: {
-              backdropFilter: "blur(8px)",
+              backdropFilter: "blur(10px)",
               backgroundColor: isDark
-                ? "rgba(0, 0, 0, 0.7)"
-                : "rgba(0, 0, 0, 0.5)",
+                ? "rgba(0, 0, 0, 0.75)"
+                : "rgba(0, 0, 0, 0.4)",
             },
           },
         }}
@@ -196,15 +200,17 @@ const ManageSubTasksModal = ({ open, onClose, service }) => {
             background: isDark
               ? `linear-gradient(135deg, ${alpha(
                   theme.palette.primary.dark,
-                  0.2
-                )} 0%, ${alpha(theme.palette.primary.main, 0.1)} 100%)`
+                  0.15
+                )} 0%, ${alpha(theme.palette.primary.main, 0.08)} 100%)`
               : `linear-gradient(135deg, ${alpha(
                   theme.palette.primary.light,
-                  0.15
-                )} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
+                  0.2
+                )} 0%, ${alpha(theme.palette.primary.main, 0.08)} 100%)`,
             borderBottom: 1,
-            borderColor: "divider",
-            pb: 2,
+            borderColor: isDark ? "grey.800" : "grey.200",
+            pb: 2.5,
+            pt: 3,
+            px: 3,
           }}
         >
           <Box
@@ -213,19 +219,43 @@ const ManageSubTasksModal = ({ open, onClose, service }) => {
             alignItems="flex-start"
           >
             <Box flex={1}>
-              <Typography variant="h5" fontWeight={700} gutterBottom>
+              <Typography
+                variant="h5"
+                fontWeight={700}
+                gutterBottom
+                sx={{ fontSize: "1.4rem", letterSpacing: "-0.02em" }}
+              >
                 Manage SubTasks
               </Typography>
-              <Box display="flex" alignItems="center" gap={1}>
-                <Typography
-                  variant="body1"
-                  fontWeight={600}
-                  sx={{ color: isDark ? "primary.light" : "primary.main" }}
+              <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
+                <Box
+                  sx={{
+                    bgcolor: isDark
+                      ? alpha(theme.palette.primary.dark, 0.3)
+                      : alpha(theme.palette.primary.light, 0.3),
+                    px: 2,
+                    py: 0.75,
+                    borderRadius: 2,
+                    border: 1,
+                    borderColor: isDark
+                      ? alpha(theme.palette.primary.main, 0.4)
+                      : alpha(theme.palette.primary.main, 0.3),
+                  }}
                 >
-                  {service?.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  • Define the steps for this service
+                  <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    sx={{ color: isDark ? "primary.light" : "primary.dark" }}
+                  >
+                    {service?.name}
+                  </Typography>
+                </Box>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  fontWeight={500}
+                >
+                  Define the steps required for this service
                 </Typography>
               </Box>
             </Box>
@@ -234,13 +264,24 @@ const ManageSubTasksModal = ({ open, onClose, service }) => {
               color="inherit"
               onClick={handleClose}
               aria-label="close"
+              sx={{
+                color: isDark ? "grey.400" : "grey.600",
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  color: isDark ? "grey.100" : "grey.900",
+                  bgcolor: isDark
+                    ? alpha(theme.palette.error.dark, 0.2)
+                    : alpha(theme.palette.error.light, 0.15),
+                  transform: "rotate(90deg)",
+                },
+              }}
             >
               <Close />
             </IconButton>
           </Box>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 3, pb: 2 }}>
+        <DialogContent sx={{ pt: 3, pb: 2, px: 3 }}>
           {loading ? (
             <Box
               display="flex"
@@ -371,15 +412,15 @@ const ManageSubTasksModal = ({ open, onClose, service }) => {
           )}
         </DialogContent>
 
-        <Divider />
+        <Divider sx={{ borderColor: isDark ? "grey.800" : "grey.200" }} />
 
         <DialogActions
           sx={{
             px: 3,
-            py: 2,
+            py: 3,
             bgcolor: isDark
-              ? alpha(theme.palette.background.paper, 0.5)
-              : "grey.50",
+              ? alpha(theme.palette.background.default, 0.4)
+              : alpha(theme.palette.primary.main, 0.03),
           }}
         >
           <Button
@@ -387,8 +428,15 @@ const ManageSubTasksModal = ({ open, onClose, service }) => {
             variant="contained"
             disableElevation
             sx={{
-              bgcolor: isDark ? "grey.800" : "grey.200",
+              bgcolor: isDark
+                ? alpha(theme.palette.grey[700], 0.8)
+                : "grey.200",
               color: isDark ? "grey.100" : "grey.900",
+              textTransform: "none",
+              fontWeight: 600,
+              px: 4,
+              py: 1,
+              borderRadius: 2,
               "&:hover": {
                 bgcolor: isDark ? "grey.700" : "grey.300",
               },

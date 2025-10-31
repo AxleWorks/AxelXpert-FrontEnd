@@ -108,9 +108,27 @@ const ManagerServicesPage = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error saving service:", err);
-      setError(
-        err.response?.data?.message || err.message || "Failed to save service"
-      );
+
+      // Handle specific error cases
+      let errorMessage = "Failed to save service";
+
+      if (err.response?.status === 403) {
+        errorMessage =
+          "Access denied: You don't have permission to perform this action. Please check your user role or contact your administrator.";
+      } else if (err.response?.status === 401) {
+        errorMessage =
+          "Authentication failed: Your session has expired. Please log in again.";
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
+
+      // Clear error message after 8 seconds for longer messages
+      setTimeout(() => setError(null), 8000);
+
       throw err;
     }
   };
@@ -135,9 +153,26 @@ const ManagerServicesPage = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error deleting service:", err);
-      setError(
-        err.response?.data?.message || err.message || "Failed to delete service"
-      );
+
+      // Handle specific error cases
+      let errorMessage = "Failed to delete service";
+
+      if (err.response?.status === 403) {
+        errorMessage =
+          "Access denied: You don't have permission to delete services. Please check your user role or contact your administrator.";
+      } else if (err.response?.status === 401) {
+        errorMessage =
+          "Authentication failed: Your session has expired. Please log in again.";
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
+
+      // Clear error message after 8 seconds
+      setTimeout(() => setError(null), 8000);
     } finally {
       setDeleting(false);
     }
