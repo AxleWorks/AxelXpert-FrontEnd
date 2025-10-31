@@ -55,6 +55,13 @@ const AppointmentDetailModal = ({ open, onClose, appointment, onDelete }) => {
     severity: "info" // success, error, warning, info
   });
 
+  // Reset snackbar when modal opens
+  useEffect(() => {
+    if (open) {
+      setSnackbar({ open: false, message: "", severity: "info" });
+    }
+  }, [open]);
+
   useEffect(() => {
     const checkScroll = () => {
       if (paperRef.current) {
