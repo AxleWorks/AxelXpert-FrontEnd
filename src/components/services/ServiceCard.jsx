@@ -28,7 +28,10 @@ const ServiceCard = ({ service, onEdit, onDelete, onManageSubTasks }) => {
     <Card
       elevation={0}
       sx={{
-        height: "100%",
+        height: 420,
+        minHeight: 320,
+        maxHeight: 350,
+        width: 370,
         display: "flex",
         flexDirection: "column",
         border: 1,
@@ -69,7 +72,16 @@ const ServiceCard = ({ service, onEdit, onDelete, onManageSubTasks }) => {
         },
       }}
     >
-      <CardContent sx={{ flex: 1, p: 3, pt: 3.5 }}>
+      <CardContent
+        sx={{
+          flex: 1,
+          p: 3,
+          pt: 3.5,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         {/* Service Name */}
         <Typography
           variant="h6"
@@ -81,6 +93,11 @@ const ServiceCard = ({ service, onEdit, onDelete, onManageSubTasks }) => {
             fontSize: "1.15rem",
             letterSpacing: "-0.01em",
             lineHeight: 1.3,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
           }}
         >
           {service.name}
@@ -253,6 +270,9 @@ const ServiceCard = ({ service, onEdit, onDelete, onManageSubTasks }) => {
               borderLeft: 4,
               borderColor: isDark ? "primary.dark" : "primary.light",
               transition: "all 0.2s ease",
+              flex: 1,
+              overflow: "hidden",
+              minHeight: 0,
               "&:hover": {
                 bgcolor: isDark
                   ? alpha(theme.palette.background.paper, 0.6)
@@ -274,6 +294,11 @@ const ServiceCard = ({ service, onEdit, onDelete, onManageSubTasks }) => {
                 color: isDark ? "grey.300" : "grey.700",
                 lineHeight: 1.7,
                 fontSize: "0.9rem",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: "-webkit-box",
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: "vertical",
               }}
             >
               {service.description}
@@ -291,6 +316,10 @@ const ServiceCard = ({ service, onEdit, onDelete, onManageSubTasks }) => {
               border: 1,
               borderStyle: "dashed",
               borderColor: isDark ? "grey.700" : "grey.300",
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <Typography
