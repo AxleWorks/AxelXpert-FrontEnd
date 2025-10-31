@@ -5,12 +5,8 @@ import {
   Button,
   Typography,
   Box,
-  Paper,
-  IconButton,
-  Stack,
-  Tooltip,
+  CircularProgress,
 } from "@mui/material";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { publicAxios } from "../../utils/axiosConfig.js";
@@ -20,10 +16,12 @@ import AuthFormContainer from "./AuthFormContainer";
 import { AUTH_URL } from "../../config/apiEndpoints";
 
 const SignIn = () => {
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const navigate = useNavigate();
   const { setAuthUser } = useAuth();
 
@@ -38,48 +36,110 @@ const SignIn = () => {
     })();
   }, []);
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError("");
     setLoading(true);
-    setError(null);
 
     try {
-      // call backend login endpoint and expect LoginResponse with accessToken
       const res = await publicAxios.post(`${AUTH_URL}/login`, {
-        email: username,
-        password,
+        email: formData.email,
+        password: formData.password,
       });
 
-      // If backend returns accessToken, store it and decode user data
-      const data = res && res.data;
-      if (data && typeof data === "object" && data.accessToken) {
-        console.log("Login successful, access token received");
+      console.log("Login response:", res.data);
 
-        // Store access token and let AuthContext decode user data from JWT
-        if (setAuthUser) setAuthUser(data.accessToken);
+      // Check if we got an accessToken
+      if (res.data && res.data.accessToken) {
+        const { accessToken } = res.data;
 
-        // Get user role from JWT token to determine navigation
-        const payload = JSON.parse(atob(data.accessToken.split(".")[1]));
-        const role = String(payload.role || "").toLowerCase();
+        // Decode JWT token to extract user information
+        try {
+          const base64Url = accessToken.split(".")[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          const decoded = JSON.parse(window.atob(base64));
 
-        const roleMap = {
-          user: "/user/dashboard",
-          employee: "/employee/dashboard",
-          manager: "/manager/dashboard",
-        };
-        const target = roleMap[role] || "/";
-        navigate(target);
-        return;
+          console.log("Decoded token:", decoded);
+
+          // Create user data object from decoded token
+          const role = String(decoded.role || "user").toLowerCase();
+          const userData = {
+            id: decoded.id,
+            username: decoded.sub, // JWT 'sub' field contains the username
+            email: decoded.email,
+            role,
+            accessToken,
+          };
+
+          console.log("User data:", userData);
+
+          // Save to localStorage
+          localStorage.setItem("authUser", JSON.stringify(userData));
+          localStorage.setItem("accessToken", accessToken);
+
+          // Update context if available
+          if (setAuthUser) {
+            setAuthUser(userData.accessToken);
+          }
+
+          // Navigate based on role
+          const roleMap = {
+            user: "/user/dashboard",
+            employee: "/employee/dashboard",
+            manager: "/manager/dashboard",
+          };
+          const target = roleMap[role] || "/";
+
+          navigate(target, { replace: true });
+          return;
+        } catch (decodeError) {
+          console.error("Error decoding token:", decodeError);
+          setError("Invalid token received. Please try again.");
+          return;
+        }
       }
 
-      // If backend returned a plain message with 200, show it as info/error
-      if (res && res.status === 200) {
-        setError(String(res.data || "Login response received"));
-      }
+      // If no accessToken in response
+      setError("Invalid response from server. Please try again.");
     } catch (err) {
-      if (err.response && err.response.data)
-        setError(String(err.response.data));
-      else setError(err.message || "Login failed");
+      console.error("Login error:", err);
+
+      // Handle different error scenarios
+      if (err.response) {
+        const errorMessage =
+          err.response.data?.message ||
+          err.response.data?.error ||
+          err.response.data;
+
+        switch (err.response.status) {
+          case 401:
+            setError("Invalid email or password");
+            break;
+          case 403:
+            setError("Account not activated. Please check your email.");
+            break;
+          case 404:
+            setError("User not found");
+            break;
+          default:
+            setError(
+              typeof errorMessage === "string"
+                ? errorMessage
+                : "Login failed. Please try again."
+            );
+        }
+      } else if (err.request) {
+        setError("Cannot connect to server. Please check if backend is running.");
+      } else {
+        setError("An unexpected error occurred");
+      }
     } finally {
       setLoading(false);
     }
@@ -99,9 +159,11 @@ const SignIn = () => {
           variant="outlined"
           fullWidth
           margin="normal"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
           required
+          disabled={loading}
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
@@ -124,9 +186,11 @@ const SignIn = () => {
           variant="outlined"
           fullWidth
           margin="normal"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
           required
+          disabled={loading}
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
@@ -139,8 +203,6 @@ const SignIn = () => {
             },
           }}
         />
-
-        {/* error is displayed at the top of AuthFormContainer; removed inline Alert to avoid duplication */}
 
         <Box sx={{ textAlign: "right", mb: 3 }}>
           <Link
@@ -175,7 +237,7 @@ const SignIn = () => {
             },
           }}
         >
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? <CircularProgress size={24} color="inherit" /> : "Sign In"}
         </Button>
 
         <Box sx={{ textAlign: "center" }}>

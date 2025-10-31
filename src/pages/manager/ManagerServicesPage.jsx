@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import { Edit, Delete, Add } from "@mui/icons-material";
 import { SERVICES_URL } from "../../config/apiEndpoints.jsx";
+import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 
 const emptyService = {
@@ -39,21 +40,23 @@ const ManagerServicesPage = () => {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
 
-  const fetchServices = () => {
+  const fetchServices = async () => {
     setLoading(true);
-    fetch(SERVICES_URL)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch services");
-        return res.json();
-      })
-      .then((data) => {
-        setServices(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+    try {
+      const response = await authenticatedAxios.get(SERVICES_URL);
+      // Ensure we have an array of services
+      const servicesData = Array.isArray(response.data) ? response.data : [];
+      setServices(servicesData);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching services:", err);
+      setError(
+        err.response?.data?.message || err.message || "Failed to fetch services"
+      );
+      setServices([]); // Set empty array to prevent filter error
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -77,54 +80,63 @@ const ManagerServicesPage = () => {
     setCurrentService((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
-    const method = editMode ? "PUT" : "POST";
-    const url = editMode
-      ? `${SERVICES_URL}/${currentService.id}`
-      : SERVICES_URL;
-    fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    try {
+      const serviceData = {
         name: currentService.name,
         price: parseFloat(currentService.price),
         durationMinutes: parseInt(currentService.durationMinutes, 10),
         description: currentService.description,
-      }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to save service");
-        return res.json();
-      })
-      .then(() => {
-        fetchServices();
-        handleDialogClose();
-      })
-      .catch((err) => {
-        setError(err.message);
-      })
-      .finally(() => setSaving(false));
+      };
+
+      if (editMode) {
+        await authenticatedAxios.put(
+          `${SERVICES_URL}/${currentService.id}`,
+          serviceData
+        );
+      } else {
+        await authenticatedAxios.post(SERVICES_URL, serviceData);
+      }
+
+      await fetchServices();
+      handleDialogClose();
+      setError(null);
+    } catch (err) {
+      console.error("Error saving service:", err);
+      setError(
+        err.response?.data?.message || err.message || "Failed to save service"
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this service?"))
       return;
-    fetch(`${SERVICES_URL}/${id}`, { method: "DELETE" })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to delete service");
-        fetchServices();
-      })
-      .catch((err) => setError(err.message));
+
+    try {
+      await authenticatedAxios.delete(`${SERVICES_URL}/${id}`);
+      await fetchServices();
+      setError(null);
+    } catch (err) {
+      console.error("Error deleting service:", err);
+      setError(
+        err.response?.data?.message || err.message || "Failed to delete service"
+      );
+    }
   };
 
-  // Filter services by search
-  const filteredServices = services.filter(
-    (service) =>
-      service.name.toLowerCase().includes(search.toLowerCase()) ||
-      (service.description &&
-        service.description.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Filter services by search - ensure services is always an array
+  const filteredServices = Array.isArray(services)
+    ? services.filter(
+        (service) =>
+          service.name?.toLowerCase().includes(search.toLowerCase()) ||
+          (service.description &&
+            service.description.toLowerCase().includes(search.toLowerCase()))
+      )
+    : [];
 
   return (
     <ManagerLayout>

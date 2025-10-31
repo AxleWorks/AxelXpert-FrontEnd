@@ -49,6 +49,7 @@ import {
   VEHICLES_URL,
   TASKS_URL,
 } from "../../config/apiEndpoints";
+import { getAuthHeader } from "../../utils/jwtUtils";
 
 const COLORS = ["#1976d2", "#00bfa5", "#ff9800", "#9c27b0", "#f44336"];
 
@@ -91,14 +92,27 @@ const ManagerReportsPage = () => {
 
       console.log("Fetching data from endpoints...");
 
-      // Fetch data from multiple endpoints
+      // Get authentication header
+      const authHeader = getAuthHeader();
+
+      // Fetch data from multiple endpoints with authentication
       const [bookingsRes, branchesRes, servicesRes, usersRes, vehiclesRes] =
         await Promise.all([
-          fetch(`${BOOKINGS_URL}`),
-          fetch(`${BRANCHES_URL}/all`),
-          fetch(`${SERVICES_URL}`),
-          fetch(`${USERS_URL}/all`),
-          fetch(`${VEHICLES_URL}`),
+          fetch(`${BOOKINGS_URL}`, {
+            headers: authHeader ? { Authorization: authHeader } : {},
+          }),
+          fetch(`${BRANCHES_URL}/all`, {
+            headers: authHeader ? { Authorization: authHeader } : {},
+          }),
+          fetch(`${SERVICES_URL}`, {
+            headers: authHeader ? { Authorization: authHeader } : {},
+          }),
+          fetch(`${USERS_URL}/all`, {
+            headers: authHeader ? { Authorization: authHeader } : {},
+          }),
+          fetch(`${VEHICLES_URL}`, {
+            headers: authHeader ? { Authorization: authHeader } : {},
+          }),
         ]);
 
       const [bookings, branches, services, users, vehicles] = await Promise.all(

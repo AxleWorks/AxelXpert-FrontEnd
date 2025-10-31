@@ -38,6 +38,7 @@ import {
   EMPLOYEES_URL,
   BOOKINGS_URL,
 } from "../../config/apiEndpoints";
+import { getAuthHeader } from "../../utils/jwtUtils";
 
 function getStatusColor(mode, status) {
   // return background color for chip based on MUI mode
@@ -81,13 +82,12 @@ const ManagerBookingCalendarPage = () => {
     const ac = new AbortController();
     async function loadBranches() {
       try {
+        const authHeader = getAuthHeader();
         const res = await fetch(`${BRANCHES_URL}/all`, {
           signal: ac.signal,
-          
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-          
+          headers: {
+            ...(authHeader && { Authorization: authHeader }),
+          },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -114,13 +114,12 @@ const ManagerBookingCalendarPage = () => {
     const ac = new AbortController();
     async function load() {
       try {
+        const authHeader = getAuthHeader();
         const res = await fetch(EMPLOYEES_URL, {
           signal: ac.signal,
-           headers: {
-    Authorization:
-              "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-  },
+          headers: {
+            ...(authHeader && { Authorization: authHeader }),
+          },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -153,12 +152,12 @@ const ManagerBookingCalendarPage = () => {
     const ac = new AbortController();
     async function loadBookings() {
       try {
+        const authHeader = getAuthHeader();
         const res = await fetch(BOOKINGS_URL, {
           signal: ac.signal,
-  headers: {
-    Authorization: "Bearer " +
-              JSON.parse(localStorage.getItem("authUser") || "{}").JWTToken,
-  },
+          headers: {
+            ...(authHeader && { Authorization: authHeader }),
+          },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();

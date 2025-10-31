@@ -46,21 +46,42 @@ export default function BranchesComponent({
   const [searchQuery, setSearchQuery] = useState("");
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("name");
+  const [loadingManagers, setLoadingManagers] = useState(false);
 
   useEffect(() => {
     if (isManager) {
       const fetchManagers = async () => {
+        setLoadingManagers(true);
         try {
-          const response = await fetch(
-            `${USERS_URL}/managers`,
-            createAuthenticatedFetchOptions()
-          );
+          const fetchOptions = createAuthenticatedFetchOptions({
+            method: "GET",
+          });
+          console.log("Fetching managers from:", `${USERS_URL}/managers`);
+          console.log("Request headers:", fetchOptions.headers);
+
+          const response = await fetch(`${USERS_URL}/managers`, fetchOptions);
+          console.log("Managers response status:", response.status);
+
           if (response.ok) {
             const data = await response.json();
-            setManagers(data);
+            console.log("Managers data:", data);
+            // Sort managers alphabetically by username
+            const sortedManagers = data.sort((a, b) =>
+              a.username.toLowerCase().localeCompare(b.username.toLowerCase())
+            );
+            setManagers(sortedManagers);
+          } else {
+            const errorText = await response.text();
+            console.error(
+              "Failed to fetch managers:",
+              response.status,
+              errorText
+            );
           }
         } catch (error) {
           console.error("Error fetching managers:", error);
+        } finally {
+          setLoadingManagers(false);
         }
       };
       fetchManagers();
@@ -399,12 +420,36 @@ export default function BranchesComponent({
             onChange={(e) =>
               setCurrentBranch({ ...currentBranch, managerId: e.target.value })
             }
+            helperText={
+              loadingManagers
+                ? "Loading managers..."
+                : managers.length === 0
+                ? "No managers available"
+                : "Select a manager for this branch"
+            }
+            SelectProps={{
+              MenuProps: {
+                PaperProps: {
+                  style: {
+                    maxHeight: 300,
+                    overflow: "auto",
+                    fontSize: 14, // Smaller text
+                  },
+                },
+              },
+            }}
           >
-            {managers.map((manager) => (
-              <MenuItem key={manager.id} value={manager.id}>
-                {manager.name}
-              </MenuItem>
-            ))}
+            {loadingManagers ? (
+              <MenuItem disabled>Loading...</MenuItem>
+            ) : managers.length === 0 ? (
+              <MenuItem disabled>No managers available</MenuItem>
+            ) : (
+              managers.map((manager) => (
+                <MenuItem key={manager.id} value={manager.id}>
+                  {manager.username} ({manager.email})
+                </MenuItem>
+              ))
+            )}
           </TextField>
           <TextField
             label="Phone"
@@ -505,12 +550,35 @@ export default function BranchesComponent({
             onChange={(e) =>
               setCurrentBranch({ ...currentBranch, managerId: e.target.value })
             }
+            helperText={
+              loadingManagers
+                ? "Loading managers..."
+                : managers.length === 0
+                ? "No managers available"
+                : "Select a manager for this branch"
+            }
+            SelectProps={{
+              MenuProps: {
+                PaperProps: {
+                  style: {
+                    maxHeight: 300,
+                    overflow: "auto",
+                  },
+                },
+              },
+            }}
           >
-            {managers.map((manager) => (
-              <MenuItem key={manager.id} value={manager.id}>
-                {manager.name}
-              </MenuItem>
-            ))}
+            {loadingManagers ? (
+              <MenuItem disabled>Loading...</MenuItem>
+            ) : managers.length === 0 ? (
+              <MenuItem disabled>No managers available</MenuItem>
+            ) : (
+              managers.map((manager) => (
+                <MenuItem key={manager.id} value={manager.id}>
+                  {manager.username} ({manager.email})
+                </MenuItem>
+              ))
+            )}
           </TextField>
           <TextField
             label="Phone"
