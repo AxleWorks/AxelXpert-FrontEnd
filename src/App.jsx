@@ -21,33 +21,65 @@ const UserDashboardPage = lazy(() => import("./pages/user/UserDashboardPage"));
 const UserSettingsPage = lazy(() => import("./pages/user/UserSettingsPage"));
 const UserServicesPage = lazy(() => import("./pages/user/UserServicesPage"));
 const UserVehiclesPage = lazy(() => import("./pages/user/UserVehiclesPage"));
-const UserBookingCalendarPage = lazy(() => import("./pages/user/UserBookingCalendarPage"));
+const UserBookingCalendarPage = lazy(() =>
+  import("./pages/user/UserBookingCalendarPage")
+);
 const UserBranchesPage = lazy(() => import("./pages/user/UserBranchesPage"));
-const UserProgressTrackingPage = lazy(() => import("./pages/user/UserProgressTrackingPage"));
+const UserProgressTrackingPage = lazy(() =>
+  import("./pages/user/UserProgressTrackingPage")
+);
 
-const EmployeeDashboardPage = lazy(() => import("./pages/employee/EmployeeDashboardPage"));
-const EmployeeServicesPage = lazy(() => import("./pages/employee/EmployeeServicesPage"));
-const EmployeeSettingsPage = lazy(() => import("./pages/employee/EmployeeSettingsPage"));
-const EmployeeTasksPage = lazy(() => import("./pages/employee/EmployeeTasksPage"));
-const EmployeeHistoryPage = lazy(() => import("./pages/employee/EmployeeHistoryPage"));
+const EmployeeDashboardPage = lazy(() =>
+  import("./pages/employee/EmployeeDashboardPage")
+);
+const EmployeeServicesPage = lazy(() =>
+  import("./pages/employee/EmployeeServicesPage")
+);
+const EmployeeSettingsPage = lazy(() =>
+  import("./pages/employee/EmployeeSettingsPage")
+);
+const EmployeeTasksPage = lazy(() =>
+  import("./pages/employee/EmployeeTasksPage")
+);
+const EmployeeHistoryPage = lazy(() =>
+  import("./pages/employee/EmployeeHistoryPage")
+);
 
-const ManagerDashboardPage = lazy(() => import("./pages/manager/ManagerDashboardPage"));
-const ManagerBookingCalendarPage = lazy(() => import("./pages/manager/ManagerBookingCalendarPage"));
-const ManagerProgressTrackingPage = lazy(() => import("./pages/manager/ManagerProgressTrackingPage"));
-const ManagerUserManagementPage = lazy(() => import("./pages/manager/ManagerUserManagementPage"));
-const ManagerReportsPage = lazy(() => import("./pages/manager/ManagerReportsPage"));
-const ManagerSettingsPage = lazy(() => import("./pages/manager/ManagerSettingsPage"));
-const ManagerServicesPage = lazy(() => import("./pages/manager/ManagerServicesPage"));
-const ManagerBranchesPage = lazy(() => import("./pages/manager/ManagerBranchesPage"));
+const ManagerDashboardPage = lazy(() =>
+  import("./pages/manager/ManagerDashboardPage")
+);
+const ManagerBookingCalendarPage = lazy(() =>
+  import("./pages/manager/ManagerBookingCalendarPage")
+);
+const ManagerProgressTrackingPage = lazy(() =>
+  import("./pages/manager/ManagerProgressTrackingPage")
+);
+const ManagerUserManagementPage = lazy(() =>
+  import("./pages/manager/ManagerUserManagementPage")
+);
+const ManagerReportsPage = lazy(() =>
+  import("./pages/manager/ManagerReportsPage")
+);
+const ManagerSettingsPage = lazy(() =>
+  import("./pages/manager/ManagerSettingsPage")
+);
+const ManagerServicesPage = lazy(() =>
+  import("./pages/manager/ManagerServicesPage")
+);
+const ManagerBranchesPage = lazy(() =>
+  import("./pages/manager/ManagerBranchesPage")
+);
 
 // Loading fallback
 const LoadingFallback = () => (
-  <div style={{ 
-    display: 'flex', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    height: '100vh' 
-  }}>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+    }}
+  >
     Loading...
   </div>
 );
@@ -227,6 +259,72 @@ const App = () => {
                   path="/manager/reports"
                   element={
                     <ProtectedRoute requiredRole="manager">
+                      <ManagerReportsPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Admin Routes - Uses same pages as Manager */}
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <ManagerDashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/booking-calendar"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <ManagerBookingCalendarPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/progress-tracking"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <ManagerProgressTrackingPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/user-management"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <ManagerUserManagementPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/settings"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <ManagerSettingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/services"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <ManagerServicesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/branches"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <ManagerBranchesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/reports"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
                       <ManagerReportsPage />
                     </ProtectedRoute>
                   }

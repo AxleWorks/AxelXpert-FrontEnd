@@ -50,10 +50,12 @@ import {
   TASKS_URL,
 } from "../../config/apiEndpoints";
 import { getAuthHeader } from "../../utils/jwtUtils";
+import { useAuth } from "../../contexts/AuthContext";
 
 const COLORS = ["#1976d2", "#00bfa5", "#ff9800", "#9c27b0", "#f44336"];
 
 const ManagerReportsPage = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState({
@@ -72,6 +74,8 @@ const ManagerReportsPage = () => {
   const [services, setServices] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
+  const [userBranchName, setUserBranchName] = useState(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [filters, setFilters] = useState({
     startDate: new Date(new Date().getFullYear(), 0, 1)
       .toISOString()
@@ -81,84 +85,101 @@ const ManagerReportsPage = () => {
     serviceType: "all",
   });
 
+  // Check if user is admin
+  const isAdmin = user?.role === "admin";
+
+  // Initial data load - only once
   useEffect(() => {
-    fetchReportData();
-  }, [filters]);
+    const fetchInitialData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const fetchReportData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+        console.log("Fetching initial data from endpoints...");
 
-      console.log("Fetching data from endpoints...");
+        // Get authentication header
+        const authHeader = getAuthHeader();
 
-      // Get authentication header
-      const authHeader = getAuthHeader();
+        // Fetch data from multiple endpoints with authentication
+        const [bookingsRes, branchesRes, servicesRes, usersRes, vehiclesRes] =
+          await Promise.all([
+            fetch(`${BOOKINGS_URL}`, {
+              headers: authHeader ? { Authorization: authHeader } : {},
+            }),
+            fetch(`${BRANCHES_URL}/all`, {
+              headers: authHeader ? { Authorization: authHeader } : {},
+            }),
+            fetch(`${SERVICES_URL}`, {
+              headers: authHeader ? { Authorization: authHeader } : {},
+            }),
+            fetch(`${USERS_URL}/all`, {
+              headers: authHeader ? { Authorization: authHeader } : {},
+            }),
+            fetch(`${VEHICLES_URL}`, {
+              headers: authHeader ? { Authorization: authHeader } : {},
+            }),
+          ]);
 
-      // Fetch data from multiple endpoints with authentication
-      const [bookingsRes, branchesRes, servicesRes, usersRes, vehiclesRes] =
-        await Promise.all([
-          fetch(`${BOOKINGS_URL}`, {
-            headers: authHeader ? { Authorization: authHeader } : {},
-          }),
-          fetch(`${BRANCHES_URL}/all`, {
-            headers: authHeader ? { Authorization: authHeader } : {},
-          }),
-          fetch(`${SERVICES_URL}`, {
-            headers: authHeader ? { Authorization: authHeader } : {},
-          }),
-          fetch(`${USERS_URL}/all`, {
-            headers: authHeader ? { Authorization: authHeader } : {},
-          }),
-          fetch(`${VEHICLES_URL}`, {
-            headers: authHeader ? { Authorization: authHeader } : {},
-          }),
-        ]);
+        const [bookings, branches, services, users, vehicles] =
+          await Promise.all([
+            bookingsRes.ok ? bookingsRes.json() : [],
+            branchesRes.ok ? branchesRes.json() : [],
+            servicesRes.ok ? servicesRes.json() : [],
+            usersRes.ok ? usersRes.json() : [],
+            vehiclesRes.ok ? vehiclesRes.json() : [],
+          ]);
 
-      const [bookings, branches, services, users, vehicles] = await Promise.all(
-        [
-          bookingsRes.ok ? bookingsRes.json() : [],
-          branchesRes.ok ? branchesRes.json() : [],
-          servicesRes.ok ? servicesRes.json() : [],
-          usersRes.ok ? usersRes.json() : [],
-          vehiclesRes.ok ? vehiclesRes.json() : [],
-        ]
-      );
+        console.log("Fetched data:", {
+          bookings: bookings.length,
+          branches: branches.length,
+          services: services.length,
+          users: users.length,
+          vehicles: vehicles.length,
+        });
 
-      console.log("Fetched data:", {
-        bookings: bookings.length,
-        branches: branches.length,
-        services: services.length,
-        users: users.length,
-        vehicles: vehicles.length,
-      });
+        setBranches(branches);
+        setServices(services);
+        setAppointments(bookings);
 
-      console.log("Sample booking:", bookings[0]);
-      console.log("Sample branch:", branches[0]);
-      console.log("Sample service:", services[0]);
+        // If user is a manager (not admin), find their branch and lock the filter
+        if (!isAdmin && user?.branchId) {
+          const userBranch = branches.find((b) => b.id === user.branchId);
+          if (userBranch) {
+            const branchName = userBranch.name || userBranch.branchName;
+            setUserBranchName(branchName);
+            // Set the filter to manager's branch ID
+            setFilters((prev) => ({
+              ...prev,
+              branch: user.branchId.toString(),
+            }));
+          }
+        }
 
-      setBranches(branches);
-      setServices(services);
-      setAppointments(bookings); // Store raw appointments data for PDF
+        setInitialLoadComplete(true);
+      } catch (err) {
+        console.error("Error fetching initial data:", err);
+        setError(`Error fetching data: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      // Process data for reports
+    fetchInitialData();
+  }, []); // Only run once on mount
+
+  // Process report data when filters or data changes
+  useEffect(() => {
+    if (initialLoadComplete && appointments.length > 0) {
       const processedData = processReportData(
-        bookings,
+        appointments,
         branches,
         services,
-        users,
-        vehicles
+        [],
+        []
       );
       setReportData(processedData);
-
-      console.log("Final processed data:", processedData);
-    } catch (err) {
-      console.error("Error fetching report data:", err);
-      setError(`Error fetching data: ${err.message}`);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [filters, initialLoadComplete, appointments, branches, services]);
 
   const processReportData = (bookings, branches, services, users, vehicles) => {
     console.log("Processing data with actual endpoints...");
@@ -573,6 +594,15 @@ const ManagerReportsPage = () => {
                   value={filters.branch}
                   onChange={(e) => handleFilterChange("branch", e.target.value)}
                   SelectProps={{ native: true }}
+                  disabled={!isAdmin}
+                  sx={{
+                    ...(!isAdmin && {
+                      backgroundColor: "action.disabledBackground",
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "action.disabled",
+                      },
+                    }),
+                  }}
                 >
                   <option value="all">All Branches</option>
                   {branches.map((branch) => (

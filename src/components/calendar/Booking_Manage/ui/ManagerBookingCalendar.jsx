@@ -16,6 +16,7 @@ import { API_BASE, API_PREFIX } from "../../../../config/apiEndpoints.jsx";
 import CalendarGrid from "../CalendarGrid";
 import AppointmentPopup from "../AppointmentPopup";
 import { getAuthHeader } from "../../../../utils/jwtUtils";
+import { useAuth } from "../../../../contexts/AuthContext";
 
 function getStatusColor(mode, status) {
   const dark = mode === "dark";
@@ -37,6 +38,7 @@ export default function ManagerBookingCalendar({
   apiBase = `${API_BASE}${API_PREFIX}`,
 }) {
   const theme = useTheme();
+  const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedBranch, setSelectedBranch] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -46,11 +48,15 @@ export default function ManagerBookingCalendar({
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [branches, setBranches] = useState([]);
+  const [userBranchName, setUserBranchName] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
+
+  // Check if user is admin
+  const isAdmin = user?.role === "admin";
 
   useEffect(() => {
     const ac = new AbortController();
@@ -67,6 +73,16 @@ export default function ManagerBookingCalendar({
         const data = await res.json();
         const mapped = (data || []).map((b) => b.branchName || b.name || "");
         setBranches(mapped);
+
+        // If user is a manager (not admin), find their branch and lock the filter
+        if (!isAdmin && user?.branchId) {
+          const userBranch = data.find((b) => b.id === user.branchId);
+          if (userBranch) {
+            const branchName = userBranch.branchName || userBranch.name;
+            setUserBranchName(branchName);
+            setSelectedBranch(branchName); // Lock to manager's branch
+          }
+        }
       } catch (err) {
         if (err.name !== "AbortError") {
           console.error("Failed to load branches", err);
@@ -80,7 +96,7 @@ export default function ManagerBookingCalendar({
     }
     loadBranches();
     return () => ac.abort();
-  }, [apiBase]);
+  }, [apiBase, user, isAdmin]);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -300,6 +316,8 @@ export default function ManagerBookingCalendar({
         setSearchQuery={setSearchQuery}
         counts={counts}
         branches={branches}
+        isAdmin={isAdmin}
+        userBranchName={userBranchName}
       />
 
       <Paper sx={{ p: 2, mb: 2 }}>
