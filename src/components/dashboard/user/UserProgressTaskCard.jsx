@@ -157,12 +157,22 @@ const calculateProgress = (subTasks) => {
               Technician Notes
             </Typography>
             <List dense sx ={{ pl: 1, bgcolor:'#e4f1ffff', p:2, mb:1, borderRadius:5}}>
-              <Typography variant="body1" fontWeight={400}>
-                {task.technicianNotes}
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {new Date(task.technicianNoteAddedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              </Typography>
+              {task.technicianNotes && task.technicianNotes.trim() !== '' ? (
+                <Box>
+                  <Typography variant="body1" fontWeight={400}>
+                    {task.technicianNotes}
+                  </Typography>
+                  {task.technicianNoteAddedAt && (
+                    <Typography variant="body1" color="text.secondary">
+                      {new Date(task.technicianNoteAddedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </Typography>
+                  )}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No technician notes available
+                </Typography>
+              )}
             </List>
           </Box>
         </Box>
