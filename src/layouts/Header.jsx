@@ -72,6 +72,10 @@ const Header = ({ onMenuClick }) => {
         label: "Manager",
         color: "warning",
       },
+      admin: {
+        label: "Admin",
+        color: "error",
+      },
     };
     const config = roleConfig[role] || roleConfig.user;
     return (
