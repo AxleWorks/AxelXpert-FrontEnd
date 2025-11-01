@@ -28,43 +28,40 @@ import { useAuth } from "../../contexts/AuthContext";
 
 const DRAWER_WIDTH = 280;
 
+// Manager menu configuration - main navigation items
+const menuItems = [
+  { text: "Dashboard", icon: DashboardIcon, path: "/manager/dashboard" },
+  {
+    text: "Booking Calendar",
+    icon: CalendarTodayIcon,
+    path: "/manager/booking-calendar",
+  },
+  {
+    text: "Progress Tracking",
+    icon: TrackChangesIcon,
+    path: "/manager/progress-tracking",
+  },
+  {
+    text: "User Management",
+    icon: PeopleIcon,
+    path: "/manager/user-management",
+  },
+  { text: "Services", icon: BuildIcon, path: "/manager/services" },
+  { text: "Branches", icon: StoreIcon, path: "/manager/branches" },
+  { text: "Reports", icon: AssessmentIcon, path: "/manager/reports" },
+];
+
+// Bottom menu items
+const bottomMenuItems = [
+  { text: "Settings", icon: SettingsIcon, path: "/manager/settings" },
+];
+
 const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
-  const { clearAuthUser, user } = useAuth();
-
-  // Determine the base path based on user role
-  const basePath = user?.role === "admin" ? "/admin" : "/manager";
-
-  // Manager/Admin menu configuration - main navigation items
-  const menuItems = [
-    { text: "Dashboard", icon: DashboardIcon, path: `${basePath}/dashboard` },
-    {
-      text: "Booking Calendar",
-      icon: CalendarTodayIcon,
-      path: `${basePath}/booking-calendar`,
-    },
-    {
-      text: "Progress Tracking",
-      icon: TrackChangesIcon,
-      path: `${basePath}/progress-tracking`,
-    },
-    {
-      text: "User Management",
-      icon: PeopleIcon,
-      path: `${basePath}/user-management`,
-    },
-    { text: "Services", icon: BuildIcon, path: `${basePath}/services` },
-    { text: "Branches", icon: StoreIcon, path: `${basePath}/branches` },
-    { text: "Reports", icon: AssessmentIcon, path: `${basePath}/reports` },
-  ];
-
-  // Bottom menu items
-  const bottomMenuItems = [
-    { text: "Settings", icon: SettingsIcon, path: `${basePath}/settings` },
-  ];
+  const { clearAuthUser } = useAuth();
 
   const isSelected = (path) => {
     return (
@@ -148,14 +145,14 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
             }}
           >
             <Typography variant="h6" sx={{ color: "white", fontWeight: 700 }}>
-              {user?.role === "admin" ? "A" : "M"}
+              M
             </Typography>
           </Box>
           <Typography
             variant="h6"
             sx={{ fontWeight: 600, color: theme.palette.text.primary }}
           >
-            {user?.role === "admin" ? "Admin Panel" : "Manager Panel"}
+            Manager Panel
           </Typography>
         </Box>
       </Toolbar>
@@ -228,9 +225,7 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
           }}
         >
           <Typography variant="caption" color="text.secondary">
-            {user?.role === "admin"
-              ? "Admin Dashboard v1.0.0"
-              : "Manager Dashboard v1.0.0"}
+            Manager Dashboard v1.0.0
           </Typography>
         </Box>
       </Box>

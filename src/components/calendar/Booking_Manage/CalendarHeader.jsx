@@ -30,8 +30,6 @@ export default function CalendarHeader({
   setSearchQuery,
   counts,
   branches,
-  isAdmin = true,
-  userBranchName = null,
 }) {
   const getMonthYear = (date) =>
     date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
@@ -48,16 +46,6 @@ export default function CalendarHeader({
           value={selectedBranch}
           onChange={(e) => setSelectedBranch(e.target.value)}
           size="small"
-          disabled={!isAdmin}
-          sx={{
-            minWidth: 160,
-            ...(!isAdmin && {
-              backgroundColor: "action.disabledBackground",
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "action.disabled",
-              },
-            }),
-          }}
         >
           <MenuItem value="All">All Branches</MenuItem>
           {branches.map((b) => (

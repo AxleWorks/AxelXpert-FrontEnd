@@ -19,12 +19,10 @@ import { Close } from "@mui/icons-material";
 import { Button } from "../ui/button";
 import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import { BRANCHES_URL, USERS_URL } from "../../config/apiEndpoints.jsx";
-import { useAuth } from "../../contexts/AuthContext";
 
 export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
-  const { user } = useAuth();
   const [form, setForm] = React.useState({
     username: "",
     role: "",
@@ -58,7 +56,6 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
             address: userData.address || "",
             isActive: userData.isActive ?? true,
           });
-          
           setBranches(branchesResponse.data);
         })
         .catch((err) => {
@@ -107,14 +104,6 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
     if (!form.username || !form.role) {
       setError("Username and Role are required");
       return;
-    }
-
-    // For managers, validate they're not changing to a different branch
-    if (user?.role === 'manager' && user?.branchId) {
-      if (form.branchId && form.branchId !== user.branchId) {
-        setError("You cannot change employees to a different branch");
-        return;
-      }
     }
 
     // Call onSave with updated data
@@ -356,11 +345,6 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
           <Box>
             <Typography variant="body2" sx={labelStyles}>
               Branch
-              {user?.role === 'manager' && (
-                <Typography component="span" sx={{ color: "text.secondary", fontSize: "0.75rem", ml: 1 }}>
-                  (Cannot change branch)
-                </Typography>
-              )}
             </Typography>
             <FormControl fullWidth disabled={loading}>
               <Select

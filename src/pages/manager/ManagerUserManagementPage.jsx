@@ -1,16 +1,6 @@
 import React, { useEffect, useCallback, useState } from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-  CircularProgress,
-  Alert,
-  Tabs,
-  Tab,
-} from "@mui/material";
+import { Box, Typography, Grid } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import PeopleIcon from "@mui/icons-material/People";
-import PersonIcon from "@mui/icons-material/Person";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import { Button } from "../../components/ui/button";
 import EmployeeProfileModal from "../../components/userManagement/EmployeeProfileModal";
@@ -23,12 +13,9 @@ import BlockConfirmDialog from "../../components/userManagement/BlockConfirmDial
 import NotificationSnackbar from "../../components/userManagement/NotificationSnackbar";
 import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import { USERS_URL } from "../../config/apiEndpoints.jsx";
-import { useAuth } from "../../contexts/AuthContext";
 
 const ManagerUserManagementPage = () => {
-  const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
-  const [users, setUsers] = useState([]); // Separate state for users (customers)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -45,70 +32,12 @@ const ManagerUserManagementPage = () => {
   const [showError, setShowError] = useState(false);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [employeeToBlock, setEmployeeToBlock] = useState(null);
-  const [currentTab, setCurrentTab] = useState(0); // 0 for employees, 1 for users
-
-  // Check if user is admin
-  const isAdmin = user?.role === "admin";
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        console.log("Fetching user data...", {
-          userRole: user?.role,
-          userBranchId: user?.branchId,
-          isAdmin,
-        });
-
-        // Fetch all user types: employees, managers, and users
-        const [employeesRes, managersRes, usersRes] = await Promise.all([
-          authenticatedAxios.get(`${USERS_URL}/employees`),
-          authenticatedAxios.get(`${USERS_URL}/managers`),
-          authenticatedAxios.get(`${USERS_URL}/users`),
-        ]);
-
-        console.log("=== RAW API Response ===");
-        console.log("Employees:", employeesRes.data);
-        console.log("Managers:", managersRes.data);
-        console.log("Users (Customers):", usersRes.data);
-        console.log("========================");
-
-        console.log("API Response:", {
-          employees: employeesRes.data.length,
-          managers: managersRes.data.length,
-          users: usersRes.data.length,
-          usersData: usersRes.data,
-        });
-
-        // Both admin and manager can see ALL users (customers) regardless of branch
-        // Manager can only see employees from their branch
-        // Admin can see employees from all branches
-
-        if (!isAdmin && user?.branchId) {
-          // MANAGER VIEW
-          const branchEmployees = employeesRes.data.filter(
-            (emp) => emp.branchId === user.branchId
-          );
-
-          console.log("Manager view:", {
-            branchEmployees: branchEmployees.length,
-            allCustomers: usersRes.data.length,
-          });
-
-          setEmployees(branchEmployees); // Only their branch employees
-          setUsers(usersRes.data); // ALL users/customers regardless of branch
-        } else {
-          // Admin view: all employees/managers in one tab, all users in another
-          const allEmployees = [...employeesRes.data, ...managersRes.data];
-
-          console.log(
-            "Admin view - employees:",
-            allEmployees.length,
-            "users:",
-            usersRes.data.length
-          );
-          setEmployees(allEmployees);
-          setUsers(usersRes.data);
-        }
+        const response = await authenticatedAxios.get(`${USERS_URL}/all`);
+        setEmployees(response.data);
       } catch (err) {
         console.error("Failed to fetch employees:", err);
         setError("Failed to load employees. Please try again later.");
@@ -118,7 +47,7 @@ const ManagerUserManagementPage = () => {
     };
 
     fetchEmployees();
-  }, [user, isAdmin]);
+  }, []);
 
   const handleOpenAdd = useCallback(() => {
     console.log("Add Employee button clicked - opening modal");
@@ -300,7 +229,7 @@ const ManagerUserManagementPage = () => {
     setEmployees((prev) => [...prev, newEmployee]);
     setSuccessTitle("Employee added!");
     setSuccessMessage(
-      `Login credentials has been sent to ${newEmployee.email}.`
+      `${newEmployee.email} has been added successfully. A welcome email with login credentials has been sent.`
     );
     setShowSuccess(true);
     setAddOpen(false);
@@ -327,119 +256,72 @@ const ManagerUserManagementPage = () => {
     setShowError(false);
   }, []);
 
-  const handleTabChange = (event, newValue) => {
-    setCurrentTab(newValue);
-  };
+  if (loading) {
+    return (
+      <ManagerLayout>
+        <Box sx={{ p: 4, textAlign: "center" }}>
+          <Typography>Loading...</Typography>
+        </Box>
+      </ManagerLayout>
+    );
+  }
 
-  // Get current data based on active tab
-  const currentData = currentTab === 0 ? employees : users;
-  const currentDataLabel = currentTab === 0 ? "Employees" : "Customers";
+  if (error) {
+    return (
+      <ManagerLayout>
+        <Box sx={{ p: 4, textAlign: "center" }}>
+          <Typography color="error">{error}</Typography>
+        </Box>
+      </ManagerLayout>
+    );
+  }
 
   return (
     <ManagerLayout>
-      <Box>
-        <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
-          User Management
-        </Typography>
-
-        {/* Loading State */}
-        {loading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight={400}
+      <Box sx={{ pb: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <div>
+            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              User Management
+            </Typography>
+            <Typography color="text.secondary">
+              Manage employees and their assignments
+            </Typography>
+          </div>
+          <Button
+            startIcon={<AddIcon />}
+            sx={{
+              backgroundColor: "#0b75d9",
+              color: "white",
+              borderRadius: 2,
+              padding: "8px 16px",
+              textTransform: "none",
+              boxShadow: "none",
+              "&:hover": { backgroundColor: "#0765b6" },
+            }}
+            onClick={handleOpenAdd}
           >
-            <CircularProgress size={48} />
-          </Box>
-        ) : error ? (
-          /* Error State */
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        ) : (
-          /* Main Content */
-          <>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 3,
-              }}
-            >
-              <Typography color="text.secondary">
-                Manage employees and their assignments
-              </Typography>
-              {/* Only show Add Employee button on Employees tab */}
-              {currentTab === 0 && (
-                <Button
-                  startIcon={<AddIcon />}
-                  sx={{
-                    backgroundColor: "#0b75d9",
-                    color: "white",
-                    borderRadius: 2,
-                    padding: "8px 16px",
-                    textTransform: "none",
-                    boxShadow: "none",
-                    "&:hover": { backgroundColor: "#0765b6" },
-                  }}
-                  onClick={handleOpenAdd}
-                >
-                  Add Employee
-                </Button>
-              )}
-            </Box>
+            Add Employee
+          </Button>
+        </Box>
 
-            {/* Tabs for Employees and Customers */}
-            <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
-              <Tabs
-                value={currentTab}
-                onChange={handleTabChange}
-                sx={{
-                  "& .MuiTab-root": {
-                    textTransform: "none",
-                    fontWeight: 500,
-                    fontSize: "1rem",
-                    minWidth: 120,
-                  },
-                  "& .Mui-selected": {
-                    color: "#0b75d9",
-                  },
-                  "& .MuiTabs-indicator": {
-                    backgroundColor: "#0b75d9",
-                  },
-                }}
-              >
-                <Tab
-                  icon={<PeopleIcon />}
-                  iconPosition="start"
-                  label={`Employees (${employees.length})`}
-                />
-                <Tab
-                  icon={<PersonIcon />}
-                  iconPosition="start"
-                  label={`Customers (${users.length})`}
-                />
-              </Tabs>
-            </Box>
+        <UserManagementStats employees={employees} />
 
-            <UserManagementStats
-              employees={currentData}
-              type={currentTab === 0 ? "employees" : "customers"}
-            />
+        <EmployeesTable
+          employees={employees}
+          onView={openView}
+          onEdit={openEdit}
+          onDelete={openDeleteDialog}
+          onBlock={openBlockDialog}
+        />
 
-            <EmployeesTable
-              employees={currentData}
-              onView={openView}
-              onEdit={openEdit}
-              onDelete={openDeleteDialog}
-              onBlock={openBlockDialog}
-            />
-          </>
-        )}
-
-        {/* Modals - Always rendered, controlled by state */}
         <EmployeeProfileModal
           open={modalOpen}
           onClose={handleCloseView}
@@ -457,8 +339,6 @@ const ManagerUserManagementPage = () => {
           open={addOpen}
           onClose={handleCloseAdd}
           onCreate={handleCreateEmployee}
-          isAdmin={isAdmin}
-          userBranchId={user?.branchId}
         />
 
         <DeleteConfirmDialog

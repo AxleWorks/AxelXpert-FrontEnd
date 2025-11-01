@@ -84,7 +84,6 @@ const SignIn = () => {
             user: "/user/dashboard",
             employee: "/employee/dashboard",
             manager: "/manager/dashboard",
-            admin: "/admin/dashboard",
           };
           const target = roleMap[role] || "/";
 

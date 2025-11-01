@@ -64,7 +64,7 @@ const StatCard = React.memo(
 
 StatCard.displayName = "StatCard";
 
-const UserManagementStats = React.memo(({ employees, type = "employees" }) => {
+const UserManagementStats = React.memo(({ employees }) => {
   const stats = React.useMemo(() => {
     const totalEmployees = employees.length;
     const activeEmployees = employees.filter(
@@ -76,20 +76,6 @@ const UserManagementStats = React.memo(({ employees, type = "employees" }) => {
 
     return { totalEmployees, activeEmployees, inactiveEmployees };
   }, [employees]);
-
-  // Labels change based on type
-  const labels =
-    type === "customers"
-      ? {
-          total: "Total Customers",
-          active: "Active",
-          inactive: "Inactive/Blocked",
-        }
-      : {
-          total: "Total Employees",
-          active: "Active",
-          inactive: "Inactive/Blocked",
-        };
 
   return (
     <Grid
@@ -109,7 +95,7 @@ const UserManagementStats = React.memo(({ employees, type = "employees" }) => {
         }}
       >
         <StatCard
-          title={labels.total}
+          title="Total Employees"
           value={stats.totalEmployees}
           Icon={User}
           iconBg="#eaf3ff"
@@ -128,7 +114,7 @@ const UserManagementStats = React.memo(({ employees, type = "employees" }) => {
         }}
       >
         <StatCard
-          title={labels.active}
+          title="Active"
           value={stats.activeEmployees}
           Icon={UserCheck}
           iconBg="#e9fbf0"
@@ -147,7 +133,7 @@ const UserManagementStats = React.memo(({ employees, type = "employees" }) => {
         }}
       >
         <StatCard
-          title={labels.inactive}
+          title="Inactive/Blocked"
           value={stats.inactiveEmployees}
           Icon={UserX}
           iconBg="#fff6ea"
