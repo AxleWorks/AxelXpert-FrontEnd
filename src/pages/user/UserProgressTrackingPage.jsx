@@ -182,15 +182,24 @@ const UserProgressTrackingPage = () => {
                 <ListItemText 
                   primary={sub.title} 
                 />
-                {/* <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-                    {sub.description}
-                </Typography> */}
               </ListItem>
             ))}
           </List>
+          <Box>
+            <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
+              Technician Notes
+            </Typography>
+            <List dense sx ={{ pl: 1, bgcolor:'#e4f1ffff', p:2, mb:1, borderRadius:5}}>
+              <Typography variant="body1" fontWeight={400}>
+                {task.technicianNotes}
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                {new Date(task.techncianNoteAddedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              </Typography>
+            </List>
+          </Box>
         </Box>
       </Collapse>
-
       </Paper>
     );
   };
