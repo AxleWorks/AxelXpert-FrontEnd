@@ -228,7 +228,9 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
           }}
         >
           <Typography variant="caption" color="text.secondary">
-            {user?.role === "admin" ? "Admin Dashboard v1.0.0" : "Manager Dashboard v1.0.0"}
+            {user?.role === "admin"
+              ? "Admin Dashboard v1.0.0"
+              : "Manager Dashboard v1.0.0"}
           </Typography>
         </Box>
       </Box>

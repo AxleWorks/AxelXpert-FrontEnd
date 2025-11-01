@@ -83,7 +83,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
     }
 
     // For managers, validate they're adding to their own branch
-    if (user?.role === 'manager' && user?.branchId) {
+    if (user?.role === "manager" && user?.branchId) {
       const selectedBranch = branches.find((b) => b.name === form.branch);
       if (selectedBranch && selectedBranch.id !== user.branchId) {
         setError("You can only add employees to your own branch");
@@ -299,8 +299,11 @@ export default function AddEmployeeModal({ open, onClose, onCreate }) {
           <Box>
             <Typography variant="body2" sx={labelStyles}>
               Branch
-              {user?.role === 'manager' && (
-                <Typography component="span" sx={{ color: "text.secondary", fontSize: "0.75rem", ml: 1 }}>
+              {user?.role === "manager" && (
+                <Typography
+                  component="span"
+                  sx={{ color: "text.secondary", fontSize: "0.75rem", ml: 1 }}
+                >
                   (You can only add to your branch)
                 </Typography>
               )}

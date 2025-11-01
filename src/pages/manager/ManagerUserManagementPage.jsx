@@ -40,16 +40,16 @@ const ManagerUserManagementPage = () => {
         const [employeesRes, managersRes, usersRes] = await Promise.all([
           authenticatedAxios.get(`${USERS_URL}/employees`),
           authenticatedAxios.get(`${USERS_URL}/managers`),
-          authenticatedAxios.get(`${USERS_URL}/users`)
+          authenticatedAxios.get(`${USERS_URL}/users`),
         ]);
-        
+
         // Combine all user types
         const allUsers = [
           ...employeesRes.data,
           ...managersRes.data,
-          ...usersRes.data
+          ...usersRes.data,
         ];
-        
+
         setEmployees(allUsers);
       } catch (err) {
         console.error("Failed to fetch employees:", err);
