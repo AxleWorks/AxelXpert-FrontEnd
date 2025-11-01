@@ -1,6 +1,16 @@
 import React, { useEffect, useCallback, useState } from "react";
-import { Box, Typography, Grid, CircularProgress, Alert } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Grid,
+  CircularProgress,
+  Alert,
+  Tabs,
+  Tab,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import PeopleIcon from "@mui/icons-material/People";
+import PersonIcon from "@mui/icons-material/Person";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import { Button } from "../../components/ui/button";
 import EmployeeProfileModal from "../../components/userManagement/EmployeeProfileModal";
@@ -18,6 +28,7 @@ import { useAuth } from "../../contexts/AuthContext";
 const ManagerUserManagementPage = () => {
   const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
+  const [users, setUsers] = useState([]); // Separate state for users (customers)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -34,6 +45,7 @@ const ManagerUserManagementPage = () => {
   const [showError, setShowError] = useState(false);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [employeeToBlock, setEmployeeToBlock] = useState(null);
+  const [currentTab, setCurrentTab] = useState(0); // 0 for employees, 1 for users
 
   // Check if user is admin
   const isAdmin = user?.role === "admin";
@@ -54,47 +66,48 @@ const ManagerUserManagementPage = () => {
           authenticatedAxios.get(`${USERS_URL}/users`),
         ]);
 
+        console.log("=== RAW API Response ===");
+        console.log("Employees:", employeesRes.data);
+        console.log("Managers:", managersRes.data);
+        console.log("Users (Customers):", usersRes.data);
+        console.log("========================");
+
         console.log("API Response:", {
           employees: employeesRes.data.length,
           managers: managersRes.data.length,
           users: usersRes.data.length,
-          sampleEmployee: employeesRes.data[0],
-          sampleUser: usersRes.data[0],
+          usersData: usersRes.data,
         });
 
-        // Manager view: their branch employees + all users (role=user)
+        // Both admin and manager can see ALL users (customers) regardless of branch
+        // Manager can only see employees from their branch
+        // Admin can see employees from all branches
+
         if (!isAdmin && user?.branchId) {
+          // MANAGER VIEW
           const branchEmployees = employeesRes.data.filter(
             (emp) => emp.branchId === user.branchId
           );
 
-          console.log("Manager filtering:", {
-            totalEmployees: employeesRes.data.length,
+          console.log("Manager view:", {
             branchEmployees: branchEmployees.length,
-            allUsers: usersRes.data.length,
+            allCustomers: usersRes.data.length,
           });
 
-          const combinedUsers = [
-            ...branchEmployees,
-            ...usersRes.data, // All users with role=user, regardless of branch
-          ];
+          setEmployees(branchEmployees); // Only their branch employees
+          setUsers(usersRes.data); // ALL users/customers regardless of branch
+        } else {
+          // Admin view: all employees/managers in one tab, all users in another
+          const allEmployees = [...employeesRes.data, ...managersRes.data];
 
           console.log(
-            "Combined users for manager:",
-            combinedUsers.length,
-            combinedUsers
+            "Admin view - employees:",
+            allEmployees.length,
+            "users:",
+            usersRes.data.length
           );
-          setEmployees(combinedUsers);
-        } else {
-          // Admin view: all employees, managers, and users
-          const allUsers = [
-            ...employeesRes.data,
-            ...managersRes.data,
-            ...usersRes.data,
-          ];
-
-          console.log("Admin view - all users:", allUsers.length);
-          setEmployees(allUsers);
+          setEmployees(allEmployees);
+          setUsers(usersRes.data);
         }
       } catch (err) {
         console.error("Failed to fetch employees:", err);
@@ -314,6 +327,14 @@ const ManagerUserManagementPage = () => {
     setShowError(false);
   }, []);
 
+  const handleTabChange = (event, newValue) => {
+    setCurrentTab(newValue);
+  };
+
+  // Get current data based on active tab
+  const currentData = currentTab === 0 ? employees : users;
+  const currentDataLabel = currentTab === 0 ? "Employees" : "Customers";
+
   return (
     <ManagerLayout>
       <Box>
@@ -350,27 +371,63 @@ const ManagerUserManagementPage = () => {
               <Typography color="text.secondary">
                 Manage employees and their assignments
               </Typography>
-              <Button
-                startIcon={<AddIcon />}
-                sx={{
-                  backgroundColor: "#0b75d9",
-                  color: "white",
-                  borderRadius: 2,
-                  padding: "8px 16px",
-                  textTransform: "none",
-                  boxShadow: "none",
-                  "&:hover": { backgroundColor: "#0765b6" },
-                }}
-                onClick={handleOpenAdd}
-              >
-                Add Employee
-              </Button>
+              {/* Only show Add Employee button on Employees tab */}
+              {currentTab === 0 && (
+                <Button
+                  startIcon={<AddIcon />}
+                  sx={{
+                    backgroundColor: "#0b75d9",
+                    color: "white",
+                    borderRadius: 2,
+                    padding: "8px 16px",
+                    textTransform: "none",
+                    boxShadow: "none",
+                    "&:hover": { backgroundColor: "#0765b6" },
+                  }}
+                  onClick={handleOpenAdd}
+                >
+                  Add Employee
+                </Button>
+              )}
             </Box>
 
-            <UserManagementStats employees={employees} />
+            {/* Tabs for Employees and Customers */}
+            <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+              <Tabs
+                value={currentTab}
+                onChange={handleTabChange}
+                sx={{
+                  "& .MuiTab-root": {
+                    textTransform: "none",
+                    fontWeight: 500,
+                    fontSize: "1rem",
+                    minWidth: 120,
+                  },
+                  "& .Mui-selected": {
+                    color: "#0b75d9",
+                  },
+                  "& .MuiTabs-indicator": {
+                    backgroundColor: "#0b75d9",
+                  },
+                }}
+              >
+                <Tab
+                  icon={<PeopleIcon />}
+                  iconPosition="start"
+                  label={`Employees (${employees.length})`}
+                />
+                <Tab
+                  icon={<PersonIcon />}
+                  iconPosition="start"
+                  label={`Customers (${users.length})`}
+                />
+              </Tabs>
+            </Box>
+
+            <UserManagementStats employees={currentData} />
 
             <EmployeesTable
-              employees={employees}
+              employees={currentData}
               onView={openView}
               onEdit={openEdit}
               onDelete={openDeleteDialog}
