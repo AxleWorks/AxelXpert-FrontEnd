@@ -8,6 +8,13 @@
   "description": "Perform 120-minute full service, including oil change, filter replacements, and brake check.",
   "status": "IN_PROGRESS",
   "technicianNotes": "Brake pads showing wear, recommend replacement soon.",
+  "progressPhotos": [
+    "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+    "https://res.cloudinary.com/demo/image/upload/bike.jpg",
+    "https://res.cloudinary.com/demo/image/upload/car.jpg",
+    "https://res.cloudinary.com/demo/image/upload/hiker.jpg",
+    "https://res.cloudinary.com/demo/image/upload/coffee.jpg"
+  ],
   "subTasks": [
     {
       "id": 1,
@@ -47,6 +54,7 @@
   "description": "Perform 160-minute full service, including oil change, filter replacements, and brake check.",
   "status": "IN_PROGRESS",
   "technicianNotes": "Recommend replacement soon.",
+  "progressPhotos": [],
   "subTasks": [
     {
       "id": 1,

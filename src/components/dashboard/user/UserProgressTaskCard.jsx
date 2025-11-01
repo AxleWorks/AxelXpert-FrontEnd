@@ -174,6 +174,78 @@ const calculateProgress = (subTasks) => {
                 </Typography>
               )}
             </List>
+            <Box>
+                <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
+                    Progress Photos
+                </Typography>
+                
+                {task.progressPhotos && task.progressPhotos.length > 0 ? (
+                  <Box 
+                    sx={{ 
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                      gap: 2,
+                      mt: 1
+                    }}
+                  >
+                    {task.progressPhotos.map((photoUrl, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          position: 'relative',
+                          // paddingTop: '100%' creates a 1:1 aspect ratio container
+                          paddingTop: '100%',
+                          overflow: 'hidden',
+                          borderRadius: 2,
+                          boxShadow: 2,
+                          bgcolor: '#f0f0f0',
+                          transition: 'transform 0.2s, box-shadow 0.2s',
+                        }}
+                      >
+                        <img
+                          src={photoUrl}
+                          alt={`Progress photo ${index + 1}`}
+                          loading="lazy" 
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover', // Ensures image fills container while maintaining aspect ratio
+                            objectPosition: 'center'
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.parentElement.innerHTML = `<div style="
+                                position: absolute;
+                                top: 50%;
+                                left: 50%;
+                                transform: translate(-50%, -50%);
+                                color: #999;
+                                text-align: center;
+                                font-size: 12px;">
+                                Image not available
+                              </div>`;
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                ) : (
+                  <Box 
+                    sx={{ 
+                      p: 2, 
+                      bgcolor: '#f9f9f9', 
+                      borderRadius: 2
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      No progress photos available yet
+                    </Typography>
+                  </Box>
+                )}
+            </Box>
           </Box>
         </Box>
       </Collapse>
