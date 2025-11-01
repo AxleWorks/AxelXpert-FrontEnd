@@ -26,12 +26,12 @@ import {
   Logout as LogoutIcon,
   Email as EmailIcon,
 } from "@mui/icons-material";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../contexts/AuthContext";
 import { useTheme as useCustomTheme } from "../contexts/ThemeContext";
 import { API_BASE } from "../config/apiEndpoints";
 
 const Header = ({ onMenuClick }) => {
-  const { user, logout } = useAuth();
+  const { user, clearAuthUser } = useAuth();
   const { isDarkMode, toggleTheme } = useCustomTheme();
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
@@ -53,7 +53,7 @@ const Header = ({ onMenuClick }) => {
   };
 
   const handleLogout = () => {
-    localStorage.clear(); // Clear all local storage
+    clearAuthUser(); // Use auth context logout which clears JWT token
     handleCloseProfileMenu();
     window.location.href = "/signin"; // Navigate to login page
   };
@@ -71,6 +71,10 @@ const Header = ({ onMenuClick }) => {
       manager: {
         label: "Manager",
         color: "warning",
+      },
+      admin: {
+        label: "Admin",
+        color: "error",
       },
     };
     const config = roleConfig[role] || roleConfig.user;

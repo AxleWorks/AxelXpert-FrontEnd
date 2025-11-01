@@ -15,25 +15,35 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  Alert,
+  AlertTitle,
 } from "@mui/material";
 import AppointmentHeader from "./ui/AppointmentHeader";
 import AppointmentDetails from "./ui/AppointmentDetails";
 import AssignEmployeeSection from "./ui/AssignEmployeeSection";
+import { API_BASE, API_PREFIX } from "../../../config/apiEndpoints.jsx";
 import AppointmentActions from "./ui/AppointmentActions";
 import RejectionDialog from "./ui/RejectionDialog";
+import { getAuthHeader } from "../../../utils/jwtUtils";
 
-const style = {
+const getModalStyle = (theme) => ({
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: "min(92vw, 520px)",
-  maxHeight: "86vh",
+  width: "min(92vw, 580px)",
+  maxHeight: "90vh",
   overflowY: "auto",
-  p: 3,
-  borderRadius: 2,
-  boxShadow: "0 12px 40px rgba(2,6,23,0.4)",
-};
+  p: 0,
+  borderRadius: 3,
+  boxShadow: theme.palette.mode === 'dark' 
+    ? "0 20px 60px rgba(0,0,0,0.7)" 
+    : "0 20px 60px rgba(0,0,0,0.3)",
+  background: theme.palette.mode === 'dark'
+    ? `linear-gradient(to bottom, ${theme.palette.background.paper}, ${theme.palette.background.default})`
+    : "linear-gradient(to bottom, #ffffff, #fafafa)",
+  border: theme.palette.mode === 'dark' ? `1px solid ${theme.palette.divider}` : 'none',
+});
 
 function initials(name) {
   if (!name) return "";
@@ -63,11 +73,53 @@ export default function AppointmentPopup({
   onReject,
   selectedEmployee,
   setSelectedEmployee,
-  apiBase = "http://localhost:8080/api",
+  apiBase = `${API_BASE}${API_PREFIX}`,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [isUnassigning, setIsUnassigning] = useState(false);
+
+  // Check if appointment is already approved/assigned
+  const isAlreadyAssigned = useMemo(() => {
+    return appointment?.assignedEmployee || appointment?.assignedEmployeeName;
+  }, [appointment]);
+
+  // Unassign employee (set to null) using PUT method
+  const handleUnassignEmployee = async () => {
+    if (!appointment) return;
+
+    setIsUnassigning(true);
+    try {
+      const authHeader = getAuthHeader();
+      const res = await fetch(`${apiBase}/bookings/${appointment.id}/assign`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(authHeader && { Authorization: authHeader }),
+        },
+        body: JSON.stringify({ employeeId: null }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Unassign failed:", errText);
+        alert("Failed to unassign employee. Please try again.");
+        return;
+      }
+
+      const updated = await res.json();
+      // Clear selected employee and notify parent
+      setSelectedEmployee && setSelectedEmployee(null);
+      onApprove && onApprove(null, updated);
+      // Don't close modal, allow reassignment
+    } catch (err) {
+      console.error("Unassign error:", err);
+      alert("Error unassigning employee. Please try again.");
+    } finally {
+      setIsUnassigning(false);
+    }
+  };
 
   // Approve and assign an employee by calling backend, then notify parent
   const handleApproveClick = async (employee) => {
@@ -79,9 +131,13 @@ export default function AppointmentPopup({
     }
 
     try {
+      const authHeader = getAuthHeader();
       const res = await fetch(`${apiBase}/bookings/${appointment.id}/assign`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(authHeader && { Authorization: authHeader }),
+        },
         body: JSON.stringify({ employeeId: employee.id }),
       });
 
@@ -111,9 +167,13 @@ export default function AppointmentPopup({
 
     setIsRejecting(true);
     try {
+      const authHeader = getAuthHeader();
       const res = await fetch(`${apiBase}/bookings/${appointment.id}/reject`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(authHeader && { Authorization: authHeader }),
+        },
         body: JSON.stringify({ reason: reason.trim() }),
       });
 
@@ -156,39 +216,103 @@ export default function AppointmentPopup({
       closeAfterTransition
       BackdropProps={{
         sx: {
-          backdropFilter: "blur(6px)",
-          backgroundColor: "rgba(0,0,0,0.36)",
+          backdropFilter: "blur(8px)",
+          backgroundColor: (theme) => 
+            theme.palette.mode === 'dark' 
+              ? "rgba(0,0,0,0.7)" 
+              : "rgba(0,0,0,0.5)",
         },
       }}
     >
-      <Paper sx={style}>
-        <AppointmentHeader
-          title="Slot Details"
-          subtitle="Review and assign an employee or reject the request"
-          onClose={onClose}
-        />
+      <Paper sx={(theme) => getModalStyle(theme)} elevation={24}>
+        <Box sx={{ p: 3, pb: 2 }}>
+          <AppointmentHeader
+            title="Appointment Details"
+            subtitle={
+              isAlreadyAssigned
+                ? "Employee already assigned • Reassign or manage appointment"
+                : "Review and assign an employee or reject the request"
+            }
+            onClose={onClose}
+          />
+        </Box>
 
-        <Divider sx={{ mb: 2 }} />
+        <Divider />
 
         {appointment ? (
-          <Box>
+          <Box sx={{ p: 3 }}>
             <AppointmentDetails appointment={appointment} />
 
-            <Typography variant="subtitle2">Assign Employee</Typography>
-            <AssignEmployeeSection
-              employees={employees}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              selectedEmployee={selectedEmployee}
-              setSelectedEmployee={setSelectedEmployee}
-            />
+            {/* Alert for already assigned appointments */}
+            {isAlreadyAssigned && (
+              <Alert
+                severity="info"
+                sx={{
+                  mb: 3,
+                  borderRadius: 2,
+                  "& .MuiAlert-icon": {
+                    fontSize: 28,
+                  },
+                }}
+                action={
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={handleUnassignEmployee}
+                    disabled={isUnassigning}
+                    sx={{ fontWeight: 600 }}
+                  >
+                    {isUnassigning ? "Unassigning..." : "Unassign"}
+                  </Button>
+                }
+              >
+                <AlertTitle sx={{ fontWeight: 600 }}>
+                  Employee Already Assigned
+                </AlertTitle>
+                {appointment.assignedEmployee ||
+                  appointment.assignedEmployeeName}{" "}
+                is currently assigned to this appointment. Click "Unassign" to
+                reassign a different employee.
+              </Alert>
+            )}
 
-            <AppointmentActions
-              onApprove={() => handleApproveClick(selectedEmployee)}
-              onReject={() => handleRejectClick()}
-              onClose={onClose}
-              selectedEmployee={selectedEmployee}
-            />
+            <Box
+              sx={(theme) => ({
+                bgcolor: theme.palette.mode === 'dark' 
+                  ? "rgba(255,255,255,0.05)" 
+                  : "grey.50",
+                p: 2.5,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: theme.palette.mode === 'dark' 
+                  ? "rgba(255,255,255,0.1)" 
+                  : "grey.200",
+              })}
+            >
+              <Typography
+                variant="subtitle2"
+                sx={{ mb: 1.5, fontWeight: 600, color: "text.primary" }}
+              >
+                {isAlreadyAssigned ? "Reassign Employee" : "Assign Employee"}
+              </Typography>
+              <AssignEmployeeSection
+                employees={employees}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                selectedEmployee={selectedEmployee}
+                setSelectedEmployee={setSelectedEmployee}
+              />
+            </Box>
+
+            <Box sx={{ mt: 3 }}>
+              <AppointmentActions
+                onApprove={() => handleApproveClick(selectedEmployee)}
+                onReject={() => handleRejectClick()}
+                onClose={onClose}
+                selectedEmployee={selectedEmployee}
+                isAlreadyAssigned={isAlreadyAssigned}
+              />
+            </Box>
           </Box>
         ) : null}
 

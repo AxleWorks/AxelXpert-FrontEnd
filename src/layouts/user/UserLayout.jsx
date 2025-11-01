@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { Box, CssBaseline, Toolbar } from "@mui/material";
+import { useLocation } from "react-router-dom";
 import Header from "../Header";
 import UserSidebar from "./UserSidebar";
+import Chatbot from "../../components/ui/Chatbot";
 
 const UserLayout = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -24,13 +27,32 @@ const UserLayout = ({ children }) => {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - 280px)` },
-
           minHeight: "100vh",
         }}
       >
         <Toolbar />
-        {children}
+        <Box
+          key={location.pathname}
+          sx={{
+            animation: "fadeSlideIn 0.4s ease-out",
+            "@keyframes fadeSlideIn": {
+              "0%": {
+                opacity: 0,
+                transform: "translateY(20px)",
+              },
+              "100%": {
+                opacity: 1,
+                transform: "translateY(0)",
+              },
+            },
+          }}
+        >
+          {children}
+        </Box>
       </Box>
+
+      {/* Chatbot Component */}
+      <Chatbot />
     </Box>
   );
 };
