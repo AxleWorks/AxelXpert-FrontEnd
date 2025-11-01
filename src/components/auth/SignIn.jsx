@@ -94,6 +94,7 @@ const SignIn = () => {
             user: "/user/dashboard",
             employee: "/employee/dashboard",
             manager: "/manager/dashboard",
+            admin: "/admin/dashboard",
           };
           const target = roleMap[role] || "/";
 
@@ -136,7 +137,9 @@ const SignIn = () => {
             );
         }
       } else if (err.request) {
-        setError("Cannot connect to server. Please check if backend is running.");
+        setError(
+          "Cannot connect to server. Please check if backend is running."
+        );
       } else {
         setError("An unexpected error occurred");
       }
