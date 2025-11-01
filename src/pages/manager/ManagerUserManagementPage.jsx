@@ -424,7 +424,10 @@ const ManagerUserManagementPage = () => {
               </Tabs>
             </Box>
 
-            <UserManagementStats employees={currentData} />
+            <UserManagementStats
+              employees={currentData}
+              type={currentTab === 0 ? "employees" : "customers"}
+            />
 
             <EmployeesTable
               employees={currentData}
