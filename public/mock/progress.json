@@ -6,6 +6,7 @@
   "title": "Full Vehicle Inspection & Service",
   "description": "Perform 120-minute full service, including oil change, filter replacements, and brake check.",
   "status": "IN_PROGRESS",
+  "technicianNotes": "Brake pads showing wear, recommend replacement soon.",
   "subTasks": [
     {
       "id": 1,
@@ -32,5 +33,6 @@
   "startTime": "2025-10-26T09:00:00",
   "completedTime": null,
   "createdAt": "2025-10-26T08:30:00",
-  "updatedAt": "2025-10-26T09:01:30"
+  "updatedAt": "2025-10-26T09:01:30",
+  "techncianNoteAddedAt": "2025-10-26T09:15:00"
 }
