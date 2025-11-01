@@ -37,7 +37,7 @@ import {
   validateImageFile,
   generateCloudinaryUrl,
 } from "../../utils/cloudinaryUtils";
-import { getAuthHeader } from "../../utils/jwtUtils";
+import { getAuthHeader, getCurrentUser } from "../../utils/jwtUtils";
 import { authenticatedAxios } from "../../utils/axiosConfig";
 
 const ProfilePhotoManager = ({
@@ -134,21 +134,9 @@ const ProfilePhotoManager = ({
         onImageUpdate(uploadResult.data.url, updatedUser);
       }
 
-      // Update localStorage if needed
-      const authUser = localStorage.getItem("authUser");
-      if (authUser) {
-        const parsedUser = JSON.parse(authUser);
-        if (parsedUser.id === userId || parsedUser.id === parseInt(userId)) {
-          localStorage.setItem(
-            "authUser",
-            JSON.stringify({
-              ...parsedUser,
-              profileImageUrl: uploadResult.data.url,
-              cloudinaryPublicId: uploadResult.data.publicId,
-            })
-          );
-        }
-      }
+      // Note: With JWT auth, profile image URL is not stored in localStorage
+      // User info is decoded from the JWT token on each request
+      // The backend should return a new token if user data needs to be updated
 
       toast.success("Profile photo updated!", {
         description: "Your profile photo has been successfully updated.",
@@ -209,17 +197,8 @@ const ProfilePhotoManager = ({
         onImageUpdate(null, updatedUser);
       }
 
-      // Update localStorage
-      const authUser = localStorage.getItem("authUser");
-      if (authUser) {
-        const parsedUser = JSON.parse(authUser);
-        if (parsedUser.id === userId || parsedUser.id === parseInt(userId)) {
-          const updated = { ...parsedUser };
-          delete updated.profileImageUrl;
-          delete updated.cloudinaryPublicId;
-          localStorage.setItem("authUser", JSON.stringify(updated));
-        }
-      }
+      // Note: With JWT auth, profile image URL is not stored in localStorage
+      // User info is decoded from the JWT token on each request
 
       toast.success("Profile photo deleted!", {
         description: "Your profile photo has been successfully removed.",
@@ -280,12 +259,11 @@ const ProfilePhotoManager = ({
       .slice(0, 2);
   };
 
-  // Get user name from localStorage for initials
+  // Get user name from JWT token for initials
   const getUserName = () => {
     try {
-      const authUser = localStorage.getItem("authUser");
-      if (authUser) {
-        const user = JSON.parse(authUser);
+      const user = getCurrentUser();
+      if (user) {
         return user.username || user.name || "User";
       }
     } catch (error) {

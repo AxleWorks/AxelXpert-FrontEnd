@@ -60,7 +60,7 @@ const SignIn = () => {
       if (res.data && res.data.accessToken) {
         const { accessToken } = res.data;
 
-        // Decode JWT token to extract user information
+        // Decode JWT token to extract role for routing
         try {
           const base64Url = accessToken.split(".")[1];
           const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -68,25 +68,15 @@ const SignIn = () => {
 
           console.log("Decoded token:", decoded);
 
-          // Create user data object from decoded token
+          // Get role from token
           const role = String(decoded.role || "user").toLowerCase();
-          const userData = {
-            id: decoded.id,
-            username: decoded.sub, // JWT 'sub' field contains the username
-            email: decoded.email,
-            role,
-            accessToken,
-          };
 
-          console.log("User data:", userData);
-
-          // Save to localStorage
-          localStorage.setItem("authUser", JSON.stringify(userData));
+          // ONLY store the access token in localStorage
           localStorage.setItem("accessToken", accessToken);
 
-          // Update context if available
+          // Update context with the token
           if (setAuthUser) {
-            setAuthUser(userData.accessToken);
+            setAuthUser(accessToken);
           }
 
           // Navigate based on role
@@ -136,7 +126,9 @@ const SignIn = () => {
             );
         }
       } else if (err.request) {
-        setError("Cannot connect to server. Please check if backend is running.");
+        setError(
+          "Cannot connect to server. Please check if backend is running."
+        );
       } else {
         setError("An unexpected error occurred");
       }

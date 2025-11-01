@@ -259,7 +259,7 @@ const SettingsComponent = ({ role = "user" }) => {
           }
 
           // Clear localStorage and redirect to login
-          localStorage.removeItem("authUser");
+          localStorage.removeItem("accessToken");
           toast.success("Account deleted", {
             description: "Your account has been successfully deleted.",
           });

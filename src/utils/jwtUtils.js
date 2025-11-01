@@ -81,11 +81,9 @@ export const getUserDataFromToken = (token) => {
  */
 export const getStoredAccessToken = () => {
   try {
-    const authUser = localStorage.getItem("authUser");
-    if (!authUser) return null;
-
-    const userData = JSON.parse(authUser);
-    return userData.accessToken || null;
+    // Only retrieve the token, not user data
+    const token = localStorage.getItem("accessToken");
+    return token || null;
   } catch (error) {
     console.error("Error getting stored access token:", error);
     return null;
@@ -98,20 +96,8 @@ export const getStoredAccessToken = () => {
  */
 export const storeAccessToken = (accessToken) => {
   try {
-    // Get current auth user data or create new
-    let authUser = {};
-    try {
-      const stored = localStorage.getItem("authUser");
-      if (stored) authUser = JSON.parse(stored);
-    } catch (e) {
-      // ignore parsing errors
-    }
-
-    // Add access token to auth user data
-    authUser.accessToken = accessToken;
-
-    // Store back to localStorage
-    localStorage.setItem("authUser", JSON.stringify(authUser));
+    // Only store the token, no user data
+    localStorage.setItem("accessToken", accessToken);
   } catch (error) {
     console.error("Error storing access token:", error);
   }
@@ -122,7 +108,8 @@ export const storeAccessToken = (accessToken) => {
  */
 export const clearStoredToken = () => {
   try {
-    localStorage.removeItem("authUser");
+    // Remove only the token
+    localStorage.removeItem("accessToken");
   } catch (error) {
     console.error("Error clearing stored token:", error);
   }

@@ -7,11 +7,7 @@ import {
   FormControlLabel,
   Chip as MuiChip,
 } from "@mui/material";
-import {
-  PlayArrow,
-  Upload,
-  CheckCircle,
-} from "@mui/icons-material";
+import { PlayArrow, Upload, CheckCircle } from "@mui/icons-material";
 import { Card, CardContent, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -19,9 +15,10 @@ import { Progress } from "../ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Textarea } from "../ui/textarea";
 import { TaskImageUploadModal } from "./TaskImageUploadModal";
-import {authenticatedAxios} from "../../utils/axiosConfig";
+import { authenticatedAxios } from "../../utils/axiosConfig";
 import { API_BASE } from "../../config/apiEndpoints";
 import { uploadImageToCloudinary } from "../../utils/cloudinaryUtils";
+import { getCurrentUser } from "../../utils/jwtUtils";
 
 export function EmployeeTasks() {
   const [activeTasks, setActiveTasks] = useState([]);
@@ -36,7 +33,13 @@ export function EmployeeTasks() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const user = JSON.parse(localStorage.getItem("authUser"));
+        // Get user from JWT token
+        const user = getCurrentUser();
+        if (!user) {
+          console.error("No authenticated user found");
+          return;
+        }
+
         const response = await authenticatedAxios.get(
           `${API_BASE}/api/tasks/employee/${user.id}`
         );
@@ -79,20 +82,19 @@ export function EmployeeTasks() {
             : task
         )
       );
-
     } catch (error) {
       console.error("Failed to start timer:", error);
     }
   };
 
   const handleSubtaskToggle = async (taskId, subtaskId) => {
-
     const task = activeTasks.find((t) => t.id === taskId);
     const subtask = task.subTasks.find((st) => st.id === subtaskId);
 
-    if (task.status !== "IN_PROGRESS") return
+    if (task.status !== "IN_PROGRESS") return;
 
-    const toggledState = subtask.status === "COMPLETED" ? "NOT_STARTED" : "COMPLETED";
+    const toggledState =
+      subtask.status === "COMPLETED" ? "NOT_STARTED" : "COMPLETED";
 
     // hold the updated subtasks
     const updatedSubtasks = task.subTasks.map((st) =>
@@ -100,9 +102,15 @@ export function EmployeeTasks() {
     );
 
     // progress update
-    const completedCount = updatedSubtasks.filter((st) => st.status === "COMPLETED").length;
-    const progress = Math.round((completedCount / updatedSubtasks.length) * 100);
-    const allSubtasksCompleted = updatedSubtasks.every((st) => st.status === "COMPLETED");
+    const completedCount = updatedSubtasks.filter(
+      (st) => st.status === "COMPLETED"
+    ).length;
+    const progress = Math.round(
+      (completedCount / updatedSubtasks.length) * 100
+    );
+    const allSubtasksCompleted = updatedSubtasks.every(
+      (st) => st.status === "COMPLETED"
+    );
 
     setActiveTasks((prevTasks) =>
       prevTasks.map((t) => {
@@ -131,7 +139,7 @@ export function EmployeeTasks() {
       }
     } catch (error) {
       console.error("Failed to update subtask:", error);
-      
+
       // Revert to original state on error
       setActiveTasks((prevTasks) =>
         prevTasks.map((t) => {
@@ -151,7 +159,7 @@ export function EmployeeTasks() {
 
   const handleTaskCompletion = async (taskId, updatedSubtasks) => {
     const completionTime = new Date().toISOString();
-    
+
     try {
       await authenticatedAxios.patch(`${API_BASE}/api/tasks/${taskId}`, {
         completedTime: completionTime,
@@ -174,7 +182,6 @@ export function EmployeeTasks() {
 
         return prevTasks.filter((t) => t.id !== taskId);
       });
-
     } catch (error) {
       console.error("Failed to complete task:", error);
     }
@@ -196,9 +203,8 @@ export function EmployeeTasks() {
     setUploadingImages((prev) => ({ ...prev, [currentTaskId]: true }));
 
     try {
-
       const result = await uploadImageToCloudinary(file);
-      
+
       if (!result.success) {
         console.error(`Failed to upload ${file.name}:`, result.error);
         throw new Error(result.error);
@@ -209,10 +215,13 @@ export function EmployeeTasks() {
         description: description || "",
       };
 
-      await authenticatedAxios.post(`${API_BASE}/api/tasks/${currentTaskId}/images`, {
-        imageUrl: imageData.url,
-        description: imageData.description,
-      });
+      await authenticatedAxios.post(
+        `${API_BASE}/api/tasks/${currentTaskId}/images`,
+        {
+          imageUrl: imageData.url,
+          description: imageData.description,
+        }
+      );
 
       setActiveTasks((prevTasks) =>
         prevTasks.map((task) =>
@@ -224,7 +233,6 @@ export function EmployeeTasks() {
             : task
         )
       );
-
     } catch (error) {
       console.error("Failed to upload image:", error);
     } finally {
@@ -251,11 +259,17 @@ export function EmployeeTasks() {
     const isVisible = notesVisibility[taskId] || false;
 
     try {
-      const user = JSON.parse(localStorage.getItem("authUser"));
+      // Get user from JWT token
+      const user = getCurrentUser();
+      if (!user) {
+        console.error("No authenticated user found");
+        return;
+      }
+
       await authenticatedAxios.post(
         `${API_BASE}/api/tasks/${taskId}/notes?authorId=${user.id}`,
         {
-          noteType:"EMPLOYEE_NOTE",
+          noteType: "EMPLOYEE_NOTE",
           content: noteText,
           visibleToCustomer: isVisible,
         }
@@ -269,7 +283,6 @@ export function EmployeeTasks() {
         ...prev,
         [taskId]: false,
       }));
-
     } catch (error) {
       console.error("Failed to submit note:", error);
     }
@@ -304,7 +317,8 @@ export function EmployeeTasks() {
           sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 3 }}
         >
           {activeTasks.map((task) => {
-            const isTaskStarted = task.status != "COMPLETED" && task.status != "NOT_STARTED";
+            const isTaskStarted =
+              task.status != "COMPLETED" && task.status != "NOT_STARTED";
             const isUploading = uploadingImages[task.id];
 
             return (
@@ -351,9 +365,7 @@ export function EmployeeTasks() {
                     </Box>
 
                     <Box sx={{ textAlign: "right" }}>
-                      <Typography color="text.secondary">
-                        Start Time
-                      </Typography>
+                      <Typography color="text.secondary">Start Time</Typography>
                       <Typography>{task.sheduledTime}</Typography>
                     </Box>
                   </Box>
@@ -385,10 +397,10 @@ export function EmployeeTasks() {
                         justifyContent: "space-between",
                       }}
                     >
+                      <Typography variant="body2">Overall Progress</Typography>
                       <Typography variant="body2">
-                        Overall Progress
+                        {task.progress || 0}%
                       </Typography>
-                      <Typography variant="body2">{task.progress || 0}%</Typography>
                     </Box>
                     <Progress value={task.progress} />
                   </Box>
