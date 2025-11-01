@@ -9,6 +9,7 @@ import { Typography,
          List,
          ListItem,
          ListItemText,
+        ListItemIcon,
          IconButton } from "@mui/material";
 import { DirectionsCar as DirectionsCarIcon,
          ExpandMore as ExpandMoreIcon, 
@@ -45,6 +46,18 @@ const UserProgressTrackingPage = () => {
     return Math.round((completedTasks / subTasks.length) * 100);
   }
 
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'COMPLETED':
+        return <CheckCircleIcon color="success" />;
+      case 'IN_PROGRESS':
+        return <ScheduleIcon color="primary" />;
+      case 'NOT_STARTED':
+      default:
+        return <NotStartedIcon color="disabled" />;
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'COMPLETED':
@@ -55,7 +68,7 @@ const UserProgressTrackingPage = () => {
       default:
         return 'default';
     }
-  }
+  };
 
   const renderContent = () => {
     if (loading) {
@@ -75,6 +88,20 @@ const UserProgressTrackingPage = () => {
     }
 
     const progressPercentage = calculateProgress(task.subTasks);
+    
+    //Sorting map to give numbers
+    const statusOrder = {
+      'COMPLETED': 1,
+      'IN_PROGRESS': 2,
+      'NOT_STARTED': 3
+    };
+
+    // .slice to create a copy of the array
+    const sortedSubTasks = task.subTasks.slice().sort((a, b) => {
+      const orderA = statusOrder[a.status];
+      const orderB = statusOrder[b.status];
+      return orderA - orderB;
+    });
 
     return (
       <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3 }}>
@@ -135,9 +162,32 @@ const UserProgressTrackingPage = () => {
           <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
             Tasks Progress
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Sub-Task list will be displayed here.
-          </Typography>
+          {/* dense make the list items a bit smaller */}
+                <List dense>  
+                {sortedSubTasks.map((sub)=> (
+                  <ListItem key={sub.id} sx ={{ pl: 1, bgcolor:'#f4f4f4ff', p:1, mb:1, borderRadius:10}}>
+                  <Chip
+                    icon={getStatusIcon(sub.status)}
+                    size="small"
+                    color={getStatusColor(sub.status)}
+                    sx={{ 
+                    height: 24, 
+                    mr: 2,
+                    '& .MuiChip-icon': {
+                      marginLeft: '8px',
+                      marginRight: '-4px'
+                    }
+                    }}
+                  />
+                <ListItemText 
+                  primary={sub.title} 
+                />
+                {/* <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
+                    {sub.description}
+                </Typography> */}
+              </ListItem>
+            ))}
+          </List>
         </Box>
       </Collapse>
 
