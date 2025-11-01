@@ -194,7 +194,7 @@ const UserProgressTrackingPage = () => {
                 {task.technicianNotes}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                {new Date(task.techncianNoteAddedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                {new Date(task.technicianNoteAddedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
               </Typography>
             </List>
           </Box>
