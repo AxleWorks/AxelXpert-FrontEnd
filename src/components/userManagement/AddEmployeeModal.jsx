@@ -9,15 +9,24 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
   CircularProgress,
   Typography,
+  IconButton,
+  useTheme,
+  alpha,
 } from "@mui/material";
+import { Close } from "@mui/icons-material";
 import { Button } from "../../components/ui/button";
-import axios from "axios";
+import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import { BRANCHES_URL, USERS_URL } from "../../config/apiEndpoints.jsx";
+import { useAuth } from "../../contexts/AuthContext";
 
-export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo }) {
+export default function AddEmployeeModal({
+  open,
+  onClose,
+  onCreate,
+  managerInfo,
+}) {
   const [form, setForm] = React.useState({
     email: "",
     role: "",
@@ -34,7 +43,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo 
       const fetchBranches = async () => {
         setLoading(true);
         try {
-          const response = await axios.get(`${BRANCHES_URL}/all`);
+          const response = await authenticatedAxios.get(`${BRANCHES_URL}/all`);
           setBranches(response.data);
           // Auto-select the manager's branch if available
           if (managerInfo?.branchName) {
@@ -64,18 +73,20 @@ export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo 
 
   const handleChange = (key) => (e) => {
     const value = e.target.value;
-    
+
     // Validate branch selection
     if (key === "branch") {
       if (managerInfo?.branchName && value !== managerInfo.branchName) {
-        setError(`You can only add users to your branch: ${managerInfo.branchName}`);
+        setError(
+          `You can only add users to your branch: ${managerInfo.branchName}`
+        );
         return; // Prevents the selection
       } else {
         // Clear error when valid branch is selected or any other valid input
         setError("");
       }
     }
-    
+
     setForm((s) => ({ ...s, [key]: value }));
   };
 
@@ -95,7 +106,9 @@ export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo 
 
     // Validate manager info is available
     if (!managerInfo?.id) {
-      setError("Manager information not available. Please refresh and try again.");
+      setError(
+        "Manager information not available. Please refresh and try again."
+      );
       return;
     }
 
@@ -124,6 +137,11 @@ export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo 
           setError(
             err.response.data || "Invalid data. Please check your inputs."
           );
+        } else if (err.response.status === 403) {
+          // Forbidden - manager trying to add to wrong branch
+          setError(
+            err.response.data || "You can only add employees to your own branch"
+          );
         } else if (err.response.status === 500) {
           setError("Server error. Please try again later.");
         } else {
@@ -137,6 +155,49 @@ export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo 
     }
   };
 
+  const inputStyles = {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 2,
+      backgroundColor: "background.paper",
+      "& fieldset": {
+        borderColor: "rgba(0, 0, 0, 0.12)",
+      },
+      "&:hover fieldset": {
+        borderColor: "rgba(0, 0, 0, 0.23)",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "#0b75d9",
+      },
+    },
+    "& .MuiInputBase-input": {
+      padding: "12px 14px",
+    },
+  };
+
+  const labelStyles = {
+    mb: 1,
+    color: "text.secondary",
+    fontSize: "0.875rem",
+    fontWeight: 500,
+  };
+
+  const selectStyles = {
+    borderRadius: 2,
+    backgroundColor: "background.paper",
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: "rgba(0, 0, 0, 0.12)",
+    },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: "rgba(0, 0, 0, 0.23)",
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#0b75d9",
+    },
+    "& .MuiSelect-select": {
+      padding: "12px 14px",
+    },
+  };
+
   return (
     <Dialog
       open={!!open}
@@ -145,34 +206,76 @@ export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo 
       maxWidth="sm"
       PaperProps={{
         sx: {
+          bgcolor: isDark ? "grey.900" : "background.paper",
+          backgroundImage: "none",
           borderRadius: 3,
-          p: 1,
+          boxShadow: isDark
+            ? "0 20px 60px rgba(0, 0, 0, 0.6)"
+            : "0 20px 60px rgba(0, 0, 0, 0.15)",
+        },
+      }}
+      slotProps={{
+        backdrop: {
+          sx: {
+            backdropFilter: "blur(10px)",
+            backgroundColor: isDark
+              ? "rgba(0, 0, 0, 0.75)"
+              : "rgba(0, 0, 0, 0.4)",
+          },
         },
       }}
     >
       <DialogTitle
         sx={{
-          fontSize: "1.5rem",
-          fontWeight: 600,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           pb: 2,
           pt: 3,
           px: 3,
+          borderBottom: 1,
+          borderColor: isDark ? "grey.800" : "grey.200",
+          bgcolor: isDark
+            ? alpha(theme.palette.success.dark, 0.05)
+            : alpha(theme.palette.success.light, 0.05),
         }}
       >
-        Add Employee
+        <Box
+          sx={{
+            fontSize: "1.35rem",
+            fontWeight: 700,
+            color: isDark ? "grey.50" : "grey.900",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Add Employee
+        </Box>
+        <IconButton
+          edge="end"
+          color="inherit"
+          onClick={onClose}
+          aria-label="close"
+          size="small"
+          sx={{
+            color: isDark ? "grey.400" : "grey.600",
+            transition: "all 0.2s ease",
+            "&:hover": {
+              color: isDark ? "grey.100" : "grey.900",
+              bgcolor: isDark
+                ? alpha(theme.palette.error.dark, 0.2)
+                : alpha(theme.palette.error.light, 0.15),
+              transform: "rotate(90deg)",
+            },
+          }}
+        >
+          <Close fontSize="small" />
+        </IconButton>
       </DialogTitle>
       <DialogContent sx={{ px: 3, py: 2 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
+          {/* Email */}
           <Box>
-            <Typography
-              variant="body2"
-              sx={{
-                mb: 1,
-                color: "text.secondary",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-              }}
-            >
+            <Typography variant="body2" sx={labelStyles}>
               Email
             </Typography>
             <TextField
@@ -183,37 +286,12 @@ export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo 
               required
               placeholder="example@axlexpert.com"
               error={!!error && !form.email}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                  backgroundColor: "background.paper",
-                  "& fieldset": {
-                    borderColor: "rgba(0, 0, 0, 0.12)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(0, 0, 0, 0.23)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#0b75d9",
-                  },
-                },
-                "& .MuiInputBase-input": {
-                  padding: "12px 14px",
-                },
-              }}
+              sx={inputStyles}
             />
           </Box>
-
+          {/* Role */}
           <Box>
-            <Typography
-              variant="body2"
-              sx={{
-                mb: 1,
-                color: "text.secondary",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-              }}
-            >
+            <Typography variant="body2" sx={labelStyles}>
               Role
             </Typography>
             <FormControl fullWidth required error={!!error && !form.role}>
@@ -221,46 +299,31 @@ export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo 
                 value={form.role}
                 onChange={handleChange("role")}
                 displayEmpty
-                sx={{
-                  borderRadius: 2,
-                  backgroundColor: "background.paper",
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "rgba(0, 0, 0, 0.12)",
-                  },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "rgba(0, 0, 0, 0.23)",
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#0b75d9",
-                  },
-                  "& .MuiSelect-select": {
-                    padding: "12px 14px",
-                  },
-                }}
+                sx={selectStyles}
               >
                 <MenuItem value="" disabled>
                   <Typography sx={{ color: "text.secondary" }}>
                     Select role
                   </Typography>
                 </MenuItem>
-                <MenuItem value="USER">User</MenuItem>
-                <MenuItem value="EMPLOYEE">Employee</MenuItem>
-                <MenuItem value="MANAGER">Manager</MenuItem>
+                <MenuItem value="user">User</MenuItem>
+                <MenuItem value="employee">Employee</MenuItem>
+                <MenuItem value="manager">Manager</MenuItem>
               </Select>
             </FormControl>
           </Box>
-
+          {/* Branch */}
           <Box>
-            <Typography
-              variant="body2"
-              sx={{
-                mb: 1,
-                color: "text.secondary",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-              }}
-            >
+            <Typography variant="body2" sx={labelStyles}>
               Branch
+              {user?.role === "manager" && (
+                <Typography
+                  component="span"
+                  sx={{ color: "text.secondary", fontSize: "0.75rem", ml: 1 }}
+                >
+                  (You can only add to your branch)
+                </Typography>
+              )}
             </Typography>
             <FormControl
               fullWidth
@@ -272,22 +335,7 @@ export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo 
                 value={form.branch}
                 onChange={handleChange("branch")}
                 displayEmpty
-                sx={{
-                  borderRadius: 2,
-                  backgroundColor: "background.paper",
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "rgba(0, 0, 0, 0.12)",
-                  },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "rgba(0, 0, 0, 0.23)",
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#0b75d9",
-                  },
-                  "& .MuiSelect-select": {
-                    padding: "12px 14px",
-                  },
-                }}
+                sx={selectStyles}
               >
                 {loading ? (
                   <MenuItem disabled>
@@ -318,7 +366,8 @@ export default function AddEmployeeModal({ open, onClose, onCreate, managerInfo 
                 )}
               </Select>
             </FormControl>
-          </Box>          {error && (
+          </Box>{" "}
+          {error && (
             <Box
               sx={{
                 color: "error.main",

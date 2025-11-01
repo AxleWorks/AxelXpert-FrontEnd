@@ -15,7 +15,7 @@ import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import { publicAxios } from "../../utils/axiosConfig.js";
 import { useNavigate } from "react-router-dom";
 import { AUTH_URL } from "../../config/apiEndpoints";
 
@@ -66,7 +66,7 @@ const SignUp = () => {
     }
 
     try {
-      const res = await axios.post(`${AUTH_URL}/signup`, {
+      const res = await publicAxios.post(`${AUTH_URL}/signup`, {
         username: userName,
         email,
         password,
@@ -107,8 +107,8 @@ const SignUp = () => {
     // small backend healthcheck
     (async () => {
       try {
-        await axios.get(`${AUTH_URL}/status`);
-      } catch (e) {
+        await publicAxios.get(`${AUTH_URL}/status`);
+      } catch {
         // ignore
       }
     })();
