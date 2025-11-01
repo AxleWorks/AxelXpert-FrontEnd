@@ -13,8 +13,10 @@ import BlockConfirmDialog from "../../components/userManagement/BlockConfirmDial
 import NotificationSnackbar from "../../components/userManagement/NotificationSnackbar";
 import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import { USERS_URL } from "../../config/apiEndpoints.jsx";
+import { useAuth } from "../../contexts/AuthContext";
 
 const ManagerUserManagementPage = () => {
+  const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,9 +35,18 @@ const ManagerUserManagementPage = () => {
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [employeeToBlock, setEmployeeToBlock] = useState(null);
 
+  // Check if user is admin
+  const isAdmin = user?.role === "admin";
+
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
+        console.log("Fetching user data...", {
+          userRole: user?.role,
+          userBranchId: user?.branchId,
+          isAdmin,
+        });
+
         // Fetch all user types: employees, managers, and users
         const [employeesRes, managersRes, usersRes] = await Promise.all([
           authenticatedAxios.get(`${USERS_URL}/employees`),
@@ -43,14 +54,48 @@ const ManagerUserManagementPage = () => {
           authenticatedAxios.get(`${USERS_URL}/users`),
         ]);
 
-        // Combine all user types
-        const allUsers = [
-          ...employeesRes.data,
-          ...managersRes.data,
-          ...usersRes.data,
-        ];
+        console.log("API Response:", {
+          employees: employeesRes.data.length,
+          managers: managersRes.data.length,
+          users: usersRes.data.length,
+          sampleEmployee: employeesRes.data[0],
+          sampleUser: usersRes.data[0],
+        });
 
-        setEmployees(allUsers);
+        // Manager view: their branch employees + all users (role=user)
+        if (!isAdmin && user?.branchId) {
+          const branchEmployees = employeesRes.data.filter(
+            (emp) => emp.branchId === user.branchId
+          );
+
+          console.log("Manager filtering:", {
+            totalEmployees: employeesRes.data.length,
+            branchEmployees: branchEmployees.length,
+            allUsers: usersRes.data.length,
+          });
+
+          const combinedUsers = [
+            ...branchEmployees,
+            ...usersRes.data, // All users with role=user, regardless of branch
+          ];
+
+          console.log(
+            "Combined users for manager:",
+            combinedUsers.length,
+            combinedUsers
+          );
+          setEmployees(combinedUsers);
+        } else {
+          // Admin view: all employees, managers, and users
+          const allUsers = [
+            ...employeesRes.data,
+            ...managersRes.data,
+            ...usersRes.data,
+          ];
+
+          console.log("Admin view - all users:", allUsers.length);
+          setEmployees(allUsers);
+        }
       } catch (err) {
         console.error("Failed to fetch employees:", err);
         setError("Failed to load employees. Please try again later.");
@@ -60,7 +105,7 @@ const ManagerUserManagementPage = () => {
     };
 
     fetchEmployees();
-  }, []);
+  }, [user, isAdmin]);
 
   const handleOpenAdd = useCallback(() => {
     console.log("Add Employee button clicked - opening modal");
@@ -352,6 +397,8 @@ const ManagerUserManagementPage = () => {
           open={addOpen}
           onClose={handleCloseAdd}
           onCreate={handleCreateEmployee}
+          isAdmin={isAdmin}
+          userBranchId={user?.branchId}
         />
 
         <DeleteConfirmDialog
