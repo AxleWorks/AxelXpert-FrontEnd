@@ -1,6 +1,5 @@
 // API service for booking operations
 import { API_BASE, API_PREFIX } from "../config/apiEndpoints.jsx";
-import { createAuthenticatedFetchOptions } from "../utils/jwtUtils.js";
 
 const API_BASE_URL = `${API_BASE}${API_PREFIX}/bookings`;
 
@@ -11,13 +10,13 @@ const API_BASE_URL = `${API_BASE}${API_PREFIX}/bookings`;
  */
 export const createBooking = async (bookingData) => {
   try {
-    const response = await fetch(
-      API_BASE_URL,
-      createAuthenticatedFetchOptions({
-        method: "POST",
-        body: JSON.stringify(bookingData),
-      })
-    );
+    const response = await fetch(API_BASE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(bookingData),
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -41,7 +40,7 @@ export const getAllBookings = async (count = null) => {
     const url = count
       ? `${API_BASE_URL}/all?count=${count}`
       : `${API_BASE_URL}/all`;
-    const response = await fetch(url, createAuthenticatedFetchOptions());
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error("Failed to fetch bookings");
@@ -78,13 +77,13 @@ export const getCustomerBookings = async (customerId) => {
  */
 export const assignEmployee = async (bookingId, employeeId) => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/${bookingId}/assign`,
-      createAuthenticatedFetchOptions({
-        method: "POST",
-        body: JSON.stringify({ employeeId }),
-      })
-    );
+    const response = await fetch(`${API_BASE_URL}/${bookingId}/assign`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ employeeId }),
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -107,13 +106,13 @@ export const assignEmployee = async (bookingId, employeeId) => {
  */
 export const rejectBooking = async (bookingId, reason, notes = "") => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/${bookingId}/reject`,
-      createAuthenticatedFetchOptions({
-        method: "POST",
-        body: JSON.stringify({ reason, notes }),
-      })
-    );
+    const response = await fetch(`${API_BASE_URL}/${bookingId}/reject`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reason, notes }),
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -136,12 +135,12 @@ export const deleteBooking = async (bookingId) => {
   try {
     console.log(`Attempting to delete booking with ID: ${bookingId}`);
 
-    const response = await fetch(
-      `${API_BASE_URL}/${bookingId}`,
-      createAuthenticatedFetchOptions({
-        method: "DELETE",
-      })
-    );
+    const response = await fetch(`${API_BASE_URL}/${bookingId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     console.log(`Delete response status: ${response.status}`);
 

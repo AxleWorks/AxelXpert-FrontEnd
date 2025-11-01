@@ -37,8 +37,6 @@ import {
   validateImageFile,
   generateCloudinaryUrl,
 } from "../../utils/cloudinaryUtils";
-import { getAuthHeader, getCurrentUser } from "../../utils/jwtUtils";
-import { authenticatedAxios } from "../../utils/axiosConfig";
 
 const ProfilePhotoManager = ({
   currentImageUrl,
@@ -93,8 +91,6 @@ const ProfilePhotoManager = ({
     setIsUploading(true);
     setUploadProgress(0);
 
-    let uploadResult = null;
-
     try {
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
@@ -105,7 +101,7 @@ const ProfilePhotoManager = ({
       }, 200);
 
       // Upload to Cloudinary first
-      uploadResult = await uploadImageToCloudinary(selectedFile, {
+      const uploadResult = await uploadImageToCloudinary(selectedFile, {
         folder: `profile_photos/user_${userId}`,
       });
 
@@ -117,26 +113,50 @@ const ProfilePhotoManager = ({
       }
 
       // Save the Cloudinary URL to backend
-      const response = await authenticatedAxios.put(
-        `${API_BASE}/api/users/${userId}/profile-image`,
+      const response = await fetch(
+        `${API_BASE}${API_PREFIX}/users/${userId}/profile-image`,
         {
-          profileImageUrl: uploadResult.data.url,
-          cloudinaryPublicId: uploadResult.data.publicId,
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            profileImageUrl: uploadResult.data.url,
+            cloudinaryPublicId: uploadResult.data.publicId,
+          }),
         }
       );
 
       setUploadProgress(100);
 
-      const updatedUser = response.data;
+      if (!response.ok) {
+        // If backend save fails, try to delete the uploaded image from Cloudinary
+        await deleteImageFromCloudinary(uploadResult.data.publicId);
+        throw new Error("Failed to save profile image to database");
+      }
+
+      const updatedUser = await response.json();
 
       // Call parent callback
       if (onImageUpdate) {
         onImageUpdate(uploadResult.data.url, updatedUser);
       }
 
-      // Note: With JWT auth, profile image URL is not stored in localStorage
-      // User info is decoded from the JWT token on each request
-      // The backend should return a new token if user data needs to be updated
+      // Update localStorage if needed
+      const authUser = localStorage.getItem("authUser");
+      if (authUser) {
+        const parsedUser = JSON.parse(authUser);
+        if (parsedUser.id === userId || parsedUser.id === parseInt(userId)) {
+          localStorage.setItem(
+            "authUser",
+            JSON.stringify({
+              ...parsedUser,
+              profileImageUrl: uploadResult.data.url,
+              cloudinaryPublicId: uploadResult.data.publicId,
+            })
+          );
+        }
+      }
 
       toast.success("Profile photo updated!", {
         description: "Your profile photo has been successfully updated.",
@@ -145,18 +165,8 @@ const ProfilePhotoManager = ({
       handleCloseDialog();
     } catch (error) {
       console.error("Upload error:", error);
-
-      // If backend save fails, try to delete the uploaded image from Cloudinary
-      if (uploadResult?.success && uploadResult.data?.publicId) {
-        await deleteImageFromCloudinary(uploadResult.data.publicId);
-      }
-
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to save profile image to database";
       toast.error("Upload failed", {
-        description: errorMessage,
+        description: error.message || "Please try again later.",
       });
     } finally {
       setIsUploading(false);
@@ -174,9 +184,16 @@ const ProfilePhotoManager = ({
       const publicId = extractPublicIdFromUrl(currentImageUrl);
 
       // Delete from backend first
-      const response = await authenticatedAxios.delete(
-        `${API_BASE}/api/users/${userId}/profile-image`
+      const response = await fetch(
+        `${API_BASE}${API_PREFIX}/users/${userId}/profile-image`,
+        {
+          method: "DELETE",
+        }
       );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete profile image from database");
+      }
 
       // Delete from Cloudinary if we have a public ID
       if (publicId) {
@@ -190,15 +207,24 @@ const ProfilePhotoManager = ({
         }
       }
 
-      const updatedUser = response.data;
+      const updatedUser = await response.json();
 
       // Call parent callback
       if (onImageUpdate) {
         onImageUpdate(null, updatedUser);
       }
 
-      // Note: With JWT auth, profile image URL is not stored in localStorage
-      // User info is decoded from the JWT token on each request
+      // Update localStorage
+      const authUser = localStorage.getItem("authUser");
+      if (authUser) {
+        const parsedUser = JSON.parse(authUser);
+        if (parsedUser.id === userId || parsedUser.id === parseInt(userId)) {
+          const updated = { ...parsedUser };
+          delete updated.profileImageUrl;
+          delete updated.cloudinaryPublicId;
+          localStorage.setItem("authUser", JSON.stringify(updated));
+        }
+      }
 
       toast.success("Profile photo deleted!", {
         description: "Your profile photo has been successfully removed.",
@@ -207,12 +233,8 @@ const ProfilePhotoManager = ({
       setMenuAnchorEl(null);
     } catch (error) {
       console.error("Delete error:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to delete profile image from database";
       toast.error("Delete failed", {
-        description: errorMessage,
+        description: error.message || "Please try again later.",
       });
     } finally {
       setIsDeleting(false);
@@ -259,11 +281,12 @@ const ProfilePhotoManager = ({
       .slice(0, 2);
   };
 
-  // Get user name from JWT token for initials
+  // Get user name from localStorage for initials
   const getUserName = () => {
     try {
-      const user = getCurrentUser();
-      if (user) {
+      const authUser = localStorage.getItem("authUser");
+      if (authUser) {
+        const user = JSON.parse(authUser);
         return user.username || user.name || "User";
       }
     } catch (error) {

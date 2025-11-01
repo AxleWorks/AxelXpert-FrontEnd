@@ -5,53 +5,51 @@ import {
   Button,
   Typography,
   Box,
-  CircularProgress,
+  Paper,
+  IconButton,
+  Stack,
+  Tooltip,
 } from "@mui/material";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { publicAxios } from "../../utils/axiosConfig.js";
+import axios from "axios";
 import AuthLayout from "./AuthLayout";
 import AuthBranding from "./AuthBranding";
 import AuthFormContainer from "./AuthFormContainer";
 import { AUTH_URL } from "../../config/apiEndpoints";
 
 const SignIn = () => {
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { setAuthUser } = useAuth();
 
   useEffect(() => {
     // quick backend status check
+    let mounted = true;
     (async () => {
       try {
-        await publicAxios.get(`${AUTH_URL}/status`);
-      } catch {
+        await axios.get(`${AUTH_URL}/status`);
+      } catch (e) {
         // ignore - used only for quick healthcheck
       }
     })();
+    return () => (mounted = false);
   }, []);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError("");
     setLoading(true);
+    setError(null);
 
     try {
-      const res = await publicAxios.post(`${AUTH_URL}/login`, {
-        email: formData.email,
-        password: formData.password,
+      // call backend login endpoint and expect LoginResponse {id, username, email, role}
+      const res = await axios.post(`${AUTH_URL}/login`, {
+        email: username,
+        password,
       });
 
       // If backend returns an object with user data, save it and update context/localStorage
@@ -94,43 +92,10 @@ const SignIn = () => {
       if (res && res.status === 200) {
         setError(String(res.data || "Login response received"));
       }
-
-      // If no accessToken in response
-      setError("Invalid response from server. Please try again.");
     } catch (err) {
-      console.error("Login error:", err);
-
-      // Handle different error scenarios
-      if (err.response) {
-        const errorMessage =
-          err.response.data?.message ||
-          err.response.data?.error ||
-          err.response.data;
-
-        switch (err.response.status) {
-          case 401:
-            setError("Invalid email or password");
-            break;
-          case 403:
-            setError("Account not activated. Please check your email.");
-            break;
-          case 404:
-            setError("User not found");
-            break;
-          default:
-            setError(
-              typeof errorMessage === "string"
-                ? errorMessage
-                : "Login failed. Please try again."
-            );
-        }
-      } else if (err.request) {
-        setError(
-          "Cannot connect to server. Please check if backend is running."
-        );
-      } else {
-        setError("An unexpected error occurred");
-      }
+      if (err.response && err.response.data)
+        setError(String(err.response.data));
+      else setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -142,7 +107,7 @@ const SignIn = () => {
     <AuthFormContainer title="Sign In" error={error}>
       <form onSubmit={handleSubmit} noValidate>
         <Typography variant="body2" sx={{ mb: 1, color: "#64748b" }}>
-          Email
+          Username
         </Typography>
         <TextField
           placeholder="Enter your username"
@@ -150,11 +115,9 @@ const SignIn = () => {
           variant="outlined"
           fullWidth
           margin="normal"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
-          disabled={loading}
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
@@ -177,11 +140,9 @@ const SignIn = () => {
           variant="outlined"
           fullWidth
           margin="normal"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
-          disabled={loading}
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
@@ -195,9 +156,11 @@ const SignIn = () => {
           }}
         />
 
+        {/* error is displayed at the top of AuthFormContainer; removed inline Alert to avoid duplication */}
+
         <Box sx={{ textAlign: "right", mb: 3 }}>
           <Link
-            to="/forgot-password"
+            to="/forget-password"
             style={{ color: "#3b82f6", textDecoration: "none" }}
           >
             Forgot Password?
@@ -228,7 +191,7 @@ const SignIn = () => {
             },
           }}
         >
-          {loading ? <CircularProgress size={24} color="inherit" /> : "Sign In"}
+          {loading ? "Signing in..." : "Sign In"}
         </Button>
 
         <Box sx={{ textAlign: "center" }}>

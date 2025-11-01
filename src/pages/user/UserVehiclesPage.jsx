@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Typography, Box, Grid, Button } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
-import { authenticatedAxios } from "../../utils/axiosConfig.js";
-import { getCurrentUser } from "../../utils/jwtUtils.js";
+import axios from "axios";
 import { VEHICLES_URL } from "../../config/apiEndpoints";
 import VehicleCard from "../../components/vehicles/VehicleCard";
 import VehicleForm from "../../components/vehicles/VehicleForm";
@@ -24,16 +23,14 @@ const UserVehiclesPage = () => {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const currentUser = getCurrentUser();
-        const userId = currentUser?.id;
+        const authUser = JSON.parse(localStorage.getItem("authUser"));
+        const userId = authUser?.id;
         if (!userId) {
-          console.error("User ID not found in JWT token");
+          console.error("User ID not found in local storage");
           setVehicles([]);
           return;
         }
-        const response = await authenticatedAxios.get(
-          `${VEHICLES_URL}/user/${userId}`
-        );
+        const response = await axios.get(`${VEHICLES_URL}/user/${userId}`);
         setVehicles(Array.isArray(response.data) ? response.data : []); // Ensure vehicles is always an array
       } catch (error) {
         console.error("Error fetching vehicles:", error);
@@ -66,30 +63,25 @@ const UserVehiclesPage = () => {
 
   const handleSave = async () => {
     try {
-      const currentUser = getCurrentUser();
-      const userId = currentUser?.id;
+      const authUser = JSON.parse(localStorage.getItem("authUser"));
+      const userId = authUser?.id;
       if (!userId) {
-        console.error("User ID not found in JWT token");
+        console.error("User ID not found in local storage");
         return;
       }
 
       if (formData.id) {
         // Update vehicle
-        await authenticatedAxios.put(
-          `${VEHICLES_URL}/${formData.id}`,
-          formData
-        );
+        await axios.put(`${VEHICLES_URL}/${formData.id}`, formData);
       } else {
         // Create new vehicle
-        await authenticatedAxios.post(VEHICLES_URL, {
+        await axios.post(VEHICLES_URL, {
           ...formData,
           userId: userId,
         });
       }
       handleCloseDialog();
-      const response = await authenticatedAxios.get(
-        `${VEHICLES_URL}/user/${userId}`
-      );
+      const response = await axios.get(`${VEHICLES_URL}/user/${userId}`);
       setVehicles(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error saving vehicle:", error);
@@ -98,7 +90,7 @@ const UserVehiclesPage = () => {
 
   const handleDelete = async (id) => {
     try {
-      await authenticatedAxios.delete(`${VEHICLES_URL}/${id}`);
+      await axios.delete(`${VEHICLES_URL}/${id}`);
       setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id));
     } catch (error) {
       console.error("Error deleting vehicle:", error);

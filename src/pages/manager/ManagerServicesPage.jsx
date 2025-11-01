@@ -3,200 +3,128 @@ import {
   Typography,
   Paper,
   Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   CircularProgress,
   Button,
-  Alert,
-  Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  IconButton,
 } from "@mui/material";
-import { Add } from "@mui/icons-material";
+import { Edit, Delete, Add } from "@mui/icons-material";
 import { SERVICES_URL } from "../../config/apiEndpoints.jsx";
-import { authenticatedAxios } from "../../utils/axiosConfig.js";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
-import ManageSubTasksModal from "../../components/services/ManageSubTasksModal";
-import ServiceFormDialog from "../../components/services/ServiceFormDialog";
-import DeleteServiceDialog from "../../components/services/DeleteServiceDialog";
-import ServiceCard from "../../components/services/ServiceCard";
+
+const emptyService = {
+  name: "",
+  price: "",
+  durationMinutes: "",
+  description: "",
+};
 
 const ManagerServicesPage = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [currentService, setCurrentService] = useState(emptyService);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Service form dialog state
-  const [serviceFormOpen, setServiceFormOpen] = useState(false);
-  const [formMode, setFormMode] = useState("add");
-  const [editingService, setEditingService] = useState(null);
-
-  // Delete dialog state
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingService, setDeletingService] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-
-  // SubTasks modal state
-  const [subTasksModalOpen, setSubTasksModalOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState(null);
-
-  const fetchServices = async () => {
+  const fetchServices = () => {
     setLoading(true);
-    try {
-      const response = await authenticatedAxios.get(SERVICES_URL);
-      // Ensure we have an array of services
-      const servicesData = Array.isArray(response.data) ? response.data : [];
-      setServices(servicesData);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching services:", err);
-      setError(
-        err.response?.data?.message || err.message || "Failed to fetch services"
-      );
-      setServices([]); // Set empty array to prevent filter error
-    } finally {
-      setLoading(false);
-    }
+    fetch(SERVICES_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch services");
+        return res.json();
+      })
+      .then((data) => {
+        setServices(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
     fetchServices();
   }, []);
 
-  const handleAddNew = () => {
-    setEditingService({
-      name: "",
-      price: "",
-      durationMinutes: "",
-      description: "",
-    });
-    setFormMode("add");
-    setServiceFormOpen(true);
+  const handleDialogOpen = (service = emptyService) => {
+    setCurrentService(service);
+    setEditMode(!!service.id);
+    setDialogOpen(true);
   };
 
-  const handleEdit = (service) => {
-    setEditingService(service);
-    setFormMode("edit");
-    setServiceFormOpen(true);
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setCurrentService(emptyService);
+    setEditMode(false);
   };
 
-  const handleSaveService = async (formData) => {
-    setError(null);
-    setSuccess(null);
-    try {
-      const serviceData = {
-        name: formData.name,
-        price: parseFloat(formData.price),
-        durationMinutes: parseInt(formData.durationMinutes, 10),
-        description: formData.description,
-      };
-
-      if (formMode === "add") {
-        await authenticatedAxios.post(SERVICES_URL, serviceData);
-        setSuccess("Service added successfully!");
-      } else {
-        await authenticatedAxios.put(
-          `${SERVICES_URL}/${editingService.id}`,
-          serviceData
-        );
-        setSuccess("Service updated successfully!");
-      }
-
-      await fetchServices();
-      setServiceFormOpen(false);
-      setEditingService(null);
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      console.error("Error saving service:", err);
-
-      // Handle specific error cases
-      let errorMessage = "Failed to save service";
-
-      if (err.response?.status === 403) {
-        errorMessage =
-          "Access denied: You don't have permission to perform this action. Please check your user role or contact your administrator.";
-      } else if (err.response?.status === 401) {
-        errorMessage =
-          "Authentication failed: Your session has expired. Please log in again.";
-      } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      setError(errorMessage);
-
-      // Clear error message after 8 seconds for longer messages
-      setTimeout(() => setError(null), 8000);
-
-      throw err;
-    }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentService((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleDeleteClick = (service) => {
-    setDeletingService(service);
-    setDeleteDialogOpen(true);
+  const handleSave = () => {
+    setSaving(true);
+    const method = editMode ? "PUT" : "POST";
+    const url = editMode
+      ? `${SERVICES_URL}/${currentService.id}`
+      : SERVICES_URL;
+    fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: currentService.name,
+        price: parseFloat(currentService.price),
+        durationMinutes: parseInt(currentService.durationMinutes, 10),
+        description: currentService.description,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to save service");
+        return res.json();
+      })
+      .then(() => {
+        fetchServices();
+        handleDialogClose();
+      })
+      .catch((err) => {
+        setError(err.message);
+      })
+      .finally(() => setSaving(false));
   };
 
-  const handleConfirmDelete = async () => {
-    setDeleting(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      await authenticatedAxios.delete(`${SERVICES_URL}/${deletingService.id}`);
-      await fetchServices();
-      setDeleteDialogOpen(false);
-      setDeletingService(null);
-      setSuccess("Service deleted successfully!");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      console.error("Error deleting service:", err);
-
-      // Handle specific error cases
-      let errorMessage = "Failed to delete service";
-
-      if (err.response?.status === 403) {
-        errorMessage =
-          "Access denied: You don't have permission to delete services. Please check your user role or contact your administrator.";
-      } else if (err.response?.status === 401) {
-        errorMessage =
-          "Authentication failed: Your session has expired. Please log in again.";
-      } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      setError(errorMessage);
-
-      // Clear error message after 8 seconds
-      setTimeout(() => setError(null), 8000);
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = (id) => {
+    if (!window.confirm("Are you sure you want to delete this service?"))
+      return;
+    fetch(`${SERVICES_URL}/${id}`, { method: "DELETE" })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to delete service");
+        fetchServices();
+      })
+      .catch((err) => setError(err.message));
   };
 
-  const handleManageSubTasks = (service) => {
-    setSelectedService(service);
-    setSubTasksModalOpen(true);
-  };
-
-  const handleCloseSubTasksModal = () => {
-    setSubTasksModalOpen(false);
-    setSelectedService(null);
-  };
-
-  // Filter services by search - ensure services is always an array
-  const filteredServices = Array.isArray(services)
-    ? services.filter(
-        (service) =>
-          service.name?.toLowerCase().includes(search.toLowerCase()) ||
-          (service.description &&
-            service.description.toLowerCase().includes(search.toLowerCase()))
-      )
-    : [];
+  // Filter services by search
+  const filteredServices = services.filter(
+    (service) =>
+      service.name.toLowerCase().includes(search.toLowerCase()) ||
+      (service.description &&
+        service.description.toLowerCase().includes(search.toLowerCase()))
+  );
 
   return (
     <ManagerLayout>
@@ -204,152 +132,146 @@ const ManagerServicesPage = () => {
         <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
           Service Management
         </Typography>
-
-        {/* Success Message */}
-        {success && (
-          <Alert
-            severity="success"
-            sx={{ mb: 2 }}
-            onClose={() => setSuccess(null)}
-          >
-            {success}
-          </Alert>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
         {/* Search Section */}
-        <Box display="flex" gap={2} mb={3} alignItems="center">
-          <Paper sx={{ flex: 1, p: 1.5, borderRadius: 2, boxShadow: 0 }}>
-            <input
-              type="text"
-              placeholder="Search services..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: 6,
-                border: "1px solid #d1d5db",
-                fontSize: 16,
-                outline: "none",
-              }}
-            />
-          </Paper>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={handleAddNew}
-            disableElevation
-            sx={{
-              borderRadius: 2,
-              textTransform: "none",
-              fontWeight: 600,
-              px: 3,
-              py: 1.5,
-              whiteSpace: "nowrap",
+        <Paper sx={{ mb: 2, p: 1.5, borderRadius: 2, boxShadow: 0 }}>
+          <input
+            type="text"
+            placeholder="Search services..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              borderRadius: 6,
+              border: "1px solid #d1d5db",
+              fontSize: 16,
+              outline: "none",
             }}
-          >
-            Add Service
-          </Button>
-        </Box>
-
-        {/* Services Grid */}
-        {loading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight={400}
-          >
-            <CircularProgress size={48} />
-          </Box>
-        ) : filteredServices.length === 0 ? (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 8,
-              textAlign: "center",
-              borderRadius: 3,
-              border: 2,
-              borderStyle: "dashed",
-              borderColor: "grey.300",
-            }}
-          >
-            <Typography
-              variant="h6"
-              color="text.secondary"
-              fontWeight={600}
-              gutterBottom
+          />
+        </Paper>
+        <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
+          <Box display="flex" justifyContent="flex-end" mb={2}>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => handleDialogOpen()}
             >
-              {search ? "No services found" : "No services yet"}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mb={3}>
-              {search
-                ? "Try adjusting your search terms"
-                : "Get started by adding your first service"}
-            </Typography>
-            {!search && (
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleAddNew}
-                sx={{ textTransform: "none" }}
-              >
-                Add Your First Service
-              </Button>
-            )}
-          </Paper>
-        ) : (
-          <Grid container spacing={3}>
-            {filteredServices.map((service) => (
-              <Grid item xs={12} sm={6} md={4} key={service.id}>
-                <ServiceCard
-                  service={service}
-                  onEdit={handleEdit}
-                  onDelete={handleDeleteClick}
-                  onManageSubTasks={handleManageSubTasks}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        )}
+              Add Service
+            </Button>
+          </Box>
+          {loading ? (
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              minHeight={120}
+            >
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Typography color="error">{error}</Typography>
+          ) : (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Price</TableCell>
+                    <TableCell>Duration (min)</TableCell>
+                    <TableCell>Description</TableCell>
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredServices.map((service) => (
+                    <TableRow key={service.id}>
+                      <TableCell>{service.name}</TableCell>
+                      <TableCell>${service.price.toFixed(2)}</TableCell>
+                      <TableCell>{service.durationMinutes}</TableCell>
+                      <TableCell>{service.description || "-"}</TableCell>
+                      <TableCell align="right">
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleDialogOpen(service)}
+                          size="small"
+                        >
+                          <Edit />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDelete(service.id)}
+                          size="small"
+                        >
+                          <Delete />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Paper>
 
-        {/* Service Form Dialog (Add/Edit) */}
-        <ServiceFormDialog
-          open={serviceFormOpen}
-          onClose={() => {
-            setServiceFormOpen(false);
-            setEditingService(null);
-          }}
-          onSave={handleSaveService}
-          initialData={editingService}
-          mode={formMode}
-        />
-
-        {/* Delete Confirmation Dialog */}
-        <DeleteServiceDialog
-          open={deleteDialogOpen}
-          onClose={() => {
-            setDeleteDialogOpen(false);
-            setDeletingService(null);
-          }}
-          onConfirm={handleConfirmDelete}
-          serviceName={deletingService?.name}
-          loading={deleting}
-        />
-
-        {/* SubTasks Management Modal */}
-        <ManageSubTasksModal
-          open={subTasksModalOpen}
-          onClose={handleCloseSubTasksModal}
-          service={selectedService}
-        />
+        <Dialog
+          open={dialogOpen}
+          onClose={handleDialogClose}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>{editMode ? "Edit Service" : "Add Service"}</DialogTitle>
+          <DialogContent>
+            <TextField
+              margin="normal"
+              label="Name"
+              name="name"
+              value={currentService.name}
+              onChange={handleInputChange}
+              fullWidth
+              required
+            />
+            <TextField
+              margin="normal"
+              label="Price"
+              name="price"
+              type="number"
+              value={currentService.price}
+              onChange={handleInputChange}
+              fullWidth
+              required
+              inputProps={{ min: 0, step: 0.01 }}
+            />
+            <TextField
+              margin="normal"
+              label="Duration (minutes)"
+              name="durationMinutes"
+              type="number"
+              value={currentService.durationMinutes}
+              onChange={handleInputChange}
+              fullWidth
+              required
+              inputProps={{ min: 1, step: 1 }}
+            />
+            <TextField
+              margin="normal"
+              label="Description"
+              name="description"
+              value={currentService.description || ""}
+              onChange={handleInputChange}
+              fullWidth
+              multiline
+              rows={2}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDialogClose} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} variant="contained" disabled={saving}>
+              {saving ? "Saving..." : editMode ? "Update" : "Add"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </ManagerLayout>
   );

@@ -11,20 +11,12 @@ import {
   MenuItem,
   FormControl,
   CircularProgress,
-  IconButton,
-  useTheme,
-  alpha,
 } from "@mui/material";
-import { Close } from "@mui/icons-material";
 import { Button } from "../ui/button";
-import { authenticatedAxios } from "../../utils/axiosConfig.js";
+import axios from "axios";
 import { BRANCHES_URL, USERS_URL } from "../../config/apiEndpoints.jsx";
-import { useAuth } from "../../contexts/AuthContext";
 
 export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
-  const { user } = useAuth();
   const [form, setForm] = React.useState({
     username: "",
     role: "",
@@ -44,8 +36,8 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
       // Fetch fresh employee data
       setLoading(true);
       Promise.all([
-        authenticatedAxios.get(`${USERS_URL}/${employee.id}`),
-        authenticatedAxios.get(`${BRANCHES_URL}/all`),
+        axios.get(`${USERS_URL}/${employee.id}`),
+        axios.get(`${BRANCHES_URL}/all`),
       ])
         .then(([userResponse, branchesResponse]) => {
           const userData = userResponse.data;
@@ -58,7 +50,6 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
             address: userData.address || "",
             isActive: userData.isActive ?? true,
           });
-          
           setBranches(branchesResponse.data);
         })
         .catch((err) => {
@@ -109,14 +100,6 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
       return;
     }
 
-    // For managers, validate they're not changing to a different branch
-    if (user?.role === 'manager' && user?.branchId) {
-      if (form.branchId && form.branchId !== user.branchId) {
-        setError("You cannot change employees to a different branch");
-        return;
-      }
-    }
-
     // Call onSave with updated data
     if (onSave) {
       onSave({
@@ -138,31 +121,23 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
       borderRadius: 2,
       backgroundColor: "background.paper",
       "& fieldset": {
-        borderColor: isDark
-          ? "rgba(255, 255, 255, 0.12)"
-          : "rgba(0, 0, 0, 0.12)",
+        borderColor: "rgba(0, 0, 0, 0.12)",
       },
       "&:hover fieldset": {
-        borderColor: isDark
-          ? "rgba(255, 255, 255, 0.23)"
-          : "rgba(0, 0, 0, 0.23)",
+        borderColor: "rgba(0, 0, 0, 0.23)",
       },
       "&.Mui-focused fieldset": {
         borderColor: "#0b75d9",
       },
       "&.Mui-disabled": {
-        backgroundColor: isDark
-          ? "rgba(255, 255, 255, 0.02)"
-          : "rgba(0, 0, 0, 0.02)",
+        backgroundColor: "rgba(0, 0, 0, 0.02)",
       },
     },
     "& .MuiInputBase-input": {
       padding: "12px 14px",
     },
     "& .MuiInputBase-input.Mui-disabled": {
-      WebkitTextFillColor: isDark
-        ? "rgba(255, 255, 255, 0.6)"
-        : "rgba(0, 0, 0, 0.6)",
+      WebkitTextFillColor: "rgba(0, 0, 0, 0.6)",
     },
   };
 
@@ -182,22 +157,8 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
         fullWidth
         PaperProps={{
           sx: {
-            bgcolor: isDark ? "grey.900" : "background.paper",
-            backgroundImage: "none",
             borderRadius: 3,
-            boxShadow: isDark
-              ? "0 20px 60px rgba(0, 0, 0, 0.6)"
-              : "0 20px 60px rgba(0, 0, 0, 0.15)",
-          },
-        }}
-        slotProps={{
-          backdrop: {
-            sx: {
-              backdropFilter: "blur(10px)",
-              backgroundColor: isDark
-                ? "rgba(0, 0, 0, 0.75)"
-                : "rgba(0, 0, 0, 0.4)",
-            },
+            p: 1,
           },
         }}
       >
@@ -217,70 +178,21 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
       fullWidth
       PaperProps={{
         sx: {
-          bgcolor: isDark ? "grey.900" : "background.paper",
-          backgroundImage: "none",
           borderRadius: 3,
-          boxShadow: isDark
-            ? "0 20px 60px rgba(0, 0, 0, 0.6)"
-            : "0 20px 60px rgba(0, 0, 0, 0.15)",
-        },
-      }}
-      slotProps={{
-        backdrop: {
-          sx: {
-            backdropFilter: "blur(10px)",
-            backgroundColor: isDark
-              ? "rgba(0, 0, 0, 0.75)"
-              : "rgba(0, 0, 0, 0.4)",
-          },
+          p: 1,
         },
       }}
     >
       <DialogTitle
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          fontSize: "1.5rem",
+          fontWeight: 600,
           pb: 2,
           pt: 3,
           px: 3,
-          borderBottom: 1,
-          borderColor: isDark ? "grey.800" : "grey.200",
-          bgcolor: isDark
-            ? alpha(theme.palette.primary.dark, 0.05)
-            : alpha(theme.palette.primary.light, 0.05),
         }}
       >
-        <Box
-          sx={{
-            fontSize: "1.35rem",
-            fontWeight: 700,
-            color: isDark ? "grey.50" : "grey.900",
-            letterSpacing: "-0.02em",
-          }}
-        >
-          Edit Profile
-        </Box>
-        <IconButton
-          edge="end"
-          color="inherit"
-          onClick={onClose}
-          aria-label="close"
-          size="small"
-          sx={{
-            color: isDark ? "grey.400" : "grey.600",
-            transition: "all 0.2s ease",
-            "&:hover": {
-              color: isDark ? "grey.100" : "grey.900",
-              bgcolor: isDark
-                ? alpha(theme.palette.error.dark, 0.2)
-                : alpha(theme.palette.error.light, 0.15),
-              transform: "rotate(90deg)",
-            },
-          }}
-        >
-          <Close fontSize="small" />
-        </IconButton>
+        Edit Profile
       </DialogTitle>
       <DialogContent sx={{ px: 3, py: 2 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
@@ -356,11 +268,6 @@ export default function EditEmployeeModal({ open, onClose, employee, onSave }) {
           <Box>
             <Typography variant="body2" sx={labelStyles}>
               Branch
-              {user?.role === 'manager' && (
-                <Typography component="span" sx={{ color: "text.secondary", fontSize: "0.75rem", ml: 1 }}>
-                  (Cannot change branch)
-                </Typography>
-              )}
             </Typography>
             <FormControl fullWidth disabled={loading}>
               <Select

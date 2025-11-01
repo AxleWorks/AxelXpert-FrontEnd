@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { Box, CssBaseline, Toolbar } from "@mui/material";
-import { useLocation } from "react-router-dom";
 import Header from "../Header";
 import EmployeeSidebar from "./EmployeeSidebar";
 
 const EmployeeLayout = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const location = useLocation();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -30,24 +28,7 @@ const EmployeeLayout = ({ children }) => {
         }}
       >
         <Toolbar />
-        <Box
-          key={location.pathname}
-          sx={{
-            animation: "fadeSlideIn 0.4s ease-out",
-            "@keyframes fadeSlideIn": {
-              "0%": {
-                opacity: 0,
-                transform: "translateY(20px)",
-              },
-              "100%": {
-                opacity: 1,
-                transform: "translateY(0)",
-              },
-            },
-          }}
-        >
-          {children}
-        </Box>
+        {children}
       </Box>
     </Box>
   );

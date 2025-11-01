@@ -32,8 +32,7 @@ const lightTheme = createTheme({
       contrastText: "#ffffff",
     },
     background: {
-     
-      default: "#ffffff",
+      default: "#f8fafc",
       paper: "#ffffff",
     },
     text: {

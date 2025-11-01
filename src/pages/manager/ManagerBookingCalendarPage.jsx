@@ -38,8 +38,6 @@ import {
   EMPLOYEES_URL,
   BOOKINGS_URL,
 } from "../../config/apiEndpoints";
-import { getAuthHeader } from "../../utils/jwtUtils";
-import { useAuth } from "../../contexts/AuthContext";
 
 function getStatusColor(mode, status) {
   // return background color for chip based on MUI mode
@@ -60,7 +58,6 @@ function getStatusColor(mode, status) {
 
 const ManagerBookingCalendarPage = () => {
   const theme = useTheme();
-  const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedBranch, setSelectedBranch] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -74,42 +71,24 @@ const ManagerBookingCalendarPage = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [userBranchName, setUserBranchName] = useState(null); // Store manager's branch name
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
-
-  // Check if user is admin
-  const isAdmin = user?.role === "admin";
   // fetch branches from backend on mount
   useEffect(() => {
     const ac = new AbortController();
     async function loadBranches() {
       try {
-        const authHeader = getAuthHeader();
         const res = await fetch(`${BRANCHES_URL}/all`, {
           signal: ac.signal,
-          headers: {
-            ...(authHeader && { Authorization: authHeader }),
-          },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         // map server shape to UI shape: branch name
         const mapped = (data || []).map((b) => b.branchName || b.name || "");
         setBranches(mapped);
-
-        // If user is a manager (not admin), find their branch and lock the filter
-        if (!isAdmin && user?.branchId) {
-          const userBranch = data.find((b) => b.id === user.branchId);
-          if (userBranch) {
-            const branchName = userBranch.branchName || userBranch.name;
-            setUserBranchName(branchName);
-            setSelectedBranch(branchName); // Lock to manager's branch
-          }
-        }
       } catch (err) {
         if (err.name !== "AbortError") {
           console.error("Failed to load branches", err);
@@ -123,19 +102,15 @@ const ManagerBookingCalendarPage = () => {
     }
     loadBranches();
     return () => ac.abort();
-  }, [user, isAdmin]);
+  }, []);
 
   // fetch employees from backend on mount
   useEffect(() => {
     const ac = new AbortController();
     async function load() {
       try {
-        const authHeader = getAuthHeader();
         const res = await fetch(EMPLOYEES_URL, {
           signal: ac.signal,
-          headers: {
-            ...(authHeader && { Authorization: authHeader }),
-          },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -168,12 +143,8 @@ const ManagerBookingCalendarPage = () => {
     const ac = new AbortController();
     async function loadBookings() {
       try {
-        const authHeader = getAuthHeader();
         const res = await fetch(BOOKINGS_URL, {
           signal: ac.signal,
-          headers: {
-            ...(authHeader && { Authorization: authHeader }),
-          },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();

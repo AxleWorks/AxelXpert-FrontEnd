@@ -3,15 +3,16 @@ import {
   Typography,
   Paper,
   Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   CircularProgress,
-  Grid,
-  Button,
 } from "@mui/material";
-import { Add } from "@mui/icons-material";
+import EmployeeLayout from "../../layouts/employee/EmployeeLayout";
 import { SERVICES_URL } from "../../config/apiEndpoints.jsx";
-import { createAuthenticatedFetchOptions } from "../../utils/jwtUtils.js";
-import UserServiceCard from "../../components/services/UserServiceCard";
-import EmployeeLayout from "../../layouts/employee/EmployeeLayout.jsx";
 
 const EmployeeServicesPage = () => {
   const [services, setServices] = useState([]);
@@ -20,7 +21,7 @@ const EmployeeServicesPage = () => {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch(SERVICES_URL, createAuthenticatedFetchOptions())
+    fetch(SERVICES_URL)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch services");
         return res.json();
@@ -47,11 +48,10 @@ const EmployeeServicesPage = () => {
     <EmployeeLayout>
       <Box>
         <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
-          Available Services
+          Service Management
         </Typography>
-
         {/* Search Section */}
-        <Paper sx={{ mb: 3, p: 1.5, borderRadius: 2, boxShadow: 0 }}>
+        <Paper sx={{ mb: 2, p: 1.5, borderRadius: 2, boxShadow: 0 }}>
           <input
             type="text"
             placeholder="Search services..."
@@ -67,76 +67,43 @@ const EmployeeServicesPage = () => {
             }}
           />
         </Paper>
-
-        {/* Services Grid */}
-        {loading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight={400}
-          >
-            <CircularProgress size={48} />
-          </Box>
-        ) : error ? (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 8,
-              textAlign: "center",
-              borderRadius: 3,
-              border: 2,
-              borderStyle: "dashed",
-              borderColor: "error.main",
-            }}
-          >
-            <Typography
-              variant="h6"
-              color="error"
-              fontWeight={600}
-              gutterBottom
+        <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
+          {loading ? (
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              minHeight={120}
             >
-              Error Loading Services
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {error}
-            </Typography>
-          </Paper>
-        ) : filteredServices.length === 0 ? (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 8,
-              textAlign: "center",
-              borderRadius: 3,
-              border: 2,
-              borderStyle: "dashed",
-              borderColor: "grey.300",
-            }}
-          >
-            <Typography
-              variant="h6"
-              color="text.secondary"
-              fontWeight={600}
-              gutterBottom
-            >
-              {search ? "No services found" : "No services available"}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mb={3}>
-              {search
-                ? "Try adjusting your search terms"
-                : "Check back later for available services"}
-            </Typography>
-          </Paper>
-        ) : (
-          <Grid container spacing={3}>
-            {filteredServices.map((service) => (
-              <Grid item xs={12} sm={6} md={4} key={service.id}>
-                <UserServiceCard service={service} />
-              </Grid>
-            ))}
-          </Grid>
-        )}
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Typography color="error">{error}</Typography>
+          ) : (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Price</TableCell>
+                    <TableCell>Duration (min)</TableCell>
+                    <TableCell>Description</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredServices.map((service) => (
+                    <TableRow key={service.id}>
+                      <TableCell>{service.name}</TableCell>
+                      <TableCell>${service.price.toFixed(2)}</TableCell>
+                      <TableCell>{service.durationMinutes}</TableCell>
+                      <TableCell>{service.description || "-"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Paper>
       </Box>
     </EmployeeLayout>
   );

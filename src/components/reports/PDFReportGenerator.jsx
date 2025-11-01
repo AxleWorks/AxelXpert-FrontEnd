@@ -9,56 +9,13 @@ const PDFReportTemplate = forwardRef(
     const currentDate = new Date().toLocaleDateString();
     const reportTitle = "AxleXpert - Appointment Reports";
 
-    // Filter appointments based on the current filters
-    const filteredAppointments = appointments.filter((appointment) => {
-      if (!appointment) return false;
-
-      // Parse booking date - be flexible with date parsing
-      const bookingDate = new Date(
-        appointment.startAt ||
-          appointment.date ||
-          appointment.createdAt ||
-          appointment.updatedAt ||
-          new Date()
-      );
-
-      // Date range filtering
-      const startDate = new Date(filters.startDate);
-      const endDate = new Date(filters.endDate);
-
-      const dateInRange =
-        isNaN(bookingDate.getTime()) ||
-        (bookingDate >= startDate && bookingDate <= endDate);
-
-      // Branch filtering
-      const branchMatch =
-        filters.branch === "all" ||
-        appointment.branchId?.toString() === filters.branch ||
-        appointment.branchName
-          ?.toLowerCase()
-          .includes(filters.branch.toLowerCase());
-
-      // Service type filtering
-      const serviceMatch =
-        filters.serviceType === "all" ||
-        appointment.serviceId?.toString() === filters.serviceType ||
-        appointment.serviceName
-          ?.toLowerCase()
-          .includes(filters.serviceType.toLowerCase());
-
-      return dateInRange && branchMatch && serviceMatch;
-    });
-
     return (
       <div
         ref={ref}
         style={{
           padding: "20px",
           fontFamily: "Arial, sans-serif",
-          backgroundColor: "#ffffff",
-          color: "#000000",
-          width: "100%",
-          minHeight: "100vh",
+          backgroundColor: "white",
         }}
       >
         {/* Header */}
@@ -97,18 +54,11 @@ const PDFReportTemplate = forwardRef(
                   color: "#1976d2",
                   fontSize: "20px",
                   fontWeight: "bold",
-                  backgroundColor: "transparent",
                 }}
               >
                 AxleXpert
               </div>
-              <div
-                style={{
-                  color: "#666",
-                  fontSize: "12px",
-                  backgroundColor: "transparent",
-                }}
-              >
+              <div style={{ color: "#666", fontSize: "12px" }}>
                 Vehicle Service Management
               </div>
             </div>
@@ -116,13 +66,12 @@ const PDFReportTemplate = forwardRef(
         </div>
 
         {/* Report Filters */}
-        <div style={{ marginBottom: "30px", backgroundColor: "#ffffff" }}>
+        <div style={{ marginBottom: "30px" }}>
           <h3
             style={{
               color: "#333",
               borderBottom: "2px solid #eee",
               paddingBottom: "10px",
-              backgroundColor: "transparent",
             }}
           >
             Report Filters
@@ -136,42 +85,32 @@ const PDFReportTemplate = forwardRef(
             }}
           >
             <div>
-              <strong style={{ color: "#000" }}>Date Range:</strong>{" "}
-              <span style={{ color: "#333" }}>
-                {filters.startDate} to {filters.endDate}
-              </span>
+              <strong>Date Range:</strong> {filters.startDate} to{" "}
+              {filters.endDate}
             </div>
             <div>
-              <strong style={{ color: "#000" }}>Branch:</strong>{" "}
-              <span style={{ color: "#333" }}>
-                {filters.branch === "all" ? "All Branches" : filters.branch}
-              </span>
+              <strong>Branch:</strong>{" "}
+              {filters.branch === "all" ? "All Branches" : filters.branch}
             </div>
             <div>
-              <strong style={{ color: "#000" }}>Service Type:</strong>{" "}
-              <span style={{ color: "#333" }}>
-                {filters.serviceType === "all"
-                  ? "All Services"
-                  : filters.serviceType}
-              </span>
+              <strong>Service Type:</strong>{" "}
+              {filters.serviceType === "all"
+                ? "All Services"
+                : filters.serviceType}
             </div>
             <div>
-              <strong style={{ color: "#000" }}>Total Records:</strong>{" "}
-              <span style={{ color: "#333" }}>
-                {filteredAppointments.length}
-              </span>
+              <strong>Total Records:</strong> {appointments.length}
             </div>
           </div>
         </div>
 
         {/* KPI Summary */}
-        <div style={{ marginBottom: "30px", backgroundColor: "#ffffff" }}>
+        <div style={{ marginBottom: "30px" }}>
           <h3
             style={{
               color: "#333",
               borderBottom: "2px solid #eee",
               paddingBottom: "10px",
-              backgroundColor: "transparent",
             }}
           >
             Key Performance Indicators
@@ -190,7 +129,6 @@ const PDFReportTemplate = forwardRef(
                 padding: "15px",
                 borderRadius: "8px",
                 textAlign: "center",
-                backgroundColor: "#ffffff",
               }}
             >
               <div
@@ -198,18 +136,11 @@ const PDFReportTemplate = forwardRef(
                   fontSize: "24px",
                   fontWeight: "bold",
                   color: "#1976d2",
-                  backgroundColor: "transparent",
                 }}
               >
                 {reportData.kpis.totalAppointments}
               </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#666",
-                  backgroundColor: "transparent",
-                }}
-              >
+              <div style={{ fontSize: "12px", color: "#666" }}>
                 Total Appointments
               </div>
             </div>
@@ -219,7 +150,6 @@ const PDFReportTemplate = forwardRef(
                 padding: "15px",
                 borderRadius: "8px",
                 textAlign: "center",
-                backgroundColor: "#ffffff",
               }}
             >
               <div
@@ -227,18 +157,11 @@ const PDFReportTemplate = forwardRef(
                   fontSize: "24px",
                   fontWeight: "bold",
                   color: "#4caf50",
-                  backgroundColor: "transparent",
                 }}
               >
                 ${reportData.kpis.totalRevenue.toLocaleString()}
               </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#666",
-                  backgroundColor: "transparent",
-                }}
-              >
+              <div style={{ fontSize: "12px", color: "#666" }}>
                 Total Revenue
               </div>
             </div>
@@ -248,7 +171,6 @@ const PDFReportTemplate = forwardRef(
                 padding: "15px",
                 borderRadius: "8px",
                 textAlign: "center",
-                backgroundColor: "#ffffff",
               }}
             >
               <div
@@ -256,18 +178,11 @@ const PDFReportTemplate = forwardRef(
                   fontSize: "24px",
                   fontWeight: "bold",
                   color: "#ff9800",
-                  backgroundColor: "transparent",
                 }}
               >
                 {reportData.kpis.avgCompletionTime}hrs
               </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#666",
-                  backgroundColor: "transparent",
-                }}
-              >
+              <div style={{ fontSize: "12px", color: "#666" }}>
                 Avg Completion
               </div>
             </div>
@@ -277,7 +192,6 @@ const PDFReportTemplate = forwardRef(
                 padding: "15px",
                 borderRadius: "8px",
                 textAlign: "center",
-                backgroundColor: "#ffffff",
               }}
             >
               <div
@@ -285,18 +199,11 @@ const PDFReportTemplate = forwardRef(
                   fontSize: "24px",
                   fontWeight: "bold",
                   color: "#9c27b0",
-                  backgroundColor: "transparent",
                 }}
               >
                 {reportData.kpis.branchEfficiency}%
               </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#666",
-                  backgroundColor: "transparent",
-                }}
-              >
+              <div style={{ fontSize: "12px", color: "#666" }}>
                 Branch Efficiency
               </div>
             </div>
@@ -304,13 +211,12 @@ const PDFReportTemplate = forwardRef(
         </div>
 
         {/* Appointments Table */}
-        <div style={{ marginBottom: "30px", backgroundColor: "#ffffff" }}>
+        <div style={{ marginBottom: "30px" }}>
           <h3
             style={{
               color: "#333",
               borderBottom: "2px solid #eee",
               paddingBottom: "10px",
-              backgroundColor: "transparent",
             }}
           >
             Appointment Details
@@ -321,7 +227,6 @@ const PDFReportTemplate = forwardRef(
               borderCollapse: "collapse",
               marginTop: "15px",
               fontSize: "12px",
-              backgroundColor: "#ffffff",
             }}
           >
             <thead>
@@ -331,8 +236,6 @@ const PDFReportTemplate = forwardRef(
                     border: "1px solid #ddd",
                     padding: "8px",
                     textAlign: "left",
-                    color: "#000",
-                    backgroundColor: "#f5f5f5",
                   }}
                 >
                   Date
@@ -342,8 +245,6 @@ const PDFReportTemplate = forwardRef(
                     border: "1px solid #ddd",
                     padding: "8px",
                     textAlign: "left",
-                    color: "#000",
-                    backgroundColor: "#f5f5f5",
                   }}
                 >
                   Time
@@ -353,8 +254,6 @@ const PDFReportTemplate = forwardRef(
                     border: "1px solid #ddd",
                     padding: "8px",
                     textAlign: "left",
-                    color: "#000",
-                    backgroundColor: "#f5f5f5",
                   }}
                 >
                   Customer
@@ -364,8 +263,6 @@ const PDFReportTemplate = forwardRef(
                     border: "1px solid #ddd",
                     padding: "8px",
                     textAlign: "left",
-                    color: "#000",
-                    backgroundColor: "#f5f5f5",
                   }}
                 >
                   Service
@@ -375,8 +272,6 @@ const PDFReportTemplate = forwardRef(
                     border: "1px solid #ddd",
                     padding: "8px",
                     textAlign: "left",
-                    color: "#000",
-                    backgroundColor: "#f5f5f5",
                   }}
                 >
                   Branch
@@ -386,8 +281,6 @@ const PDFReportTemplate = forwardRef(
                     border: "1px solid #ddd",
                     padding: "8px",
                     textAlign: "left",
-                    color: "#000",
-                    backgroundColor: "#f5f5f5",
                   }}
                 >
                   Status
@@ -397,8 +290,6 @@ const PDFReportTemplate = forwardRef(
                     border: "1px solid #ddd",
                     padding: "8px",
                     textAlign: "right",
-                    color: "#000",
-                    backgroundColor: "#f5f5f5",
                   }}
                 >
                   Price
@@ -406,75 +297,39 @@ const PDFReportTemplate = forwardRef(
               </tr>
             </thead>
             <tbody>
-              {filteredAppointments.length > 0 ? (
-                filteredAppointments.map((appointment, index) => (
+              {appointments.length > 0 ? (
+                appointments.map((appointment, index) => (
                   <tr
                     key={index}
                     style={{
                       backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9f9f9",
                     }}
                   >
-                    <td
-                      style={{
-                        border: "1px solid #ddd",
-                        padding: "8px",
-                        color: "#000",
-                      }}
-                    >
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                       {new Date(
                         appointment.date || appointment.createdAt
                       ).toLocaleDateString()}
                     </td>
-                    <td
-                      style={{
-                        border: "1px solid #ddd",
-                        padding: "8px",
-                        color: "#000",
-                      }}
-                    >
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                       {appointment.time ||
                         new Date(appointment.createdAt).toLocaleTimeString()}
                     </td>
-                    <td
-                      style={{
-                        border: "1px solid #ddd",
-                        padding: "8px",
-                        color: "#000",
-                      }}
-                    >
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                       {appointment.customerName ||
                         appointment.customer?.name ||
                         "Unknown Customer"}
                     </td>
-                    <td
-                      style={{
-                        border: "1px solid #ddd",
-                        padding: "8px",
-                        color: "#000",
-                      }}
-                    >
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                       {appointment.serviceName ||
                         appointment.service?.name ||
                         "General Service"}
                     </td>
-                    <td
-                      style={{
-                        border: "1px solid #ddd",
-                        padding: "8px",
-                        color: "#000",
-                      }}
-                    >
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                       {appointment.branchName ||
                         appointment.branch?.name ||
                         "Main Branch"}
                     </td>
-                    <td
-                      style={{
-                        border: "1px solid #ddd",
-                        padding: "8px",
-                        color: "#000",
-                      }}
-                    >
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                       <span
                         style={{
                           padding: "2px 6px",
@@ -506,7 +361,6 @@ const PDFReportTemplate = forwardRef(
                         border: "1px solid #ddd",
                         padding: "8px",
                         textAlign: "right",
-                        color: "#000",
                       }}
                     >
                       ${appointment.price || appointment.cost || "0"}
@@ -522,7 +376,6 @@ const PDFReportTemplate = forwardRef(
                       padding: "20px",
                       textAlign: "center",
                       color: "#666",
-                      backgroundColor: "#ffffff",
                     }}
                   >
                     No appointments found for the selected criteria
@@ -534,13 +387,12 @@ const PDFReportTemplate = forwardRef(
         </div>
 
         {/* Performance Summary */}
-        <div style={{ marginBottom: "30px", backgroundColor: "#ffffff" }}>
+        <div style={{ marginBottom: "30px" }}>
           <h3
             style={{
               color: "#333",
               borderBottom: "2px solid #eee",
               paddingBottom: "10px",
-              backgroundColor: "transparent",
             }}
           >
             Performance Summary
@@ -558,7 +410,6 @@ const PDFReportTemplate = forwardRef(
                 border: "1px solid #ddd",
                 padding: "15px",
                 borderRadius: "8px",
-                backgroundColor: "#ffffff",
               }}
             >
               <div
@@ -566,18 +417,11 @@ const PDFReportTemplate = forwardRef(
                   fontSize: "18px",
                   fontWeight: "bold",
                   color: "#1976d2",
-                  backgroundColor: "transparent",
                 }}
               >
                 {reportData.performanceMetrics.avgRevenuePerJob}
               </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#666",
-                  backgroundColor: "transparent",
-                }}
-              >
+              <div style={{ fontSize: "12px", color: "#666" }}>
                 Average Revenue per Job
               </div>
             </div>
@@ -586,7 +430,6 @@ const PDFReportTemplate = forwardRef(
                 border: "1px solid #ddd",
                 padding: "15px",
                 borderRadius: "8px",
-                backgroundColor: "#ffffff",
               }}
             >
               <div
@@ -594,18 +437,11 @@ const PDFReportTemplate = forwardRef(
                   fontSize: "18px",
                   fontWeight: "bold",
                   color: "#4caf50",
-                  backgroundColor: "transparent",
                 }}
               >
                 {reportData.performanceMetrics.employeeUtilization}%
               </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#666",
-                  backgroundColor: "transparent",
-                }}
-              >
+              <div style={{ fontSize: "12px", color: "#666" }}>
                 Employee Utilization
               </div>
             </div>
@@ -614,7 +450,6 @@ const PDFReportTemplate = forwardRef(
                 border: "1px solid #ddd",
                 padding: "15px",
                 borderRadius: "8px",
-                backgroundColor: "#ffffff",
               }}
             >
               <div
@@ -622,18 +457,11 @@ const PDFReportTemplate = forwardRef(
                   fontSize: "18px",
                   fontWeight: "bold",
                   color: "#ff9800",
-                  backgroundColor: "transparent",
                 }}
               >
                 {reportData.performanceMetrics.onTimeCompletion}%
               </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#666",
-                  backgroundColor: "transparent",
-                }}
-              >
+              <div style={{ fontSize: "12px", color: "#666" }}>
                 On-Time Completion
               </div>
             </div>
@@ -649,7 +477,6 @@ const PDFReportTemplate = forwardRef(
             textAlign: "center",
             color: "#666",
             fontSize: "12px",
-            backgroundColor: "#ffffff",
           }}
         >
           <p>
@@ -692,8 +519,6 @@ const PDFReportGenerator = ({
           useCORS: true,
           allowTaint: true,
           backgroundColor: "#ffffff",
-          logging: false,
-          windowWidth: 1200,
         },
         jsPDF: {
           unit: "in",
