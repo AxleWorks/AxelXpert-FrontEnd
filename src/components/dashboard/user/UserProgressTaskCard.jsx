@@ -8,7 +8,6 @@ import { Typography,
          List,
          ListItem,
          ListItemText,
-        ListItemIcon,
          IconButton } from "@mui/material";
 import { DirectionsCar as DirectionsCarIcon,
          ExpandMore as ExpandMoreIcon, 
