@@ -3,6 +3,7 @@ import { Box, Typography } from "@mui/material";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { TaskImageUploadModal } from "./TaskImageUploadModal";
 import { TaskCard } from "./TaskCard";
+import {toast } from "../ui/toast";
 import { CompletedTaskCard } from "./CompletedTaskCard";
 import { authenticatedAxios } from "../../utils/axiosConfig";
 import { API_BASE } from "../../config/apiEndpoints";
@@ -78,6 +79,7 @@ export function EmployeeTasks() {
             : task
         )
       );
+      toast.success("Task timer started successfully.");
     } catch (error) {
       console.error("Failed to start timer:", error);
     }
@@ -87,7 +89,10 @@ export function EmployeeTasks() {
     const task = activeTasks.find((t) => t.id === taskId);
     const subtask = task.subTasks.find((st) => st.id === subtaskId);
 
-    if (task.status !== "IN_PROGRESS") return;
+    if (task.status !== "IN_PROGRESS"){
+      toast.error("Start the task timer before updating subtasks.");
+      return;
+    } 
 
     const toggledState =
       subtask.status === "COMPLETED" ? "NOT_STARTED" : "COMPLETED";
@@ -234,8 +239,10 @@ export function EmployeeTasks() {
             : task
         )
       );
+      toast.success("Image uploaded successfully.");
     } catch (error) {
       console.error("Failed to upload image:", error);
+      toast.error("Failed to upload image.");
     } finally {
       setUploadingImages((prev) => ({ ...prev, [currentTaskId]: false }));
     }
@@ -309,9 +316,10 @@ export function EmployeeTasks() {
         ...prev,
         [taskId]: false,
       }));
-
+      toast.success("Note added successfully.");
     } catch (error) {
       console.error("Failed to submit note:", error);
+      toast.error("Failed to submit note.");
     }
   };
 
@@ -346,8 +354,9 @@ export function EmployeeTasks() {
         `${API_BASE}/api/tasks/${taskId}/images/${imageId}`
       );
 
-      console.log("Image removed successfully");
+      toast.success("Image removed successfully.");
     } catch (error) {
+      toast.error("Failed to remove image.");
       console.error("Failed to remove image:", error);
 
       setActiveTasks((prevTasks) =>
@@ -364,8 +373,6 @@ const handleRemoveNote = async (taskId, noteId) => {
     taskNotes: [...(originalTask.taskNotes || [])],
   };
 
-  console.log("About to perform optimistic update...");
-  
   // Optimistic update
   setActiveTasks((prevTasks) => {
     const updatedTasks = prevTasks.map((task) => {
@@ -389,10 +396,10 @@ const handleRemoveNote = async (taskId, noteId) => {
     await authenticatedAxios.delete(
       `${API_BASE}/api/tasks/${taskId}/notes/${noteId}`
     );
-
+    toast.success("Note removed successfully.");
   } catch (error) {
     console.error("Failed to remove note:", error);
-
+    toast.error("Failed to remove note.");
     setActiveTasks((prevTasks) =>
       prevTasks.map((task) => (task.id === taskId ? originalTaskCopy : task))
     );
