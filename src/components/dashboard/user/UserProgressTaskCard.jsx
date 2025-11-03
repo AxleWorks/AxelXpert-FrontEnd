@@ -75,179 +75,186 @@ const calculateProgress = (subTasks) => {
 
       {/* Clickable Header Section */}
       <ListItem
-        onClick={() => setOpen(!open)}
-        sx={{ cursor: 'pointer', pl: 0, pr: 0, pb: 2, alignItems: 'flex-start' }}>
-        
-        <DirectionsCarIcon color="primary" sx={{ fontSize: 40, mr: 2, mt: 0.5 }} />
-        
-        <Box sx={{ flexGrow: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: -0.5 }}>
-            <Typography variant="subtitle1" component="div" fontWeight="600">
-              {task.vehicle} - {task.title}
-            </Typography>
-            <IconButton size="small" aria-label={open ? 'collapse' : 'expand'}>
-              {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
-          </Box>
-          
-          <Typography color="text.secondary" variant="body2" sx={{ mb: 2 }}>
-            Started: {new Date(task.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-            {task.durationMinutes && ` • ETA: ${new Date(new Date(task.startTime).getTime() + task.durationMinutes * 60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
-          </Typography>
-
-          {/* Progress Bar */}
-          <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-              <Typography variant="body2" color="text.secondary">Progress</Typography>
-              <Typography variant="body2" color="text.primary">{progressPercentage}%</Typography>
-            </Box>
-            <LinearProgress 
-              variant="determinate"
-              value={progressPercentage}
-              sx={{ height: 10, borderRadius: 5 }}
-            />
-          </Box>
+      onClick={() => setOpen(!open)}
+      sx={{ cursor: 'pointer', pl: 0, pr: 0, pb: 2, alignItems: 'flex-start' }}>
+      
+      <DirectionsCarIcon color="primary" sx={{ fontSize: 40, mr: 2, mt: 0.5 }} />
+      
+      <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: -0.5 }}>
+        <Typography variant="subtitle1" component="div" fontWeight="600">
+          {task.vehicle} - {task.title}
+        </Typography>
+        <IconButton size="small" aria-label={open ? 'collapse' : 'expand'}>
+          {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </IconButton>
         </Box>
+        
+        <Typography color="text.secondary" variant="body2" sx={{ mb: 2 }}>
+        Started: {new Date(task.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+        {task.durationMinutes && ` • ETA: ${new Date(new Date(task.startTime).getTime() + task.durationMinutes * 60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+        </Typography>
 
-        {/* Status Chip and Expand Icon */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, ml: 2 }}>
-          <Chip
-            label={task.status.replace('_', ' ')}
-            color={getStatusColor(task.status)}
-            sx={{ 
-              fontWeight: 500, 
-              fontSize: '10px', 
-              height: 25
-            }}
-          />
+        {/* Progress Bar */}
+        <Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+          <Typography variant="body2" color="text.secondary">Progress</Typography>
+          <Typography variant="body2" color="text.primary">{progressPercentage}%</Typography>
         </Box>
+        <LinearProgress 
+          variant="determinate"
+          value={progressPercentage}
+          sx={{ height: 10, borderRadius: 5 }}
+        />
+        </Box>
+      </Box>
+
+      {/* Status Chip and Expand Icon */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, ml: 2 }}>
+        <Chip
+        label={task.status.replace('_', ' ')}
+        color={getStatusColor(task.status)}
+        sx={{ 
+          fontWeight: 500, 
+          fontSize: '10px', 
+          height: 25
+        }}
+        />
+      </Box>
       </ListItem>
 
       {/* Collapsible Sub-Task List */}
       <Collapse in={open} timeout="auto" unmountOnExit>
-        <Box sx={{ pt: 1, pb: 1, borderTop: '1px solid #e0e0e0' }}>
-          <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
-            Tasks Progress
-          </Typography>
-          {/* dense make the list items a bit smaller */}
-                <List dense>  
-                {sortedSubTasks.map((sub)=> (
-                  <ListItem key={sub.id} sx ={{ pl: 1, bgcolor:'#f4f4f4ff', p:1, mb:1, borderRadius:10}}>
-                  <Chip
-                    icon={getStatusIcon(sub.status)}
-                    size="small"
-                    color={getStatusColor(sub.status)}
-                    sx={{ 
-                    height: 24, 
-                    mr: 2,
-                    '& .MuiChip-icon': {
-                      marginLeft: '8px',
-                      marginRight: '-4px'
-                    }
-                    }}
-                  />
-                <ListItemText 
-                  primary={sub.title} 
-                />
-              </ListItem>
-            ))}
+      <Box sx={{ pt: 1, pb: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
+        Tasks Progress
+        </Typography>
+        {/* dense make the list items a bit smaller */}
+        <List dense>
+        {sortedSubTasks.map((sub) => (
+          <ListItem key={sub.id} sx={{ pl: 1, bgcolor: 'action.hover', p: 1, mb: 1, borderRadius: 10 }}>
+          <Chip
+            icon={getStatusIcon(sub.status)}
+            size="small"
+            color={getStatusColor(sub.status)}
+            sx={{ 
+            height: 24, 
+            mr: 2,
+            '& .MuiChip-icon': {
+            marginLeft: '8px',
+            marginRight: '-4px'
+            }
+            }}
+            />
+          <ListItemText 
+            primary={sub.title} 
+          />
+          </ListItem>
+          ))}
           </List>
           <Box>
-            <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
-              Technician Notes
+          <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
+          Technician Notes
+          </Typography>
+          <List dense sx ={{ pl: 1, bgcolor: 'action.selected', p:2, mb:1, borderRadius:5}}>
+          {task.technicianNotes && task.technicianNotes.length > 0 ? (
+          task.technicianNotes.map((note, index) => (
+            <Box key={index} sx={{ mb: index < task.technicianNotes.length - 1 ? 2 : 0 }}>
+            <Typography variant="body1" fontWeight={400}>
+            {note.content}
             </Typography>
-            <List dense sx ={{ pl: 1, bgcolor:'#e4f1ffff', p:2, mb:1, borderRadius:5}}>
-              {task.technicianNotes && task.technicianNotes.trim() !== '' ? (
-                <Box>
-                  <Typography variant="body1" fontWeight={400}>
-                    {task.technicianNotes}
-                  </Typography>
-                  {task.technicianNoteAddedAt && (
-                    <Typography variant="body1" color="text.secondary">
-                      {new Date(task.technicianNoteAddedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                    </Typography>
-                  )}
-                </Box>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  No technician notes available
-                </Typography>
-              )}
-            </List>
-            <Box>
-                <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
-                    Progress Photos
-                </Typography>
-                
-                {task.progressPhotos && task.progressPhotos.length > 0 ? (
-                  <Box 
-                    sx={{ 
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                      gap: 2,
-                      mt: 1
-                    }}
-                  >
-                    {task.progressPhotos.map((photoUrl, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          position: 'relative',
-                          // paddingTop: '100%' creates a 1:1 aspect ratio container
-                          paddingTop: '100%',
-                          overflow: 'hidden',
-                          borderRadius: 2,
-                          boxShadow: 2,
-                          bgcolor: '#f0f0f0',
-                          transition: 'transform 0.2s, box-shadow 0.2s',
-                        }}
-                      >
-                        <img
-                          src={photoUrl}
-                          alt={`Progress photo ${index + 1}`}
-                          loading="lazy" 
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover', // Ensures image fills container while maintaining aspect ratio
-                            objectPosition: 'center'
-                          }}
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.parentElement.innerHTML = `<div style="
-                                position: absolute;
-                                top: 50%;
-                                left: 50%;
-                                transform: translate(-50%, -50%);
-                                color: #999;
-                                text-align: center;
-                                font-size: 12px;">
-                                Image not available
-                              </div>`;
-                          }}
-                        />
-                      </Box>
-                    ))}
-                  </Box>
-                ) : (
-                  <Box 
-                    sx={{ 
-                      p: 2, 
-                      bgcolor: '#f9f9f9', 
-                      borderRadius: 2
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      No progress photos available yet
-                    </Typography>
-                  </Box>
-                )}
+            {note.addedAt && (
+            <Typography variant="caption" color="text.secondary">
+            {new Date(note.addedAt).toLocaleString([], {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit', 
+              minute:'2-digit'
+            })}
+            </Typography>
+            )}
             </Box>
-          </Box>
+          ))
+          ) : (
+          <Typography variant="body2" color="text.secondary">
+            No technician notes available
+          </Typography>
+          )}
+          </List>
+          <Box>
+          <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
+            Progress Photos
+          </Typography>
+          
+          {task.progressPhotos && task.progressPhotos.length > 0 ? (
+            <Box 
+            sx={{ 
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: 2,
+            mt: 1
+            }}
+            >
+            {task.progressPhotos.map((photoUrl, index) => (
+            <Box
+            key={index}
+            sx={{
+              position: 'relative',
+                paddingTop: '100%',
+                overflow: 'hidden',
+                borderRadius: 2,
+                boxShadow: 2,
+                bgcolor: 'background.default',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+              >
+              <img
+                src={photoUrl}
+                alt={`Progress photo ${index + 1}`}
+                loading="lazy" 
+                style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center'
+                }}
+                onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentElement.innerHTML = `<div style="
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  color: #999;
+                  text-align: center;
+                  font-size: 12px;">
+                  Image not available
+                  </div>`;
+                }}
+              />
+              </Box>
+            ))}
+            </Box>
+          ) : (
+            <Box 
+            sx={{ 
+              p: 2, 
+              bgcolor: 'action.hover', 
+              borderRadius: 2
+            }}
+            >
+            <Typography variant="body2" color="text.secondary">
+              No progress photos available yet
+            </Typography>
+            </Box>
+          )}
         </Box>
+        </Box>
+      </Box>
       </Collapse>
       </Paper>
     );
