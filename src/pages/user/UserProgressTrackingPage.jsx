@@ -3,28 +3,47 @@ import { Typography,
          Paper, 
          Box, 
          CircularProgress, 
-         Stack 
+         Stack,
+         Alert 
          } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
 import UserProgressTaskCard from "../../components/dashboard/user/UserProgressTaskCard";
+import { getProgressTrackingTasks } from "../../services/progressTrackingService";
+import { useAuth } from "../../contexts/AuthContext";
 
 const UserProgressTrackingPage = () => {
 
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Get the authenticated user from AuthContext
+  const { user } = useAuth();
 
   useEffect (() => {
-    fetch('/mock/progress.json')
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchProgressData = async () => {
+      if (!user || !user.id) {
+        setError("User not authenticated");
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const data = await getProgressTrackingTasks(user.id);
+        
         setTasks(data);
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching progress data:", error);
+      } catch (err) {
+        console.error("Error fetching progress data:", err);
+        setError(err.message || "Failed to load progress tracking data");
         setLoading(false);
-      });
-  }, []);
+      }
+    };
+
+    fetchProgressData();
+  }, [user]); // Re-fetch when user changes
 
 
   const renderContent = () => {
@@ -33,6 +52,14 @@ const UserProgressTrackingPage = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
         <CircularProgress />
       </Box>
+      );
+    }
+
+    if (error) {
+      return (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
       );
     }
 
