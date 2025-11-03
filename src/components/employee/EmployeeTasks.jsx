@@ -6,7 +6,7 @@ import { TaskCard } from "./TaskCard";
 import { CompletedTaskCard } from "./CompletedTaskCard";
 import { authenticatedAxios } from "../../utils/axiosConfig";
 import { API_BASE } from "../../config/apiEndpoints";
-import { uploadImageToCloudinary } from "../../utils/cloudinaryUtils";
+import { uploadImageToCloudinary, deleteImageFromCloudinary  } from "../../utils/cloudinaryUtils";
 import { getCurrentUser } from "../../utils/jwtUtils";
 
 export function EmployeeTasks() {
@@ -199,7 +199,7 @@ export function EmployeeTasks() {
     setUploadingImages((prev) => ({ ...prev, [currentTaskId]: true }));
 
     try {
-      const result = await uploadImageToCloudinary(file);
+      const result = await uploadImageToCloudinary(file,{folder:"task_images"});
 
       if (!result.success) {
         console.error(`Failed to upload ${file.name}:`, result.error);
@@ -208,13 +208,18 @@ export function EmployeeTasks() {
 
       const imageData = {
         imageUrl: result.data.url,
+        publicId: result.data.publicId,
         description: description || "",
       };
 
-      await authenticatedAxios.post(
+      console.log(imageData);
+      
+
+      const response = await authenticatedAxios.post(
         `${API_BASE}/api/tasks/${currentTaskId}/images`,
         {
           imageUrl: imageData.imageUrl,
+          publicId: imageData.publicId,
           description: imageData.description,
         }
       );
@@ -224,7 +229,7 @@ export function EmployeeTasks() {
           task.id === currentTaskId
             ? {
                 ...task,
-                taskImages: [...(task.taskImages || []), imageData],
+                taskImages: [...(task.taskImages || []), response.data],
               }
             : task
         )
@@ -278,7 +283,7 @@ export function EmployeeTasks() {
 
       // Add note to local state
       const newNote = {
-        id: response.data.id || Date.now(),
+        id: response.data.id,
         content: noteText,
         visibleToCustomer: isVisible,
         createdAt: new Date().toISOString(),
@@ -312,7 +317,7 @@ export function EmployeeTasks() {
 
   const handleRemoveImage = async (taskId, imageData) => {
     const imageId = imageData.id;
-
+    
     // Store original state for rollback 
     const originalTask = activeTasks.find((t) => t.id === taskId);
     const originalTaskCopy = {
@@ -335,6 +340,8 @@ export function EmployeeTasks() {
     );
 
     try {
+
+      const resultCloudinary = await deleteImageFromCloudinary(imageData.publicId);
       await authenticatedAxios.delete(
         `${API_BASE}/api/tasks/${taskId}/images/${imageId}`
       );
@@ -350,9 +357,6 @@ export function EmployeeTasks() {
   };
 
 const handleRemoveNote = async (taskId, noteId) => {
-  console.log("=== REMOVE NOTE DEBUG ===");
-  console.log("taskId:", taskId, "noteId:", noteId);
-  
   const originalTask = activeTasks.find((t) => t.id === taskId);
   
   const originalTaskCopy = {
