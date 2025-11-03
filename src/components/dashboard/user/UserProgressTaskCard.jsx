@@ -62,7 +62,7 @@ const calculateProgress = (subTasks) => {
     };
 
     // .slice to create a copy of the array
-    const sortedSubTasks = task.subTasks.slice().sort((a, b) => {
+    const sortedSubTasks = (task.subTasks || []).slice().sort((a, b) => {
       const orderA = statusOrder[a.status];
       const orderB = statusOrder[b.status];
       return orderA - orderB;
