@@ -76,6 +76,10 @@ const ManagerBranchesPage = lazy(() =>
   import("./pages/manager/ManagerBranchesPage")
 );
 
+const AdminDashboardPage = lazy(() =>
+  import("./pages/admin/AdminDashboardPage")
+);
+
 // Loading fallback
 const LoadingFallback = () => (
   <div
@@ -288,12 +292,12 @@ const App = () => {
                   }
                 />
 
-                {/* Admin Routes - Uses same pages as Manager */}
+                {/* Admin Routes */}
                 <Route
                   path="/admin/dashboard"
                   element={
                     <ProtectedRoute requiredRole="admin">
-                      <ManagerDashboardPage />
+                      <AdminDashboardPage />
                     </ProtectedRoute>
                   }
                 />

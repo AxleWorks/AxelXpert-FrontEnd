@@ -37,8 +37,6 @@ import {
   Groups as GroupsIcon,
   EventAvailable as EventAvailableIcon,
   BusinessCenter as BusinessCenterIcon,
-  Settings as SettingsIcon,
-  Security as SecurityIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../cards/StatCard";
@@ -90,17 +88,32 @@ const AdminDashboard = () => {
       const [statsData, revenue, branches, services, bookings] =
         await Promise.all([
           dashboardService.getAdminStats(),
-          dashboardService.getRevenueData(),
-          dashboardService.getBranchPerformance(),
-          dashboardService.getServiceDistribution(),
-          dashboardService.getRecentBookings(),
+          dashboardService.getAdminRevenueData(),
+          dashboardService.getAdminBranchPerformance(),
+          dashboardService.getAdminServiceDistribution(),
+          dashboardService.getAdminRecentBookings(),
         ]);
+
+      console.log("Admin Dashboard Data:", {
+        statsData,
+        revenue,
+        branches,
+        services,
+        bookings,
+      });
 
       setStats(statsData);
       setRevenueData(Array.isArray(revenue) ? revenue : []);
       setBranchPerformance(Array.isArray(branches) ? branches : []);
       setServiceDistribution(Array.isArray(services) ? services : []);
       setRecentBookings(Array.isArray(bookings) ? bookings : []);
+
+      console.log("State updated:", {
+        revenueLength: revenue?.length || 0,
+        branchesLength: branches?.length || 0,
+        servicesLength: services?.length || 0,
+        bookingsLength: bookings?.length || 0,
+      });
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
       setError(
@@ -130,7 +143,15 @@ const AdminDashboard = () => {
   const statsConfig = stats
     ? [
         {
-          title: "Total System Users",
+          title: "Total Revenue",
+          value: stats.revenue?.value || "$0",
+          icon: <AttachMoneyIcon />,
+          color: "#10b981",
+          trend: stats.revenue?.trend || "",
+          details: stats.revenue?.details || [],
+        },
+        {
+          title: "Active Users",
           value: stats.users?.value || "0",
           icon: <PeopleIcon />,
           color: "#3b82f6",
@@ -138,7 +159,15 @@ const AdminDashboard = () => {
           details: stats.users?.details || [],
         },
         {
-          title: "Active Branches",
+          title: "Total Bookings",
+          value: stats.bookings?.value || "0",
+          icon: <CalendarTodayIcon />,
+          color: "#f59e0b",
+          trend: stats.bookings?.trend || "",
+          details: stats.bookings?.details || [],
+        },
+        {
+          title: "Service Branches",
           value: stats.branches?.value || "0",
           icon: <StoreIcon />,
           color: "#8b5cf6",
@@ -146,60 +175,44 @@ const AdminDashboard = () => {
           details: stats.branches?.details || [],
         },
         {
-          title: "System Health",
-          value: stats.health?.value || "100%",
+          title: "Performance Score",
+          value: stats.performance?.value || "0%",
           icon: <TrendingUpIcon />,
-          color: "#10b981",
-          trend: stats.health?.trend || "",
-          details: stats.health?.details || [],
-        },
-        {
-          title: "Total Revenue",
-          value: stats.revenue?.value || "$0",
-          icon: <AttachMoneyIcon />,
-          color: "#f59e0b",
-          trend: stats.revenue?.trend || "",
-          details: stats.revenue?.details || [],
-        },
-        {
-          title: "Security Alerts",
-          value: stats.alerts?.value || "0",
-          icon: <SecurityIcon />,
           color: "#ef4444",
-          trend: stats.alerts?.trend || "",
-          details: stats.alerts?.details || [],
+          trend: stats.performance?.trend || "",
+          details: stats.performance?.details || [],
         },
       ]
     : [];
 
   const quickActions = [
     {
-      title: "System Settings",
-      icon: <SettingsIcon />,
+      title: "Generate Report",
+      icon: <AssessmentIcon />,
       color: "#3b82f6",
-      description: "Configure system",
-      action: () => navigate("/admin/settings"),
+      description: "Monthly analytics",
+      action: () => navigate("/admin/reports"),
     },
     {
-      title: "User Management",
+      title: "Manage Users",
       icon: <PeopleIcon />,
       color: "#10b981",
-      description: "Manage all users",
+      description: "User permissions",
       action: () => navigate("/admin/users"),
     },
     {
-      title: "Security Logs",
-      icon: <SecurityIcon />,
-      color: "#ef4444",
-      description: "View security events",
-      action: () => navigate("/admin/security"),
+      title: "View Calendar",
+      icon: <CalendarTodayIcon />,
+      color: "#f59e0b",
+      description: "All bookings",
+      action: () => navigate("/admin/calendar"),
     },
     {
-      title: "Analytics",
-      icon: <AnalyticsIcon />,
+      title: "Branch Overview",
+      icon: <StoreIcon />,
       color: "#8b5cf6",
-      description: "System analytics",
-      action: () => navigate("/admin/analytics"),
+      description: "Performance metrics",
+      action: () => navigate("/admin/branches"),
     },
   ];
 
@@ -264,6 +277,15 @@ const AdminDashboard = () => {
         </Alert>
       )}
 
+      {/* Debug Info */}
+      {process.env.NODE_ENV === "development" && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Debug: Revenue: {revenueData.length}, Branches:{" "}
+          {branchPerformance.length}, Services: {serviceDistribution.length},
+          Bookings: {recentBookings.length}
+        </Alert>
+      )}
+
       {/* Welcome Section */}
       <Box sx={{ mb: 4 }}>
         <Typography
@@ -289,26 +311,26 @@ const AdminDashboard = () => {
             mb: 2,
           }}
         >
-          Monitor system performance and manage administrative functions
+          Monitor business performance and key metrics across all branches
         </Typography>
         <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
           <Chip
-            icon={<SecurityIcon />}
-            label="System Secure"
+            icon={<TrendingUpIcon />}
+            label={stats?.revenue?.trend || "Revenue Tracking"}
             color="success"
             variant="outlined"
             sx={{ fontWeight: 600 }}
           />
           <Chip
-            icon={<GroupsIcon />}
-            label={`${stats?.users?.value || "0"} Total Users`}
+            icon={<EventAvailableIcon />}
+            label={`${stats?.bookings?.value || "0"} Bookings This Week`}
             color="primary"
             variant="outlined"
             sx={{ fontWeight: 600 }}
           />
           <Chip
             icon={<BusinessCenterIcon />}
-            label="All Systems Operational"
+            label="All Branches Operational"
             color="info"
             variant="outlined"
             sx={{ fontWeight: 600 }}
@@ -340,7 +362,7 @@ const AdminDashboard = () => {
             variant="h6"
             sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
           >
-            System Performance Trends
+            Revenue & Performance Trends
           </Typography>
           <ResponsiveContainer width="100%" height={350}>
             <ComposedChart data={Array.isArray(revenueData) ? revenueData : []}>
@@ -630,33 +652,33 @@ const AdminDashboard = () => {
                 variant="h6"
                 sx={{ fontWeight: 700, color: theme.palette.text.primary }}
               >
-                Recent System Activities
+                Recent Bookings
               </Typography>
               <Button
                 size="small"
                 endIcon={<ArrowForwardIcon />}
                 sx={{ textTransform: "none" }}
-                onClick={() => navigate("/admin/activities")}
+                onClick={() => navigate("/admin/bookings")}
               >
-                View All Activities
+                View All Bookings
               </Button>
             </Box>
             <TableContainer>
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 600 }}>User</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Action</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Customer</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Service</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Branch</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Details</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {Array.isArray(recentBookings) &&
-                    recentBookings.map((activity) => (
-                      <TableRow key={activity.id} hover>
+                    recentBookings.map((booking) => (
+                      <TableRow key={booking.id} hover>
                         <TableCell>
                           <Box
                             sx={{
@@ -668,15 +690,15 @@ const AdminDashboard = () => {
                             <Avatar
                               sx={{ width: 32, height: 32, bgcolor: "#e11d48" }}
                             >
-                              {activity.user.charAt(0)}
+                              {booking.customer.charAt(0)}
                             </Avatar>
-                            {activity.user}
+                            {booking.customer}
                           </Box>
                         </TableCell>
-                        <TableCell>{activity.action}</TableCell>
+                        <TableCell>{booking.service}</TableCell>
                         <TableCell>
                           <Chip
-                            label={activity.branch}
+                            label={booking.branch}
                             size="small"
                             variant="outlined"
                             sx={{ fontWeight: 500 }}
@@ -684,19 +706,19 @@ const AdminDashboard = () => {
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={activity.status}
+                            label={booking.status}
                             size="small"
-                            color={getStatusColor(activity.status)}
+                            color={getStatusColor(booking.status)}
                           />
                         </TableCell>
-                        <TableCell>{activity.date}</TableCell>
+                        <TableCell>{booking.date}</TableCell>
                         <TableCell>
                           <Typography
                             variant="body2"
                             fontWeight={600}
                             color="success.main"
                           >
-                            {activity.details}
+                            {booking.amount}
                           </Typography>
                         </TableCell>
                       </TableRow>

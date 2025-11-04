@@ -106,6 +106,40 @@ export const dashboardService = {
     );
     return response.data;
   },
+
+  // Admin Dashboard APIs (All Branches)
+  getAdminStats: async () => {
+    console.log("Calling getAdminStats API:", `${DASHBOARD_API}/admin/stats`);
+    const response = await axios.get(`${DASHBOARD_API}/admin/stats`);
+    console.log("getAdminStats response:", response.data);
+    return response.data;
+  },
+
+  getAdminRevenueData: async (months = 6) => {
+    const response = await axios.get(`${DASHBOARD_API}/admin/revenue`, {
+      params: { months },
+    });
+    return response.data;
+  },
+
+  getAdminBranchPerformance: async () => {
+    const response = await axios.get(`${DASHBOARD_API}/admin/branches`);
+    return response.data;
+  },
+
+  getAdminServiceDistribution: async () => {
+    const response = await axios.get(
+      `${DASHBOARD_API}/admin/service-distribution`
+    );
+    return response.data;
+  },
+
+  getAdminRecentBookings: async (limit = 10) => {
+    const response = await axios.get(`${DASHBOARD_API}/admin/recent-bookings`, {
+      params: { limit },
+    });
+    return response.data;
+  },
 };
 
 export default dashboardService;
