@@ -349,7 +349,21 @@ export default function EmployeeTaskDetailsPage() {
 
         <Card>
           {/* Task Header */}
-          <Box sx={{ p: 3, backgroundColor: "primary.main", color: "white" }}>
+          <Box
+            sx={{
+              p: 3,
+              backgroundColor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "background.paper"
+                  : "primary.main",
+              color: (theme) =>
+                theme.palette.mode === "dark" ? "text.primary" : "white",
+              borderBottom: (theme) =>
+                theme.palette.mode === "dark"
+                  ? `1px solid ${theme.palette.divider}`
+                  : "none",
+            }}
+          >
             <Box
               sx={{
                 display: "flex",
@@ -377,7 +391,16 @@ export default function EmployeeTaskDetailsPage() {
                   }}
                 >
                   <Badge
-                    sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
+                    sx={{
+                      bgcolor: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? "rgba(59, 130, 246, 0.2)"
+                          : "rgba(255,255,255,0.2)",
+                      color: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? theme.palette.primary.light
+                          : "white",
+                    }}
                   >
                     {task.title}
                   </Badge>
@@ -389,12 +412,24 @@ export default function EmployeeTaskDetailsPage() {
                     sx={{
                       fontWeight: "bold",
                       borderRadius: "4px",
+                      ...(task.status === "NOT_STARTED" && {
+                        backgroundColor: "#94a3b8",
+                        color: "white",
+                      }),
                       ...(task.status === "IN_PROGRESS" && {
-                        backgroundColor: "info.main",
+                        backgroundColor: "#3b82f6",
                         color: "white",
                       }),
                       ...(task.status === "COMPLETED" && {
-                        backgroundColor: "success.main",
+                        backgroundColor: "#22c55e",
+                        color: "white",
+                      }),
+                      ...(task.status === "DELAYED" && {
+                        backgroundColor: "#ef4444",
+                        color: "white",
+                      }),
+                      ...(task.status === "PENDING" && {
+                        backgroundColor: "#f59e0b",
                         color: "white",
                       }),
                     }}
