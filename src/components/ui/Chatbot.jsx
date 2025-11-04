@@ -16,11 +16,15 @@ import {
   SmartToy as BotIcon,
   Person as PersonIcon,
 } from "@mui/icons-material";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { useTheme } from "../../contexts/ThemeContext";
 
 // API configuration for Spring Boot backend
-const API_BASE_URL = 'http://localhost:8080'; // Your Spring Boot backend URL
+const API_BASE_URL = "http://localhost:8080"; // Your Spring Boot backend URL
 
 const Chatbot = () => {
+  const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]); // Initialize empty - will load from backend
   const [inputMessage, setInputMessage] = useState("");
@@ -44,10 +48,11 @@ const Chatbot = () => {
 
   // Session management function
   const getSessionId = () => {
-    let sessionId = localStorage.getItem('axlexpert-chat-session');
+    let sessionId = localStorage.getItem("axlexpert-chat-session");
     if (!sessionId) {
-      sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem('axlexpert-chat-session', sessionId);
+      sessionId =
+        "session-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem("axlexpert-chat-session", sessionId);
     }
     return sessionId;
   };
@@ -56,8 +61,10 @@ const Chatbot = () => {
   const loadWelcomeMessage = async () => {
     try {
       const sessionId = getSessionId();
-      const response = await fetch(`${API_BASE_URL}/api/chat/welcome/${sessionId}`);
-      
+      const response = await fetch(
+        `${API_BASE_URL}/api/chat/welcome/${sessionId}`
+      );
+
       if (response.ok) {
         const welcomeData = await response.json();
         const welcomeMessage = {
@@ -69,7 +76,7 @@ const Chatbot = () => {
         setMessages([welcomeMessage]);
       }
     } catch (error) {
-      console.error('Error loading welcome message:', error);
+      console.error("Error loading welcome message:", error);
       // Fallback welcome message
       const fallbackWelcome = {
         id: 1,
@@ -105,16 +112,16 @@ const Chatbot = () => {
         type: "USER",
         content: inputMessage,
         sessionId: getSessionId(),
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Make API call to your backend
       const response = await fetch(`${API_BASE_URL}/api/chat/message`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(chatRequest)
+        body: JSON.stringify(chatRequest),
       });
 
       if (!response.ok) {
@@ -122,17 +129,17 @@ const Chatbot = () => {
       }
 
       const botResponseData = await response.json();
-      
+
       const botResponse = {
         id: Date.now() + 1,
         text: botResponseData.content,
         sender: "bot",
         timestamp: new Date(),
       };
-      
+
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
-      console.error('Error calling chatbot API:', error);
+      console.error("Error calling chatbot API:", error);
       // Fallback error message
       const errorResponse = {
         id: Date.now() + 1,
@@ -154,7 +161,10 @@ const Chatbot = () => {
   };
 
   const formatTime = (timestamp) => {
-    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return timestamp.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
@@ -167,8 +177,8 @@ const Chatbot = () => {
             position: "fixed",
             bottom: 100,
             right: 20,
-            width: 350,
-            height: 500,
+            width: 450,
+            height: 600,
             borderRadius: 2,
             overflow: "hidden",
             display: isOpen ? "flex" : "none",
@@ -180,8 +190,8 @@ const Chatbot = () => {
           {/* Header */}
           <Box
             sx={{
-              background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
-              color: "white",
+              background: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
               p: 2,
               display: "flex",
               alignItems: "center",
@@ -196,7 +206,10 @@ const Chatbot = () => {
             </Box>
             <IconButton
               onClick={handleToggle}
-              sx={{ color: "white", "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+              sx={{
+                color: theme.palette.primary.contrastText,
+                "&:hover": { backgroundColor: theme.palette.action.hover },
+              }}
             >
               <CloseIcon />
             </IconButton>
@@ -208,15 +221,15 @@ const Chatbot = () => {
               flex: 1,
               overflow: "auto",
               p: 1,
-              backgroundColor: "#f8f9fa",
+              backgroundColor: theme.palette.background.default,
               "&::-webkit-scrollbar": {
                 width: "6px",
               },
               "&::-webkit-scrollbar-track": {
-                background: "#f1f1f1",
+                background: theme.palette.background.paper,
               },
               "&::-webkit-scrollbar-thumb": {
-                background: "#c1c1c1",
+                background: theme.palette.action.hover,
                 borderRadius: "3px",
               },
             }}
@@ -226,7 +239,8 @@ const Chatbot = () => {
                 key={message.id}
                 sx={{
                   display: "flex",
-                  justifyContent: message.sender === "user" ? "flex-end" : "flex-start",
+                  justifyContent:
+                    message.sender === "user" ? "flex-end" : "flex-start",
                   mb: 1,
                 }}
               >
@@ -236,14 +250,16 @@ const Chatbot = () => {
                     alignItems: "flex-start",
                     gap: 1,
                     maxWidth: "80%",
-                    flexDirection: message.sender === "user" ? "row-reverse" : "row",
+                    flexDirection:
+                      message.sender === "user" ? "row-reverse" : "row",
                   }}
                 >
                   <Avatar
                     sx={{
                       width: 32,
                       height: 32,
-                      backgroundColor: message.sender === "user" ? "#1976d2" : "#4caf50",
+                      backgroundColor:
+                        message.sender === "user" ? theme.palette.primary.main : theme.palette.success.main,
                     }}
                   >
                     {message.sender === "user" ? <PersonIcon /> : <BotIcon />}
@@ -252,23 +268,62 @@ const Chatbot = () => {
                     elevation={1}
                     sx={{
                       p: 1.5,
-                      backgroundColor: message.sender === "user" ? "#1976d2" : "white",
-                      color: message.sender === "user" ? "white" : "black",
+                      backgroundColor:
+                        message.sender === "user" ? theme.palette.primary.main : theme.palette.background.paper,
+                      color: message.sender === "user" ? theme.palette.primary.contrastText : theme.palette.text.primary,
                       borderRadius: 2,
                       borderTopLeftRadius: message.sender === "user" ? 2 : 0.5,
                       borderTopRightRadius: message.sender === "user" ? 0.5 : 2,
                     }}
                   >
-                    <Typography variant="body2" sx={{ wordWrap: "break-word" }}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => (
+                          <Typography
+                            variant="caption"
+                            sx={{ wordWrap: "break-word", lineHeight: 1.5 }}
+                          >
+                            {children}
+                          </Typography>
+                        ),
+                        ul: ({ children }) => (
+                          <Box
+                            component="ul"
+                            sx={{ pl: 2, m: 0, lineHeight: 1.5 }}
+                          >
+                            {children}
+                          </Box>
+                        ),
+                        li: ({ children }) => (
+                          <Typography
+                            component="li"
+                            variant="caption"
+                            sx={{ lineHeight: 1.5 }}
+                          >
+                            {children}
+                          </Typography>
+                        ),
+                        strong: ({ children }) => (
+                          <Typography
+                            component="strong"
+                            variant="caption"
+                            sx={{ fontWeight: "bold", lineHeight: 1.5 }}
+                          >
+                            {children}
+                          </Typography>
+                        ),
+                      }}
+                    >
                       {message.text}
-                    </Typography>
+                    </ReactMarkdown>
                     <Typography
                       variant="caption"
                       sx={{
-                        opacity: 0.7,
                         fontSize: "0.7rem",
                         mt: 0.5,
                         display: "block",
+                        color: theme.palette.text.secondary,
                       }}
                     >
                       {formatTime(message.timestamp)}
@@ -277,23 +332,30 @@ const Chatbot = () => {
                 </Box>
               </Box>
             ))}
-            
+
             {/* Typing Indicator */}
             {isTyping && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-                <Avatar sx={{ width: 32, height: 32, backgroundColor: "#4caf50" }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
+              >
+                <Avatar
+                  sx={{ width: 32, height: 32, backgroundColor: theme.palette.success.main }}
+                >
                   <BotIcon />
                 </Avatar>
                 <Paper
                   elevation={1}
                   sx={{
                     p: 1.5,
-                    backgroundColor: "white",
+                    backgroundColor: theme.palette.background.paper,
                     borderRadius: 2,
                     borderTopLeftRadius: 0.5,
                   }}
                 >
-                  <Typography variant="body2" sx={{ fontStyle: "italic", opacity: 0.7 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ fontStyle: "italic", color: theme.palette.text.secondary }}
+                  >
                     Typing...
                   </Typography>
                 </Paper>
@@ -306,8 +368,8 @@ const Chatbot = () => {
           <Box
             sx={{
               p: 2,
-              borderTop: "1px solid #e0e0e0",
-              backgroundColor: "white",
+              borderTop: `1px solid ${theme.palette.divider}`,
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             <Box sx={{ display: "flex", gap: 1, alignItems: "flex-end" }}>
@@ -324,7 +386,7 @@ const Chatbot = () => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 3,
-                    backgroundColor: "#f8f9fa",
+                    backgroundColor: theme.palette.background.default,
                   },
                 }}
               />
@@ -332,14 +394,14 @@ const Chatbot = () => {
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim()}
                 sx={{
-                  backgroundColor: "#1976d2",
-                  color: "white",
+                  backgroundColor: theme.palette.primary.main,
+                  color: theme.palette.primary.contrastText,
                   "&:hover": {
-                    backgroundColor: "#1565c0",
+                    backgroundColor: theme.palette.primary.dark,
                   },
                   "&:disabled": {
-                    backgroundColor: "#e0e0e0",
-                    color: "#9e9e9e",
+                    backgroundColor: theme.palette.action.disabledBackground,
+                    color: theme.palette.action.disabled,
                   },
                 }}
               >
@@ -369,11 +431,10 @@ const Chatbot = () => {
             sx={{
               width: 60,
               height: 60,
-              background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
-              color: "white",
+              backgroundColor: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
               "&:hover": {
-                background: "linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)",
-                transform: "scale(1.05)",
+                backgroundColor: theme.palette.primary.dark,
               },
               transition: "all 0.3s ease",
             }}
