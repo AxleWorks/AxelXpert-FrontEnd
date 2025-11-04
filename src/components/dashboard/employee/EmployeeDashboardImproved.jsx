@@ -29,9 +29,6 @@ import {
   ArrowForward as ArrowForwardIcon,
   Timer as TimerIcon,
   Refresh as RefreshIcon,
-  PlayArrow as PlayArrowIcon,
-  Stop as StopIcon,
-  PauseCircle as PauseIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../cards/StatCard";
@@ -169,13 +166,6 @@ const EmployeeDashboard = () => {
 
   const quickActions = [
     {
-      title: "Start Work",
-      icon: <PlayArrowIcon />,
-      color: "#10b981",
-      description: "Begin next task",
-      action: () => navigate("/employee/tasks"),
-    },
-    {
       title: "View Tasks",
       icon: <AssignmentIcon />,
       color: "#3b82f6",
@@ -183,18 +173,25 @@ const EmployeeDashboard = () => {
       action: () => navigate("/employee/tasks"),
     },
     {
-      title: "Take Break",
-      icon: <PauseIcon />,
+      title: "View Calendar",
+      icon: <ScheduleIcon />,
+      color: "#10b981",
+      description: "Schedule & bookings",
+      action: () => navigate("/employee/calendar"),
+    },
+    {
+      title: "View Vehicles",
+      icon: <DirectionsCarIcon />,
       color: "#f59e0b",
-      description: "Log break time",
-      action: () => {},
+      description: "Assigned vehicles",
+      action: () => navigate("/employee/vehicles"),
     },
     {
       title: "Report Issue",
       icon: <NotificationsIcon />,
       color: "#ef4444",
       description: "Technical support",
-      action: () => {},
+      action: () => navigate("/employee/support"),
     },
   ];
 
@@ -294,7 +291,7 @@ const EmployeeDashboard = () => {
             WebkitTextFillColor: "transparent",
           }}
         >
-          Good Morning!
+          Welcome Back!
         </Typography>
         <Typography
           variant="h6"
@@ -307,23 +304,6 @@ const EmployeeDashboard = () => {
         >
           Let's make today productive! Here's your work overview
         </Typography>
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-          <Chip
-            icon={<TimerIcon />}
-            label={`${
-              stats?.upcomingTasks?.value || "0"
-            } Tasks Scheduled Today`}
-            color="warning"
-            variant="outlined"
-            sx={{ fontWeight: 600 }}
-          />
-          <Chip
-            label="Next: Honda Civic at 11:00 AM"
-            color="primary"
-            variant="outlined"
-            sx={{ fontWeight: 600 }}
-          />
-        </Box>
       </Box>
 
       {/* Statistics Cards */}

@@ -20,6 +20,7 @@ import {
   Build as BuildIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
+  LocationOn as LocationIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -31,6 +32,7 @@ const menuItems = [
   { text: "Tasks", icon: AssignmentIcon, path: "/employee/tasks" },
   { text: "History", icon: HistoryIcon, path: "/employee/history" },
   { text: "Services", icon: BuildIcon, path: "/employee/services" },
+  { text: "Branches", icon: LocationIcon, path: "/employee/branches" },
 ];
 
 // Bottom menu items

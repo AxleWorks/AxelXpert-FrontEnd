@@ -393,6 +393,8 @@ const CustomerBookingModal = ({
     (s) => s.id === formData.serviceType
   );
 
+  const vehicleTypes = apiVehicles.length > 0 ? [...new Set(apiVehicles.map(v => v.type).filter(Boolean))] : ["Car", "Truck", "SUV", "Van", "Bike"];
+
   const paperStyle = {
     position: "absolute",
     top: "50%",
@@ -627,7 +629,7 @@ const CustomerBookingModal = ({
                         <MenuItem value="">
                           <em>Select vehicle type</em>
                         </MenuItem>
-                        {["Car", "Truck", "SUV", "Van"].map((type) => (
+                        {vehicleTypes.map((type) => (
                           <MenuItem key={type} value={type}>
                             {type}
                           </MenuItem>

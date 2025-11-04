@@ -41,8 +41,14 @@ const EmployeeSettingsPage = lazy(() =>
 const EmployeeTasksPage = lazy(() =>
   import("./pages/employee/EmployeeTasksPage")
 );
+const EmployeeTaskDetailsPage = lazy(() =>
+  import("./pages/employee/EmployeeTaskDetailsPage")
+);
 const EmployeeHistoryPage = lazy(() =>
   import("./pages/employee/EmployeeHistoryPage")
+);
+const EmployeeBranchesPage = lazy(() =>
+  import("./pages/employee/EmployeeBranchesPage")
 );
 
 const ManagerDashboardPage = lazy(() =>
@@ -68,6 +74,10 @@ const ManagerServicesPage = lazy(() =>
 );
 const ManagerBranchesPage = lazy(() =>
   import("./pages/manager/ManagerBranchesPage")
+);
+
+const AdminDashboardPage = lazy(() =>
+  import("./pages/admin/AdminDashboardPage")
 );
 
 // Loading fallback
@@ -176,6 +186,14 @@ const App = () => {
                   }
                 />
                 <Route
+                  path="/employee/tasks/:taskId"
+                  element={
+                    <ProtectedRoute requiredRole="employee">
+                      <EmployeeTaskDetailsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/employee/history"
                   element={
                     <ProtectedRoute requiredRole="employee">
@@ -196,6 +214,14 @@ const App = () => {
                   element={
                     <ProtectedRoute requiredRole="employee">
                       <EmployeeSettingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/employee/branches"
+                  element={
+                    <ProtectedRoute requiredRole="employee">
+                      <EmployeeBranchesPage />
                     </ProtectedRoute>
                   }
                 />
@@ -266,12 +292,12 @@ const App = () => {
                   }
                 />
 
-                {/* Admin Routes - Uses same pages as Manager */}
+                {/* Admin Routes */}
                 <Route
                   path="/admin/dashboard"
                   element={
                     <ProtectedRoute requiredRole="admin">
-                      <ManagerDashboardPage />
+                      <AdminDashboardPage />
                     </ProtectedRoute>
                   }
                 />
