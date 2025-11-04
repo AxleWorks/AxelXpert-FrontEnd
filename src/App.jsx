@@ -41,6 +41,9 @@ const EmployeeSettingsPage = lazy(() =>
 const EmployeeTasksPage = lazy(() =>
   import("./pages/employee/EmployeeTasksPage")
 );
+const EmployeeTaskDetailsPage = lazy(() =>
+  import("./pages/employee/EmployeeTaskDetailsPage")
+);
 const EmployeeHistoryPage = lazy(() =>
   import("./pages/employee/EmployeeHistoryPage")
 );
@@ -172,6 +175,14 @@ const App = () => {
                   element={
                     <ProtectedRoute requiredRole="employee">
                       <EmployeeTasksPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/employee/tasks/:taskId"
+                  element={
+                    <ProtectedRoute requiredRole="employee">
+                      <EmployeeTaskDetailsPage />
                     </ProtectedRoute>
                   }
                 />

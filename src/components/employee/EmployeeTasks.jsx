@@ -1,30 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { TaskImageUploadModal } from "./TaskImageUploadModal";
 import { TaskCard } from "./TaskCard";
-import {toast } from "../ui/toast";
+import { toast } from "../ui/toast";
 import { CompletedTaskCard } from "./CompletedTaskCard";
 import { authenticatedAxios } from "../../utils/axiosConfig";
 import { API_BASE } from "../../config/apiEndpoints";
-import { uploadImageToCloudinary, deleteImageFromCloudinary  } from "../../utils/cloudinaryUtils";
 import { getCurrentUser } from "../../utils/jwtUtils";
 
 export function EmployeeTasks() {
   const [activeTasks, setActiveTasks] = useState([]);
   const [completedTasks, setCompletedTasks] = useState([]);
-  const [taskNotes, setTaskNotes] = useState({});
-  const [notesVisibility, setNotesVisibility] = useState({});
-  const [uploadingImages, setUploadingImages] = useState({});
 
-  
-  const [expandedImages, setExpandedImages] = useState({});
-  const [expandedNotes, setExpandedNotes] = useState({});
-
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [currentTaskId, setCurrentTaskId] = useState(null);
-
-  const activeTaskInProgress = activeTasks.find(task => task.status === "IN_PROGRESS");
+  const activeTaskInProgress = activeTasks.find(
+    (task) => task.status === "IN_PROGRESS"
+  );
   const hasActiveTimer = !!activeTaskInProgress;
 
   useEffect(() => {
@@ -89,10 +79,10 @@ export function EmployeeTasks() {
     const task = activeTasks.find((t) => t.id === taskId);
     const subtask = task.subTasks.find((st) => st.id === subtaskId);
 
-    if (task.status !== "IN_PROGRESS"){
+    if (task.status !== "IN_PROGRESS") {
       toast.error("Start the task timer before updating subtasks.");
       return;
-    } 
+    }
 
     const toggledState =
       subtask.status === "COMPLETED" ? "NOT_STARTED" : "COMPLETED";
@@ -188,223 +178,6 @@ export function EmployeeTasks() {
     }
   };
 
-  const handleOpenUploadModal = (taskId) => {
-    setCurrentTaskId(taskId);
-    setUploadModalOpen(true);
-  };
-
-  const handleCloseUploadModal = () => {
-    setUploadModalOpen(false);
-    setCurrentTaskId(null);
-  };
-
-  const handleImageUpload = async (file, description) => {
-    if (!file || !currentTaskId) return;
-
-    setUploadingImages((prev) => ({ ...prev, [currentTaskId]: true }));
-
-    try {
-      const result = await uploadImageToCloudinary(file,{folder:"task_images"});
-
-      if (!result.success) {
-        console.error(`Failed to upload ${file.name}:`, result.error);
-        throw new Error(result.error);
-      }
-
-      const imageData = {
-        imageUrl: result.data.url,
-        publicId: result.data.publicId,
-        description: description || "",
-      };
-
-      console.log(imageData);
-      
-
-      const response = await authenticatedAxios.post(
-        `${API_BASE}/api/tasks/${currentTaskId}/images`,
-        {
-          imageUrl: imageData.imageUrl,
-          publicId: imageData.publicId,
-          description: imageData.description,
-        }
-      );
-
-      setActiveTasks((prevTasks) =>
-        prevTasks.map((task) =>
-          task.id === currentTaskId
-            ? {
-                ...task,
-                taskImages: [...(task.taskImages || []), response.data],
-              }
-            : task
-        )
-      );
-      toast.success("Image uploaded successfully.");
-    } catch (error) {
-      console.error("Failed to upload image:", error);
-      toast.error("Failed to upload image.");
-    } finally {
-      setUploadingImages((prev) => ({ ...prev, [currentTaskId]: false }));
-    }
-  };
-
-  const handleNotesChange = (taskId, value) => {
-    setTaskNotes((prev) => ({
-      ...prev,
-      [taskId]: value,
-    }));
-  };
-
-  const handleVisibilityChange = (taskId, checked) => {
-    setNotesVisibility((prev) => ({
-      ...prev,
-      [taskId]: checked,
-    }));
-  };
-
-  const handleNotesSubmit = async (taskId) => {
-    const noteText = taskNotes[taskId] || "";
-    const isVisible = notesVisibility[taskId] || false;
-
-    if (!noteText.trim()) {
-      console.warn("Note is empty");
-      return;
-    }
-
-    try {
-      // Get user from JWT token
-      const user = getCurrentUser();
-      if (!user) {
-        console.error("No authenticated user found");
-        return;
-      }
-
-      const response = await authenticatedAxios.post(
-        `${API_BASE}/api/tasks/${taskId}/notes?authorId=${user.id}`,
-        {
-          noteType: "EMPLOYEE_NOTE",
-          content: noteText,
-          visibleToCustomer: isVisible,
-        }
-      );
-
-      // Add note to local state
-      const newNote = {
-        id: response.data.id,
-        content: noteText,
-        visibleToCustomer: isVisible,
-        createdAt: new Date().toISOString(),
-        noteType: "EMPLOYEE_NOTE",
-      };
-
-      setActiveTasks((prevTasks) =>
-        prevTasks.map((task) =>
-          task.id === taskId
-            ? {
-                ...task,
-                taskNotes: [...(task.taskNotes || []), newNote],
-              }
-            : task
-        )
-      );
-
-      setTaskNotes((prev) => ({
-        ...prev,
-        [taskId]: "",
-      }));
-      setNotesVisibility((prev) => ({
-        ...prev,
-        [taskId]: false,
-      }));
-      toast.success("Note added successfully.");
-    } catch (error) {
-      console.error("Failed to submit note:", error);
-      toast.error("Failed to submit note.");
-    }
-  };
-
-  const handleRemoveImage = async (taskId, imageData) => {
-    const imageId = imageData.id;
-    
-    // Store original state for rollback 
-    const originalTask = activeTasks.find((t) => t.id === taskId);
-    const originalTaskCopy = {
-      ...originalTask,
-      taskImages: [...(originalTask.taskImages || [])],
-    };
-
-    // Optimistic update
-    setActiveTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              taskImages: (task.taskImages || []).filter((img) => {
-                return img.id !== imageId;
-              }),
-            }
-          : task
-      )
-    );
-
-    try {
-
-      const resultCloudinary = await deleteImageFromCloudinary(imageData.publicId);
-      await authenticatedAxios.delete(
-        `${API_BASE}/api/tasks/${taskId}/images/${imageId}`
-      );
-
-      toast.success("Image removed successfully.");
-    } catch (error) {
-      toast.error("Failed to remove image.");
-      console.error("Failed to remove image:", error);
-
-      setActiveTasks((prevTasks) =>
-        prevTasks.map((task) => (task.id === taskId ? originalTaskCopy : task))
-      );
-    }
-  };
-
-const handleRemoveNote = async (taskId, noteId) => {
-  const originalTask = activeTasks.find((t) => t.id === taskId);
-  
-  const originalTaskCopy = {
-    ...originalTask,
-    taskNotes: [...(originalTask.taskNotes || [])],
-  };
-
-  // Optimistic update
-  setActiveTasks((prevTasks) => {
-    const updatedTasks = prevTasks.map((task) => {
-      if (task.id === taskId) {
-        const filteredNotes = (task.taskNotes || []).filter((note) => {
-          return note.id !== noteId;
-        });
-        
-        return {
-          ...task,
-          taskNotes: filteredNotes,
-        };
-      }
-      return task;
-    });
-    
-    return updatedTasks;
-  });
-
-  try {
-    await authenticatedAxios.delete(
-      `${API_BASE}/api/tasks/${taskId}/notes/${noteId}`
-    );
-    toast.success("Note removed successfully.");
-  } catch (error) {
-    console.error("Failed to remove note:", error);
-    toast.error("Failed to remove note.");
-    setActiveTasks((prevTasks) =>
-      prevTasks.map((task) => (task.id === taskId ? originalTaskCopy : task))
-    );
-  }
-};
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <Box>
@@ -434,8 +207,8 @@ const handleRemoveNote = async (taskId, noteId) => {
           sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 3 }}
         >
           {activeTasks.map((task) => {
-            const isTaskStarted = task.status === "IN_PROGRESS" || task.status === "COMPLETED";
-            const isUploading = uploadingImages[task.id];
+            const isTaskStarted =
+              task.status === "IN_PROGRESS" || task.status === "COMPLETED";
 
             return (
               <TaskCard
@@ -443,35 +216,10 @@ const handleRemoveNote = async (taskId, noteId) => {
                 task={task}
                 isTaskStarted={isTaskStarted}
                 hasActiveTimer={hasActiveTimer}
-                isUploading={isUploading}
-                expandedImages={expandedImages[task.id] || false}
-                expandedNotes={expandedNotes[task.id] || false}
-                noteText={taskNotes[task.id] || ""}
-                isNoteVisible={notesVisibility[task.id] || false}
                 onStartTimer={() => handleStartTimer(task.id)}
                 onSubtaskToggle={(subtaskId) =>
                   handleSubtaskToggle(task.id, subtaskId)
                 }
-                onImageUpload={() => handleOpenUploadModal(task.id)}
-                onImageRemove={(image) => handleRemoveImage(task.id, image)}
-                onImageToggle={() => {
-                  setExpandedImages((prev) => ({
-                    ...prev,
-                    [task.id]: !prev[task.id],
-                  }));
-                }}
-                onNoteToggle={() => {
-                  setExpandedNotes((prev) => ({
-                    ...prev,
-                    [task.id]: !prev[task.id],
-                  }));
-                }}
-                onNoteChange={(value) => handleNotesChange(task.id, value)}
-                onNoteVisibilityChange={(checked) =>
-                  handleVisibilityChange(task.id, checked)
-                }
-                onNoteSubmit={() => handleNotesSubmit(task.id)}
-                onNoteRemove={(noteId) => handleRemoveNote(task.id, noteId)}
               />
             );
           })}
@@ -486,14 +234,6 @@ const handleRemoveNote = async (taskId, noteId) => {
           ))}
         </TabsContent>
       </Tabs>
-
-      <TaskImageUploadModal
-        open={uploadModalOpen}
-        onClose={handleCloseUploadModal}
-        onConfirm={handleImageUpload}
-        taskId={currentTaskId}
-        isUploading={uploadingImages[currentTaskId]}
-      />
     </Box>
   );
 }

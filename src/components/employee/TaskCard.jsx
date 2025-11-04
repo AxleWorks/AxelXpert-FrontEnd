@@ -1,34 +1,21 @@
 import React from "react";
 import { Box, Typography, Grid, Chip as MuiChip } from "@mui/material";
-import { PlayArrow, CheckCircle, Upload } from "@mui/icons-material";
+import { PlayArrow, Image, Note, ArrowForward } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import { SubtasksList } from "./SubtasksList";
-import { ImagesSection } from "./ImagesSection";
-import { NotesSection } from "./NotesSection";
 
 export function TaskCard({
   task,
   isTaskStarted,
-  isUploading,
-  expandedImages,
-  expandedNotes,
-  noteText,
-  isNoteVisible,
   onStartTimer,
   onSubtaskToggle,
-  onImageUpload,
-  onImageRemove,
-  onImageToggle,
-  onNoteToggle,
-  onNoteChange,
-  onNoteVisibilityChange,
-  onNoteSubmit,
-  onNoteRemove,
   hasActiveTimer,
 }) {
+  const navigate = useNavigate();
   return (
     <Card>
       <Box sx={{ p: 3, backgroundColor: "primary.main", color: "white" }}>
@@ -40,7 +27,11 @@ export function TaskCard({
           }}
         >
           <Box>
-            <Typography variant="h5" component="h3" sx={{ mb: 1, fontWeight: 600 }}>
+            <Typography
+              variant="h5"
+              component="h3"
+              sx={{ mb: 1, fontWeight: 600 }}
+            >
               {task.vehicle}
             </Typography>
 
@@ -52,7 +43,7 @@ export function TaskCard({
                 flexWrap: "wrap",
               }}
             >
-              <Badge sx={{ bgcolor: "", color: "white"}}>{task.title}</Badge>
+              <Badge sx={{ bgcolor: "", color: "white" }}>{task.title}</Badge>
 
               <MuiChip
                 label={task.status}
@@ -74,9 +65,11 @@ export function TaskCard({
             <Typography color="inherit" sx={{ opacity: 0.9 }}>
               Start Time
             </Typography>
-            <Typography sx={{ fontWeight: 600 }}>{new Date(task.sheduledTime).toLocaleString()}</Typography>
+            <Typography sx={{ fontWeight: 600 }}>
+              {new Date(task.sheduledTime).toLocaleString()}
+            </Typography>
           </Box>
-        </Box>  
+        </Box>
       </Box>
 
       <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -142,28 +135,58 @@ export function TaskCard({
           </Button>
         </Box>
 
-        <ImagesSection
-          task={task}
-          isTaskStarted={isTaskStarted}
-          isExpanded={expandedImages}
-          isUploading={isUploading}
-          onToggle={onImageToggle}
-          onUpload={onImageUpload}
-          onRemove={onImageRemove}
-        />
+        {/* Images and Notes Count */}
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            p: 2,
+            bgcolor: "background.default",
+            borderRadius: 1,
+            alignItems: "center",
+            justifyContent: "space-around",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Image color="primary" />
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Images
+              </Typography>
+              <Typography variant="h6" fontWeight={600}>
+                {task.taskImages?.length || 0}
+              </Typography>
+            </Box>
+          </Box>
 
-        <NotesSection
-          task={task}
-          isTaskStarted={isTaskStarted}
-          isExpanded={expandedNotes}
-          noteText={noteText}
-          isVisible={isNoteVisible}
-          onToggle={onNoteToggle}
-          onNoteChange={onNoteChange}
-          onVisibilityChange={onNoteVisibilityChange}
-          onSubmit={onNoteSubmit}
-          onRemove={onNoteRemove}
-        />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Note color="primary" />
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Notes
+              </Typography>
+              <Typography variant="h6" fontWeight={600}>
+                {task.taskNotes?.length || 0}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* View Details Button */}
+        <Button
+          onClick={() => navigate(`/employee/tasks/${task.id}`)}
+          sx={{
+            width: "100%",
+            backgroundColor: "primary.main",
+            color: "white",
+            "&:hover": {
+              backgroundColor: "primary.dark",
+            },
+          }}
+        >
+          View Full Details
+          <ArrowForward sx={{ fontSize: "1.125rem", ml: 1 }} />
+        </Button>
       </CardContent>
     </Card>
   );
