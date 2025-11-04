@@ -196,7 +196,7 @@ const calculateProgress = (subTasks) => {
             </Collapse>
           </Box>
 
-          {/*Progress Photos Section with Dropdown*/}
+          {/* Progress Photos Section with Dropdown */}
           <Box sx={{ mb: 2 }}>
             <Box 
               sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
