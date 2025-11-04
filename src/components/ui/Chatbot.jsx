@@ -173,6 +173,23 @@ const Chatbot = () => {
 
   return (
     <>
+      {/* Backdrop Blur */}
+      {isOpen && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            backdropFilter: "blur(8px)",
+            zIndex: 1299,
+            transition: "opacity 0.3s ease",
+          }}
+        />
+      )}
+
       {/* Chat Window */}
       <Fade in={isOpen}>
         <Paper
@@ -225,7 +242,7 @@ const Chatbot = () => {
                   border: "1px solid rgba(255, 255, 255, 0.2)",
                 }}
               >
-                <BotIcon sx={{ fontSize: 20 }} />
+                <BotIcon sx={{ fontSize: 25 }} />
               </Box>
               <Box>
                 <Typography
@@ -337,9 +354,9 @@ const Chatbot = () => {
                     }}
                   >
                     {message.sender === "user" ? (
-                      <PersonIcon sx={{ fontSize: 18 }} />
+                      <PersonIcon sx={{ fontSize: 25 }} />
                     ) : (
-                      <BotIcon sx={{ fontSize: 18 }} />
+                      <BotIcon sx={{ fontSize: 25 }} />
                     )}
                   </Avatar>
                   <Paper
@@ -348,7 +365,7 @@ const Chatbot = () => {
                       p: 2,
                       backgroundColor:
                         message.sender === "user"
-                          ? theme.palette.primary.main
+                          ? "#1e40af"
                           : theme.palette.background.paper,
                       color:
                         message.sender === "user"
@@ -384,7 +401,7 @@ const Chatbot = () => {
                       components={{
                         p: ({ children }) => (
                           <Typography
-                            variant="caption"
+                            variant="body2"
                             sx={{ wordWrap: "break-word", lineHeight: 1.5 }}
                           >
                             {children}
@@ -401,7 +418,7 @@ const Chatbot = () => {
                         li: ({ children }) => (
                           <Typography
                             component="li"
-                            variant="caption"
+                            variant="body2"
                             sx={{ lineHeight: 1.5 }}
                           >
                             {children}
@@ -410,7 +427,7 @@ const Chatbot = () => {
                         strong: ({ children }) => (
                           <Typography
                             component="strong"
-                            variant="caption"
+                            variant="body2"
                             sx={{ fontWeight: "bold", lineHeight: 1.5 }}
                           >
                             {children}
@@ -423,7 +440,7 @@ const Chatbot = () => {
                     <Typography
                       variant="caption"
                       sx={{
-                        fontSize: "0.7rem",
+                        fontSize: "0.8rem",
                         mt: 0.5,
                         display: "block",
                         color: theme.palette.text.secondary,
