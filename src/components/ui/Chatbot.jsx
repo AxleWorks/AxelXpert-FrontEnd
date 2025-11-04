@@ -16,11 +16,16 @@ import {
   SmartToy as BotIcon,
   Person as PersonIcon,
 } from "@mui/icons-material";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { useTheme } from "../../contexts/ThemeContext";
+import { getStoredAccessToken, getCurrentUser } from "../../utils/jwtUtils";
 
 // API configuration for Spring Boot backend
-const API_BASE_URL = 'http://localhost:8080'; // Your Spring Boot backend URL
+const API_BASE_URL = "http://localhost:8080"; // Your Spring Boot backend URL
 
 const Chatbot = () => {
+  const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]); // Initialize empty - will load from backend
   const [inputMessage, setInputMessage] = useState("");
@@ -44,10 +49,11 @@ const Chatbot = () => {
 
   // Session management function
   const getSessionId = () => {
-    let sessionId = localStorage.getItem('axlexpert-chat-session');
+    let sessionId = localStorage.getItem("axlexpert-chat-session");
     if (!sessionId) {
-      sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem('axlexpert-chat-session', sessionId);
+      sessionId =
+        "session-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem("axlexpert-chat-session", sessionId);
     }
     return sessionId;
   };
@@ -56,8 +62,10 @@ const Chatbot = () => {
   const loadWelcomeMessage = async () => {
     try {
       const sessionId = getSessionId();
-      const response = await fetch(`${API_BASE_URL}/api/chat/welcome/${sessionId}`);
-      
+      const response = await fetch(
+        `${API_BASE_URL}/api/chat/welcome/${sessionId}`
+      );
+
       if (response.ok) {
         const welcomeData = await response.json();
         const welcomeMessage = {
@@ -69,7 +77,7 @@ const Chatbot = () => {
         setMessages([welcomeMessage]);
       }
     } catch (error) {
-      console.error('Error loading welcome message:', error);
+      console.error("Error loading welcome message:", error);
       // Fallback welcome message
       const fallbackWelcome = {
         id: 1,
@@ -101,20 +109,23 @@ const Chatbot = () => {
 
     try {
       // Create the request payload matching your backend's ChatMessage DTO
+      const currentUser = getCurrentUser();
       const chatRequest = {
         type: "USER",
         content: inputMessage,
         sessionId: getSessionId(),
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        accessToken: getStoredAccessToken(),
+        userId: currentUser?.id,
       };
 
       // Make API call to your backend
       const response = await fetch(`${API_BASE_URL}/api/chat/message`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(chatRequest)
+        body: JSON.stringify(chatRequest),
       });
 
       if (!response.ok) {
@@ -122,17 +133,17 @@ const Chatbot = () => {
       }
 
       const botResponseData = await response.json();
-      
+
       const botResponse = {
         id: Date.now() + 1,
         text: botResponseData.content,
         sender: "bot",
         timestamp: new Date(),
       };
-      
+
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
-      console.error('Error calling chatbot API:', error);
+      console.error("Error calling chatbot API:", error);
       // Fallback error message
       const errorResponse = {
         id: Date.now() + 1,
@@ -154,7 +165,10 @@ const Chatbot = () => {
   };
 
   const formatTime = (timestamp) => {
-    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return timestamp.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
@@ -162,41 +176,86 @@ const Chatbot = () => {
       {/* Chat Window */}
       <Fade in={isOpen}>
         <Paper
-          elevation={8}
+          elevation={12}
           sx={{
             position: "fixed",
             bottom: 100,
             right: 20,
-            width: 350,
-            height: 500,
-            borderRadius: 2,
+            width: { xs: "90vw", sm: 450 },
+            maxWidth: 450,
+            height: { xs: "80vh", sm: 600 },
+            maxHeight: "80vh",
+            borderRadius: 4,
             overflow: "hidden",
             display: isOpen ? "flex" : "none",
             flexDirection: "column",
             zIndex: 1300,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.24)",
+            background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${theme.palette.background.default} 100%)`,
+            backdropFilter: "blur(20px)",
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow:
+              "0 32px 64px -12px rgba(0, 17, 255, 0.35), 0 20px 32px -8px rgba(0, 0, 0, 0.25), 0 8px 16px -4px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.08)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         >
           {/* Header */}
           <Box
             sx={{
-              background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
-              color: "white",
-              p: 2,
+              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+              color: theme.palette.primary.contrastText,
+              p: 2.5,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              borderBottom: `1px solid ${theme.palette.primary.main}20`,
+              backdropFilter: "blur(10px)",
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <BotIcon />
-              <Typography variant="h6" fontWeight="bold">
-                AxleXpert Assistant
-              </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background: "rgba(255, 255, 255, 0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                }}
+              >
+                <BotIcon sx={{ fontSize: 20 }} />
+              </Box>
+              <Box>
+                <Typography
+                  variant="h6"
+                  fontWeight="600"
+                  sx={{ lineHeight: 1.2 }}
+                >
+                  Axi Assistant
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ opacity: 0.8, fontSize: "0.75rem" }}
+                >
+                  Online • Ready to help
+                </Typography>
+              </Box>
             </Box>
             <IconButton
               onClick={handleToggle}
-              sx={{ color: "white", "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+              sx={{
+                color: theme.palette.primary.contrastText,
+                background: "rgba(255, 255, 255, 0.1)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                "&:hover": {
+                  background: "rgba(255, 7, 7, 1)",
+                  transform: "scale(1.05)",
+                },
+                transition: "all 0.2s ease",
+              }}
             >
               <CloseIcon />
             </IconButton>
@@ -207,18 +266,24 @@ const Chatbot = () => {
             sx={{
               flex: 1,
               overflow: "auto",
-              p: 1,
-              backgroundColor: "#f8f9fa",
+              p: 2,
+              background: `linear-gradient(180deg, ${theme.palette.background.default} 0%, ${theme.palette.background.paper} 100%)`,
+              backgroundImage: `radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.02) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.02) 0%, transparent 50%)`,
               "&::-webkit-scrollbar": {
-                width: "6px",
+                width: "4px",
               },
               "&::-webkit-scrollbar-track": {
-                background: "#f1f1f1",
+                background: "transparent",
               },
               "&::-webkit-scrollbar-thumb": {
-                background: "#c1c1c1",
-                borderRadius: "3px",
+                background: theme.palette.action.hover,
+                borderRadius: "2px",
+                "&:hover": {
+                  background: theme.palette.action.selected,
+                },
               },
+              scrollbarWidth: "thin",
+              scrollbarColor: `${theme.palette.action.hover} transparent`,
             }}
           >
             {messages.map((message) => (
@@ -226,8 +291,23 @@ const Chatbot = () => {
                 key={message.id}
                 sx={{
                   display: "flex",
-                  justifyContent: message.sender === "user" ? "flex-end" : "flex-start",
-                  mb: 1,
+                  justifyContent:
+                    message.sender === "user" ? "flex-end" : "flex-start",
+                  mb: 2,
+                  animation: "slideIn 0.3s ease-out",
+                  "@keyframes slideIn": {
+                    from: {
+                      opacity: 0,
+                      transform:
+                        message.sender === "user"
+                          ? "translateX(20px)"
+                          : "translateX(-20px)",
+                    },
+                    to: {
+                      opacity: 1,
+                      transform: "translateX(0)",
+                    },
+                  },
                 }}
               >
                 <Box
@@ -235,40 +315,118 @@ const Chatbot = () => {
                     display: "flex",
                     alignItems: "flex-start",
                     gap: 1,
-                    maxWidth: "80%",
-                    flexDirection: message.sender === "user" ? "row-reverse" : "row",
+                    maxWidth: "85%",
+                    flexDirection:
+                      message.sender === "user" ? "row-reverse" : "row",
                   }}
                 >
                   <Avatar
                     sx={{
-                      width: 32,
-                      height: 32,
-                      backgroundColor: message.sender === "user" ? "#1976d2" : "#4caf50",
+                      width: 36,
+                      height: 36,
+                      backgroundColor:
+                        message.sender === "user"
+                          ? theme.palette.primary.main
+                          : theme.palette.success.main,
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                      border: `2px solid ${theme.palette.background.paper}`,
+                      transition: "transform 0.2s ease",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                      },
                     }}
                   >
-                    {message.sender === "user" ? <PersonIcon /> : <BotIcon />}
+                    {message.sender === "user" ? (
+                      <PersonIcon sx={{ fontSize: 18 }} />
+                    ) : (
+                      <BotIcon sx={{ fontSize: 18 }} />
+                    )}
                   </Avatar>
                   <Paper
-                    elevation={1}
+                    elevation={0}
                     sx={{
-                      p: 1.5,
-                      backgroundColor: message.sender === "user" ? "#1976d2" : "white",
-                      color: message.sender === "user" ? "white" : "black",
-                      borderRadius: 2,
-                      borderTopLeftRadius: message.sender === "user" ? 2 : 0.5,
-                      borderTopRightRadius: message.sender === "user" ? 0.5 : 2,
+                      p: 2,
+                      backgroundColor:
+                        message.sender === "user"
+                          ? theme.palette.primary.main
+                          : theme.palette.background.paper,
+                      color:
+                        message.sender === "user"
+                          ? theme.palette.primary.contrastText
+                          : theme.palette.text.primary,
+                      borderRadius: 3,
+                      borderTopLeftRadius: message.sender === "user" ? 3 : 8,
+                      borderTopRightRadius: message.sender === "user" ? 8 : 3,
+                      borderBottomLeftRadius: message.sender === "user" ? 3 : 3,
+                      borderBottomRightRadius:
+                        message.sender === "user" ? 3 : 3,
+                      boxShadow:
+                        message.sender === "user"
+                          ? "0 4px 20px rgba(25, 118, 210, 0.25)"
+                          : "0 2px 12px rgba(0, 0, 0, 0.08)",
+                      border:
+                        message.sender === "user"
+                          ? "none"
+                          : `1px solid ${theme.palette.divider}`,
+                      backdropFilter: "blur(10px)",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        transform: "translateY(-1px)",
+                        boxShadow:
+                          message.sender === "user"
+                            ? "0 6px 25px rgba(25, 118, 210, 0.35)"
+                            : "0 4px 16px rgba(0, 0, 0, 0.12)",
+                      },
                     }}
                   >
-                    <Typography variant="body2" sx={{ wordWrap: "break-word" }}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => (
+                          <Typography
+                            variant="caption"
+                            sx={{ wordWrap: "break-word", lineHeight: 1.5 }}
+                          >
+                            {children}
+                          </Typography>
+                        ),
+                        ul: ({ children }) => (
+                          <Box
+                            component="ul"
+                            sx={{ pl: 2, m: 0, lineHeight: 1.5 }}
+                          >
+                            {children}
+                          </Box>
+                        ),
+                        li: ({ children }) => (
+                          <Typography
+                            component="li"
+                            variant="caption"
+                            sx={{ lineHeight: 1.5 }}
+                          >
+                            {children}
+                          </Typography>
+                        ),
+                        strong: ({ children }) => (
+                          <Typography
+                            component="strong"
+                            variant="caption"
+                            sx={{ fontWeight: "bold", lineHeight: 1.5 }}
+                          >
+                            {children}
+                          </Typography>
+                        ),
+                      }}
+                    >
                       {message.text}
-                    </Typography>
+                    </ReactMarkdown>
                     <Typography
                       variant="caption"
                       sx={{
-                        opacity: 0.7,
                         fontSize: "0.7rem",
                         mt: 0.5,
                         display: "block",
+                        color: theme.palette.text.secondary,
                       }}
                     >
                       {formatTime(message.timestamp)}
@@ -277,25 +435,80 @@ const Chatbot = () => {
                 </Box>
               </Box>
             ))}
-            
+
             {/* Typing Indicator */}
             {isTyping && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-                <Avatar sx={{ width: 32, height: 32, backgroundColor: "#4caf50" }}>
-                  <BotIcon />
-                </Avatar>
-                <Paper
-                  elevation={1}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  mb: 2,
+                  animation: "fadeIn 0.3s ease-out",
+                }}
+              >
+                <Avatar
                   sx={{
-                    p: 1.5,
-                    backgroundColor: "white",
-                    borderRadius: 2,
-                    borderTopLeftRadius: 0.5,
+                    width: 36,
+                    height: 36,
+                    backgroundColor: theme.palette.success.main,
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                    border: `2px solid ${theme.palette.background.paper}`,
                   }}
                 >
-                  <Typography variant="body2" sx={{ fontStyle: "italic", opacity: 0.7 }}>
-                    Typing...
-                  </Typography>
+                  <BotIcon sx={{ fontSize: 18 }} />
+                </Avatar>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    backgroundColor: theme.palette.background.paper,
+                    borderRadius: 3,
+                    borderTopLeftRadius: 8,
+                    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+                    border: `1px solid ${theme.palette.divider}`,
+                    backdropFilter: "blur(10px)",
+                    minWidth: 80,
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontStyle: "italic",
+                        color: theme.palette.text.secondary,
+                        mr: 1,
+                      }}
+                    >
+                      Typing
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 0.5 }}>
+                      {[0, 1, 2].map((i) => (
+                        <Box
+                          key={i}
+                          sx={{
+                            width: 4,
+                            height: 4,
+                            borderRadius: "50%",
+                            backgroundColor: theme.palette.success.main,
+                            animation: `bounce 1.4s ease-in-out ${
+                              i * 0.16
+                            }s infinite both`,
+                            "@keyframes bounce": {
+                              "0%, 80%, 100%": {
+                                transform: "scale(0)",
+                                opacity: 0.5,
+                              },
+                              "40%": {
+                                transform: "scale(1)",
+                                opacity: 1,
+                              },
+                            },
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
                 </Paper>
               </Box>
             )}
@@ -305,16 +518,17 @@ const Chatbot = () => {
           {/* Input Area */}
           <Box
             sx={{
-              p: 2,
-              borderTop: "1px solid #e0e0e0",
-              backgroundColor: "white",
+              p: 2.5,
+              borderTop: `1px solid ${theme.palette.divider}`,
+              backgroundColor: theme.palette.background.paper,
+              backdropFilter: "blur(10px)",
             }}
           >
-            <Box sx={{ display: "flex", gap: 1, alignItems: "flex-end" }}>
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-end" }}>
               <TextField
                 fullWidth
                 multiline
-                maxRows={3}
+                maxRows={4}
                 placeholder="Type your message..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
@@ -324,7 +538,27 @@ const Chatbot = () => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 3,
-                    backgroundColor: "#f8f9fa",
+                    backgroundColor: theme.palette.background.default,
+                    backdropFilter: "blur(10px)",
+                    border: `1px solid ${theme.palette.divider}`,
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      borderColor: theme.palette.primary.main,
+                      boxShadow: `0 0 0 2px ${theme.palette.primary.main}20`,
+                    },
+                    "&.Mui-focused": {
+                      borderColor: theme.palette.primary.main,
+                      boxShadow: `0 0 0 3px ${theme.palette.primary.main}30`,
+                      background: theme.palette.background.paper,
+                    },
+                    "& .MuiOutlinedInput-input": {
+                      fontSize: "0.95rem",
+                      lineHeight: 1.4,
+                      padding: "12px 16px",
+                    },
+                  },
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    border: "none",
                   },
                 }}
               />
@@ -332,18 +566,36 @@ const Chatbot = () => {
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim()}
                 sx={{
-                  backgroundColor: "#1976d2",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "#1565c0",
-                  },
+                  width: 48,
+                  height: 48,
+                  backgroundColor: inputMessage.trim()
+                    ? theme.palette.primary.main
+                    : theme.palette.action.disabledBackground,
+                  color: inputMessage.trim()
+                    ? theme.palette.primary.contrastText
+                    : theme.palette.action.disabled,
+                  borderRadius: 3,
+                  boxShadow: inputMessage.trim()
+                    ? "0 4px 12px rgba(25, 118, 210, 0.3)"
+                    : "none",
+                  backdropFilter: "blur(10px)",
+                  border: inputMessage.trim()
+                    ? "none"
+                    : `1px solid ${theme.palette.divider}`,
+                  transition: "all 0.2s ease",
+                  "&:hover": inputMessage.trim()
+                    ? {
+                        backgroundColor: theme.palette.primary.dark,
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 6px 20px rgba(25, 118, 210, 0.4)",
+                      }
+                    : {},
                   "&:disabled": {
-                    backgroundColor: "#e0e0e0",
-                    color: "#9e9e9e",
+                    transform: "none",
                   },
                 }}
               >
-                <SendIcon />
+                <SendIcon sx={{ fontSize: 20 }} />
               </IconButton>
             </Box>
           </Box>
@@ -353,32 +605,45 @@ const Chatbot = () => {
       {/* Chat Toggle Button */}
       <Zoom in={!isOpen}>
         <Paper
-          elevation={6}
+          elevation={8}
           sx={{
             position: "fixed",
-            bottom: 20,
-            right: 20,
+            bottom: 24,
+            right: 24,
             borderRadius: "50%",
             overflow: "hidden",
             zIndex: 1300,
             display: isOpen ? "none" : "block",
+            backgroundColor: theme.palette.primary.main,
+            backdropFilter: "blur(20px)",
+            border: `1px solid rgba(255, 255, 255, 0.2)`,
+            boxShadow:
+              "0 8px 32px rgba(25, 118, 210, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            "&:hover": {
+              transform: "scale(1.05) translateY(-2px)",
+              boxShadow:
+                "0 12px 40px rgba(25, 118, 210, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2)",
+            },
+            "&:active": {
+              transform: "scale(0.98) translateY(0px)",
+            },
           }}
         >
           <IconButton
             onClick={handleToggle}
             sx={{
-              width: 60,
-              height: 60,
-              background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
-              color: "white",
+              width: 64,
+              height: 64,
+              background: "transparent",
+              color: theme.palette.primary.contrastText,
               "&:hover": {
-                background: "linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)",
-                transform: "scale(1.05)",
+                background: "rgba(255, 255, 255, 0.1)",
               },
-              transition: "all 0.3s ease",
+              transition: "background 0.2s ease",
             }}
           >
-            <ChatIcon sx={{ fontSize: 32 }} />
+            <ChatIcon sx={{ fontSize: 28 }} />
           </IconButton>
         </Paper>
       </Zoom>
