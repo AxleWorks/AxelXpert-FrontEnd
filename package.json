@@ -16,7 +16,7 @@
     "@fontsource/roboto": "^5.2.8",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
-    "axios": "^1.12.2",
+    "axios": "^1.13.1",
     "html2pdf.js": "^0.12.1",
     "lucide-react": "^0.545.0",
     "react": "^19.1.1",

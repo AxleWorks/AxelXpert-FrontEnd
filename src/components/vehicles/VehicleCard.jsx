@@ -19,11 +19,11 @@ import {
   DirectionsCar as CarIcon,
   Fingerprint as ChassisIcon,
 } from "@mui/icons-material";
-import CarImage from "../../../public/car.jpg";
-import VanImage from "../../../public/van.jpg";
-import BikeImage from "../../../public/bike.jpg";
-import TruckImage from "../../../public/truck.jpg";
-import BusImage from "../../../public/bus.jpg";
+import CarImage from "/car.jpg";
+import VanImage from "/van.jpg";
+import BikeImage from "/bike.jpg";
+import TruckImage from "/truck.jpg";
+import BusImage from "/bus.jpg";
 
 const defaultImages = {
   Car: CarImage,
