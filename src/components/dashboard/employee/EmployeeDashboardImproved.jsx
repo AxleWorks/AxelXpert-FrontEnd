@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from "react";
 import {
   Grid,
-  Paper,
   Typography,
   Box,
-  Card,
-  CardContent,
   List,
   ListItem,
   ListItemText,
@@ -14,6 +11,7 @@ import {
   LinearProgress,
   Avatar,
   Container,
+  Card,
   Button,
   IconButton,
   useTheme,
@@ -21,30 +19,29 @@ import {
   Alert,
 } from "@mui/material";
 import {
+  DirectionsCar as DirectionsCarIcon,
+  Build as BuildIcon,
+  Schedule as ScheduleIcon,
   Assignment as AssignmentIcon,
   CheckCircle as CheckCircleIcon,
-  Schedule as ScheduleIcon,
-  Build as BuildIcon,
-  DirectionsCar as DirectionsCarIcon,
   TrendingUp as TrendingUpIcon,
-  CalendarToday as CalendarTodayIcon,
-  Star as StarIcon,
-  ArrowForward as ArrowForwardIcon,
   Notifications as NotificationsIcon,
-  Add as AddIcon,
+  ArrowForward as ArrowForwardIcon,
+  Timer as TimerIcon,
   Refresh as RefreshIcon,
+  PlayArrow as PlayArrowIcon,
+  Stop as StopIcon,
+  PauseCircle as PauseIcon,
 } from "@mui/icons-material";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import StatCard from "../cards/StatCard";
 import StatModal from "../cards/StatModal";
 import dashboardService from "../../../services/dashboardService";
 import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -54,22 +51,26 @@ import {
   Pie,
   Cell,
   Legend,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
 } from "recharts";
 
-const UserDashboard = () => {
+const EmployeeDashboard = () => {
   const [selectedStat, setSelectedStat] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(null);
-  const [serviceHistory, setServiceHistory] = useState([]);
-  const [serviceBreakdown, setServiceBreakdown] = useState([]);
-  const [recentTasks, setRecentTasks] = useState([]);
-  const [upcomingServices, setUpcomingServices] = useState([]);
+  const [dailyProductivity, setDailyProductivity] = useState([]);
+  const [serviceTypes, setServiceTypes] = useState([]);
+  const [todayTasks, setTodayTasks] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
 
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,25 +82,20 @@ const UserDashboard = () => {
       setLoading(true);
       setError(null);
 
-      const [statsData, historyData, tasksData, appointmentsData] =
+      const [statsData, productivity, services, tasks, activity] =
         await Promise.all([
-          dashboardService.getUserStats(),
-          dashboardService.getUserServiceHistory(),
-          dashboardService.getUserRecentTasks(),
-          dashboardService.getUserAppointments(),
+          dashboardService.getEmployeeStats(),
+          dashboardService.getEmployeeProductivity(),
+          dashboardService.getEmployeeServiceTypes(),
+          dashboardService.getEmployeeTasks(),
+          dashboardService.getEmployeeActivity(),
         ]);
 
       setStats(statsData);
-      setServiceHistory(
-        Array.isArray(historyData.chartData) ? historyData.chartData : []
-      );
-      setServiceBreakdown(
-        Array.isArray(historyData.breakdown) ? historyData.breakdown : []
-      );
-      setRecentTasks(Array.isArray(tasksData) ? tasksData : []);
-      setUpcomingServices(
-        Array.isArray(appointmentsData) ? appointmentsData : []
-      );
+      setDailyProductivity(Array.isArray(productivity) ? productivity : []);
+      setServiceTypes(Array.isArray(services) ? services : []);
+      setTodayTasks(Array.isArray(tasks) ? tasks : []);
+      setRecentActivity(Array.isArray(activity) ? activity : []);
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
       setError(
@@ -107,10 +103,10 @@ const UserDashboard = () => {
       );
       // Set empty arrays to prevent map errors
       setStats(null);
-      setServiceHistory([]);
-      setServiceBreakdown([]);
-      setRecentTasks([]);
-      setUpcomingServices([]);
+      setDailyProductivity([]);
+      setServiceTypes([]);
+      setTodayTasks([]);
+      setRecentActivity([]);
     } finally {
       setLoading(false);
     }
@@ -129,7 +125,7 @@ const UserDashboard = () => {
   const statsConfig = stats
     ? [
         {
-          title: "My Vehicles",
+          title: "Assigned Vehicles",
           value: stats.vehicles?.value || "0",
           icon: <DirectionsCarIcon />,
           color: "#3b82f6",
@@ -137,88 +133,104 @@ const UserDashboard = () => {
           details: stats.vehicles?.details || [],
         },
         {
-          title: "Active Tasks",
-          value: stats.activeTasks?.value || "0",
-          icon: <AssignmentIcon />,
-          color: "#10b981",
-          trend: stats.activeTasks?.trend || "",
-          details: stats.activeTasks?.details || [],
-        },
-        {
-          title: "Service History",
-          value: stats.serviceHistory?.value || "0",
+          title: "Services Today",
+          value: stats.services?.value || "0",
           icon: <BuildIcon />,
-          color: "#f59e0b",
-          trend: stats.serviceHistory?.trend || "",
-          details: stats.serviceHistory?.details || [],
+          color: "#10b981",
+          trend: stats.services?.trend || "",
+          details: stats.services?.details || [],
         },
         {
-          title: "Pending Appointments",
-          value: stats.appointments?.value || "0",
-          icon: <CalendarTodayIcon />,
+          title: "Work Hours",
+          value: stats.workHours?.value || "0",
+          icon: <TimerIcon />,
+          color: "#f59e0b",
+          trend: stats.workHours?.trend || "",
+          details: stats.workHours?.details || [],
+        },
+        {
+          title: "Completion Rate",
+          value: stats.completionRate?.value || "0%",
+          icon: <CheckCircleIcon />,
           color: "#8b5cf6",
-          trend: stats.appointments?.trend || "",
-          details: stats.appointments?.details || [],
+          trend: stats.completionRate?.trend || "",
+          details: stats.completionRate?.details || [],
+        },
+        {
+          title: "Upcoming Tasks",
+          value: stats.upcomingTasks?.value || "0",
+          icon: <ScheduleIcon />,
+          color: "#ef4444",
+          trend: stats.upcomingTasks?.trend || "",
+          details: stats.upcomingTasks?.details || [],
         },
       ]
     : [];
 
   const quickActions = [
     {
-      title: "Book Service",
-      icon: <CalendarTodayIcon />,
+      title: "Start Work",
+      icon: <PlayArrowIcon />,
       color: "#10b981",
-      description: "Schedule new appointment",
-      action: () => navigate("/user/booking-calendar"),
+      description: "Begin next task",
+      action: () => navigate("/employee/tasks"),
     },
     {
-      title: "View Services",
-      icon: <BuildIcon />,
+      title: "View Tasks",
+      icon: <AssignmentIcon />,
       color: "#3b82f6",
-      description: "Check services",
-      action: () => navigate("/user/services"),
+      description: "My assignments",
+      action: () => navigate("/employee/tasks"),
     },
     {
-      title: "Add Vehicle",
-      icon: <DirectionsCarIcon />,
+      title: "Take Break",
+      icon: <PauseIcon />,
       color: "#f59e0b",
-      description: "Register new vehicle",
-      action: () => navigate("/user/vehicles"),
+      description: "Log break time",
+      action: () => {},
     },
     {
-      title: "Track Progress",
-      icon: <TrendingUpIcon />,
-      color: "#8b5cf6",
-      description: "Monitor progress",
-      action: () => navigate("/user/progress-tracking"),
+      title: "Report Issue",
+      icon: <NotificationsIcon />,
+      color: "#ef4444",
+      description: "Technical support",
+      action: () => {},
     },
   ];
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "In Progress":
-        return "primary";
-      case "Scheduled":
-        return "info";
-      case "Pending":
-        return "warning";
-      case "Completed":
-        return "success";
-      default:
-        return "default";
-    }
+  const getProgressColor = (progress) => {
+    if (progress === 100) return "success";
+    if (progress >= 75) return "info";
+    if (progress >= 50) return "primary";
+    if (progress > 0) return "warning";
+    return "default";
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "High":
         return "error";
-      case "Medium":
-        return "warning";
+      case "Normal":
+        return "primary";
       case "Low":
         return "success";
       default:
         return "default";
+    }
+  };
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case "completed":
+        return <CheckCircleIcon sx={{ color: "#10b981" }} />;
+      case "started":
+        return <BuildIcon sx={{ color: "#3b82f6" }} />;
+      case "updated":
+        return <TrendingUpIcon sx={{ color: "#f59e0b" }} />;
+      case "assigned":
+        return <AssignmentIcon sx={{ color: "#8b5cf6" }} />;
+      default:
+        return <NotificationsIcon sx={{ color: "#64748b" }} />;
     }
   };
 
@@ -240,7 +252,7 @@ const UserDashboard = () => {
             variant="h6"
             sx={{ mt: 2, color: theme.palette.text.secondary }}
           >
-            Loading your dashboard...
+            Loading your workspace...
           </Typography>
         </Box>
       </Container>
@@ -249,7 +261,6 @@ const UserDashboard = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 2 }}>
-      {/* Error Alert */}
       {error && (
         <Alert
           severity="warning"
@@ -268,6 +279,7 @@ const UserDashboard = () => {
           {error}
         </Alert>
       )}
+
       {/* Welcome Section */}
       <Box sx={{ mb: 4 }}>
         <Typography
@@ -277,12 +289,12 @@ const UserDashboard = () => {
             color: theme.palette.text.primary,
             mb: 1,
             fontSize: { xs: "2rem", md: "2.5rem" },
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}
         >
-          Welcome Back!
+          Good Morning!
         </Typography>
         <Typography
           variant="h6"
@@ -293,14 +305,31 @@ const UserDashboard = () => {
             mb: 2,
           }}
         >
-          Here's your automotive service overview
+          Let's make today productive! Here's your work overview
         </Typography>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+          <Chip
+            icon={<TimerIcon />}
+            label={`${
+              stats?.upcomingTasks?.value || "0"
+            } Tasks Scheduled Today`}
+            color="warning"
+            variant="outlined"
+            sx={{ fontWeight: 600 }}
+          />
+          <Chip
+            label="Next: Honda Civic at 11:00 AM"
+            color="primary"
+            variant="outlined"
+            sx={{ fontWeight: 600 }}
+          />
+        </Box>
       </Box>
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {statsConfig.map((stat, index) => (
-          <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={index}>
+          <Grid size={{ xs: 12, sm: 6, lg: 2.4 }} key={index}>
             <StatCard {...stat} onClick={() => handleStatClick(stat)} />
           </Grid>
         ))}
@@ -308,7 +337,7 @@ const UserDashboard = () => {
 
       {/* Charts Section */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {/* Service History Chart */}
+        {/* Daily Productivity */}
         <Grid size={{ xs: 12, lg: 8 }}>
           <Card
             elevation={0}
@@ -324,18 +353,16 @@ const UserDashboard = () => {
               variant="h6"
               sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
             >
-              Service History & Costs
+              Today's Productivity & Efficiency
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart
-                data={Array.isArray(serviceHistory) ? serviceHistory : []}
-              >
+              <BarChart data={dailyProductivity}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke={theme.palette.divider}
                 />
                 <XAxis
-                  dataKey="month"
+                  dataKey="hour"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
@@ -356,51 +383,25 @@ const UserDashboard = () => {
                     color: theme.palette.text.primary,
                   }}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="cost"
-                  stroke="#10b981"
-                  fill="url(#colorGradient)"
-                  strokeWidth={3}
-                  name="Cost ($)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="services"
-                  stroke="#3b82f6"
-                  fill="url(#servicesGradient)"
-                  strokeWidth={2}
-                  name="Services"
-                />
                 <Legend />
-                <defs>
-                  <linearGradient
-                    id="colorGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
-                  </linearGradient>
-                  <linearGradient
-                    id="servicesGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-              </AreaChart>
+                <Bar
+                  dataKey="services"
+                  fill="#f59e0b"
+                  radius={[4, 4, 0, 0]}
+                  name="Services Completed"
+                />
+                <Bar
+                  dataKey="efficiency"
+                  fill="#10b981"
+                  radius={[4, 4, 0, 0]}
+                  name="Efficiency (%)"
+                />
+              </BarChart>
             </ResponsiveContainer>
           </Card>
         </Grid>
 
-        {/* Service Breakdown Pie Chart */}
+        {/* Service Distribution */}
         <Grid size={{ xs: 12, lg: 4 }}>
           <Card
             elevation={0}
@@ -416,12 +417,12 @@ const UserDashboard = () => {
               variant="h6"
               sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
             >
-              Service Breakdown
+              My Service Types
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={Array.isArray(serviceBreakdown) ? serviceBreakdown : []}
+                  data={serviceTypes}
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
@@ -430,11 +431,12 @@ const UserDashboard = () => {
                     `${name} ${(percent * 100).toFixed(0)}%`
                   }
                 >
-                  {Array.isArray(serviceBreakdown) &&
-                    serviceBreakdown.map((entry, index) => (
+                  {Array.isArray(serviceTypes) &&
+                    serviceTypes.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                 </Pie>
+                <Tooltip />
               </PieChart>
             </ResponsiveContainer>
           </Card>
@@ -515,7 +517,7 @@ const UserDashboard = () => {
 
       {/* Bottom Section */}
       <Grid container spacing={3}>
-        {/* Recent Tasks */}
+        {/* Today's Tasks */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Card
             elevation={0}
@@ -538,25 +540,24 @@ const UserDashboard = () => {
                 variant="h6"
                 sx={{ fontWeight: 700, color: theme.palette.text.primary }}
               >
-                Recent Tasks
+                Today's Schedule
               </Typography>
               <Button
                 size="small"
                 endIcon={<ArrowForwardIcon />}
-                component={Link}
-                to="/user/progress-tracking"
                 sx={{ textTransform: "none" }}
+                onClick={() => navigate("/employee/tasks")}
               >
                 View All
               </Button>
             </Box>
             <List>
-              {Array.isArray(recentTasks) &&
-                recentTasks.map((task) => (
+              {Array.isArray(todayTasks) &&
+                todayTasks.map((task) => (
                   <ListItem
                     key={task.id}
                     sx={{
-                      mb: 1,
+                      mb: 2,
                       bgcolor: isDark
                         ? theme.palette.background.default
                         : "#f8fafc",
@@ -564,51 +565,68 @@ const UserDashboard = () => {
                       border: `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <ListItemIcon>
-                      <Avatar
-                        sx={{ bgcolor: "#10b981", width: 40, height: 40 }}
+                    <Box sx={{ width: "100%" }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          mb: 1,
+                        }}
                       >
-                        <BuildIcon />
-                      </Avatar>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            mb: 0.5,
-                          }}
-                        >
+                        <Box>
                           <Typography variant="subtitle2" fontWeight={600}>
-                            {task.title}
+                            {task.vehicle}
                           </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Customer: {task.customer}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", gap: 1 }}>
                           <Chip
-                            label={task.status}
+                            label={task.time}
                             size="small"
-                            color={getStatusColor(task.status)}
+                            variant="outlined"
+                          />
+                          <Chip
+                            label={task.priority}
+                            size="small"
+                            color={getPriorityColor(task.priority)}
                           />
                         </Box>
-                      }
-                      secondary={
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            Vehicle: {task.vehicle}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {task.date}
-                          </Typography>
-                        </Box>
-                      }
-                    />
+                      </Box>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 1 }}
+                      >
+                        Service: {task.service}
+                      </Typography>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <LinearProgress
+                          variant="determinate"
+                          value={task.progress}
+                          color={getProgressColor(task.progress)}
+                          sx={{ flexGrow: 1, height: 8, borderRadius: 4 }}
+                        />
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ minWidth: 45 }}
+                        >
+                          {task.progress}%
+                        </Typography>
+                      </Box>
+                    </Box>
                   </ListItem>
                 ))}
             </List>
           </Card>
         </Grid>
 
-        {/* Upcoming Services */}
+        {/* Recent Activity */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Card
             elevation={0}
@@ -620,32 +638,15 @@ const UserDashboard = () => {
               backgroundColor: theme.palette.background.paper,
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 3,
-              }}
+            <Typography
+              variant="h6"
+              sx={{ mb: 3, fontWeight: 700, color: theme.palette.text.primary }}
             >
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 700, color: theme.palette.text.primary }}
-              >
-                Pending Services
-              </Typography>
-              <IconButton
-                component={Link}
-                to="/user/booking-calendar"
-                size="small"
-                sx={{ bgcolor: "#10b981", color: "white" }}
-              >
-                <AddIcon />
-              </IconButton>
-            </Box>
+              Recent Activity
+            </Typography>
             <List>
-              {Array.isArray(upcomingServices) &&
-                upcomingServices.map((service, index) => (
+              {Array.isArray(recentActivity) &&
+                recentActivity.map((activity, index) => (
                   <ListItem
                     key={index}
                     sx={{
@@ -659,30 +660,24 @@ const UserDashboard = () => {
                   >
                     <ListItemIcon>
                       <Avatar
-                        sx={{ bgcolor: "#3b82f6", width: 36, height: 36 }}
+                        sx={{ width: 36, height: 36, bgcolor: "transparent" }}
                       >
-                        <CalendarTodayIcon fontSize="small" />
+                        {getActivityIcon(activity.type)}
                       </Avatar>
                     </ListItemIcon>
                     <ListItemText
                       primary={
-                        <Typography variant="subtitle2" fontWeight={600}>
-                          {service.service}
+                        <Typography
+                          variant="body2"
+                          sx={{ fontSize: "0.9rem", fontWeight: 500 }}
+                        >
+                          {activity.action}
                         </Typography>
                       }
                       secondary={
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
-                            {service.vehicle}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="primary"
-                            fontWeight={600}
-                          >
-                            {service.date} at {service.time}
-                          </Typography>
-                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {activity.time}
+                        </Typography>
                       }
                     />
                   </ListItem>
@@ -692,7 +687,6 @@ const UserDashboard = () => {
         </Grid>
       </Grid>
 
-      {/* Stat Modal */}
       <StatModal
         open={modalOpen}
         onClose={handleCloseModal}
@@ -702,4 +696,4 @@ const UserDashboard = () => {
   );
 };
 
-export default UserDashboard;
+export default EmployeeDashboard;
