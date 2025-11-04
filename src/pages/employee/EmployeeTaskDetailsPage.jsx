@@ -60,7 +60,17 @@ export default function EmployeeTaskDetailsPage() {
       const response = await authenticatedAxios.get(
         `${API_BASE}/api/tasks/${taskId}`
       );
-      setTask(response.data);
+      const taskData = response.data;
+      // Calculate progress based on subtasks
+      if (taskData.subTasks && taskData.subTasks.length > 0) {
+        const completedCount = taskData.subTasks.filter(
+          (st) => st.status === "COMPLETED"
+        ).length;
+        taskData.progress = Math.round(
+          (completedCount / taskData.subTasks.length) * 100
+        );
+      }
+      setTask(taskData);
     } catch (error) {
       console.error("Error fetching task details:", error);
       toast.error("Failed to load task details");
@@ -73,21 +83,21 @@ export default function EmployeeTaskDetailsPage() {
   const calculateTimeStats = () => {
     if (!task) return null;
 
-    const estimatedMinutes = task.durationMinutes || 0;
-    const scheduledTime = new Date(task.sheduledTime);
+    const estimatedMinutes = task.estimatedTimeMinutes || 0;
+    const scheduledTime = new Date(task.startTime);
     const currentTime = new Date();
 
     // Calculate current duration if task is in progress
     let currentDuration = 0;
-    if (task.status === "IN_PROGRESS" && task.actualStartTime) {
-      const startTime = new Date(task.actualStartTime);
+    if (task.status === "IN_PROGRESS" && task.startTime) {
+      const startTime = new Date(task.startTime);
       currentDuration = Math.floor((currentTime - startTime) / (1000 * 60));
     } else if (
       task.status === "COMPLETED" &&
-      task.actualStartTime &&
+      task.startTime &&
       task.completedTime
     ) {
-      const startTime = new Date(task.actualStartTime);
+      const startTime = new Date(task.startTime);
       const endTime = new Date(task.completedTime);
       currentDuration = Math.floor((endTime - startTime) / (1000 * 60));
     }
@@ -315,6 +325,12 @@ export default function EmployeeTaskDetailsPage() {
 
   const timeStats = calculateTimeStats();
 
+  // Parse customer name from description if not available
+  const customerName =
+    task.customerName ||
+    (task.description ? task.description.split("customer: ")[1] : "Unknown") ||
+    "Unknown";
+
   return (
     <EmployeeLayout>
       <Box sx={{ p: 3 }}>
@@ -349,7 +365,7 @@ export default function EmployeeTaskDetailsPage() {
                   component="h3"
                   sx={{ mb: 1, fontWeight: 600 }}
                 >
-                  {task.vehicle}
+                  {task.vehicle || "N/A"}
                 </Typography>
 
                 <Box
@@ -391,7 +407,7 @@ export default function EmployeeTaskDetailsPage() {
                   Scheduled Time
                 </Typography>
                 <Typography sx={{ fontWeight: 600 }}>
-                  {new Date(task.sheduledTime).toLocaleString()}
+                  {new Date(task.startTime).toLocaleString()}
                 </Typography>
               </Box>
             </Box>
@@ -402,11 +418,15 @@ export default function EmployeeTaskDetailsPage() {
           >
             {/* Basic Info */}
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
                 <Typography color="text.secondary">Customer</Typography>
-                <Typography fontWeight={500}>{task.customerName}</Typography>
+                <Typography fontWeight={500}>{customerName}</Typography>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
+                <Typography color="text.secondary">Service ID</Typography>
+                <Typography fontWeight={500}>{task.serviceId}</Typography>
+              </Grid>
+              <Grid item xs={12} md={4}>
                 <Typography color="text.secondary">Assigned To</Typography>
                 <Typography fontWeight={500}>
                   {task.assignedEmployeeName}

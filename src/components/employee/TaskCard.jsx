@@ -32,7 +32,7 @@ export function TaskCard({
               component="h3"
               sx={{ mb: 1, fontWeight: 600 }}
             >
-              {task.vehicle}
+              {task.vehicle || "N/A"}
             </Typography>
 
             <Box
@@ -66,7 +66,12 @@ export function TaskCard({
               Start Time
             </Typography>
             <Typography sx={{ fontWeight: 600 }}>
-              {new Date(task.sheduledTime).toLocaleString()}
+              {task.startTime
+                ? new Date(task.startTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "Not Started"}
             </Typography>
           </Box>
         </Box>
@@ -76,11 +81,17 @@ export function TaskCard({
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Typography color="text.secondary">Customer</Typography>
-            <Typography>{task.customerName}</Typography>
+            <Typography>
+              {task.customerName ||
+                (task.description
+                  ? task.description.split("customer: ")[1]
+                  : "Unknown") ||
+                "Unknown"}
+            </Typography>
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography color="text.secondary">Estimated Time</Typography>
-            <Typography>{task.durationMinutes} mins</Typography>
+            <Typography>{task?.estimatedTimeMinutes || 0} mins</Typography>
           </Grid>
         </Grid>
 
@@ -93,9 +104,36 @@ export function TaskCard({
             }}
           >
             <Typography variant="body2">Overall Progress</Typography>
-            <Typography variant="body2">{task.progress || 0}%</Typography>
+            <Typography variant="body2">
+              {(() => {
+                if (task.progress !== undefined) return task.progress;
+                if (task.subTasks && task.subTasks.length > 0) {
+                  const completedCount = task.subTasks.filter(
+                    (st) => st.status === "COMPLETED"
+                  ).length;
+                  return Math.round(
+                    (completedCount / task.subTasks.length) * 100
+                  );
+                }
+                return 0;
+              })()}
+              %
+            </Typography>
           </Box>
-          <Progress value={task.progress} />
+          <Progress
+            value={(() => {
+              if (task.progress !== undefined) return task.progress;
+              if (task.subTasks && task.subTasks.length > 0) {
+                const completedCount = task.subTasks.filter(
+                  (st) => st.status === "COMPLETED"
+                ).length;
+                return Math.round(
+                  (completedCount / task.subTasks.length) * 100
+                );
+              }
+              return 0;
+            })()}
+          />
         </Box>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
