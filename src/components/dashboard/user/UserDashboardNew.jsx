@@ -34,7 +34,7 @@ import {
   Add as AddIcon,
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import StatCard from "../cards/StatCard";
 import StatModal from "../cards/StatModal";
 import dashboardService from "../../../services/dashboardService";
@@ -558,6 +558,8 @@ const UserDashboard = () => {
               <Button
                 size="small"
                 endIcon={<ArrowForwardIcon />}
+                component={Link}
+                to="/user/progress-tracking"
                 sx={{ textTransform: "none" }}
               >
                 View All
@@ -602,12 +604,6 @@ const UserDashboard = () => {
                             size="small"
                             color={getStatusColor(task.status)}
                           />
-                          <Chip
-                            label={task.priority}
-                            size="small"
-                            variant="outlined"
-                            color={getPriorityColor(task.priority)}
-                          />
                         </Box>
                       }
                       secondary={
@@ -651,9 +647,11 @@ const UserDashboard = () => {
                 variant="h6"
                 sx={{ fontWeight: 700, color: theme.palette.text.primary }}
               >
-                Upcoming Services
+                Pending Services
               </Typography>
               <IconButton
+                component={Link}
+                to="/user/booking-calendar"
                 size="small"
                 sx={{ bgcolor: "#10b981", color: "white" }}
               >
