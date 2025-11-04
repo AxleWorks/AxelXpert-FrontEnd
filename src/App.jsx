@@ -47,6 +47,9 @@ const EmployeeTaskDetailsPage = lazy(() =>
 const EmployeeHistoryPage = lazy(() =>
   import("./pages/employee/EmployeeHistoryPage")
 );
+const EmployeeBranchesPage = lazy(() =>
+  import("./pages/employee/EmployeeBranchesPage")
+);
 
 const ManagerDashboardPage = lazy(() =>
   import("./pages/manager/ManagerDashboardPage")
@@ -207,6 +210,14 @@ const App = () => {
                   element={
                     <ProtectedRoute requiredRole="employee">
                       <EmployeeSettingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/employee/branches"
+                  element={
+                    <ProtectedRoute requiredRole="employee">
+                      <EmployeeBranchesPage />
                     </ProtectedRoute>
                   }
                 />
