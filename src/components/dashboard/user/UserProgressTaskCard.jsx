@@ -212,7 +212,7 @@ const calculateProgress = (subTasks) => {
             <Collapse in={openPhotos} timeout="auto" unmountOnExit>
               <List dense sx={{ pl: 1, bgcolor: 'action.selected', p: 2, mt: 1, borderRadius: 2 }}>
                 {task.progressPhotos && task.progressPhotos.length > 0 ? (
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 2,mt: 1}}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 2, mt: 1}}>
                   {task.progressPhotos.map((photoUrl, index) => (
                 <Box
                   key={index}
