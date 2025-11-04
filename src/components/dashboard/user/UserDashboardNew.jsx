@@ -295,21 +295,6 @@ const UserDashboard = () => {
         >
           Here's your automotive service overview
         </Typography>
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-          <Chip
-            icon={<NotificationsIcon />}
-            label="1 Service Due Soon"
-            color="warning"
-            variant="outlined"
-            sx={{ fontWeight: 600 }}
-          />
-          <Chip
-            label="Next Appointment: Tomorrow 10:00 AM"
-            color="primary"
-            variant="outlined"
-            sx={{ fontWeight: 600 }}
-          />
-        </Box>
       </Box>
 
       {/* Statistics Cards */}
