@@ -1,6 +1,6 @@
 import React from "react";
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
-import ManagerDashboard from "../../components/dashboard/manager/ManagerDashboardNew";
+import ManagerDashboard from "../../components/dashboard/manager/ManagerDashboardImproved";
 
 const ManagerDashboardPage = () => {
   return (
