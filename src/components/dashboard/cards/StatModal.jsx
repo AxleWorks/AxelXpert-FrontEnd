@@ -8,7 +8,6 @@ import {
   Avatar,
   Typography,
   Box,
-  Grid,
   Button,
   IconButton,
   useTheme,
@@ -25,6 +24,11 @@ const StatModal = ({ open, onClose, stat }) => {
       onClose={onClose}
       maxWidth="sm"
       fullWidth
+      BackdropProps={{
+        sx: {
+          backdropFilter: "blur(10px)",
+        },
+      }}
       PaperProps={{
         sx: {
           borderRadius: 3,
@@ -65,80 +69,61 @@ const StatModal = ({ open, onClose, stat }) => {
         <IconButton
           onClick={onClose}
           size="small"
-          sx={{ color: theme.palette.text.primary }}
+          sx={{
+            color: theme.palette.text.primary,
+            "&:hover": { backgroundColor: "red" },
+          }}
         >
           <Close />
         </IconButton>
       </DialogTitle>
       <Divider />
       <DialogContent sx={{ pt: 3 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Box sx={{ textAlign: "center", mb: 3 }}>
-              <Typography
-                variant="h2"
-                sx={{ fontWeight: 800, color: stat?.color }}
+        <Box sx={{ textAlign: "center", mb: 3 }}>
+          <Typography variant="h2" sx={{ fontWeight: 800, color: stat?.color }}>
+            {stat?.value}
+          </Typography>
+          <Typography
+            variant="h6"
+            sx={{ color: theme.palette.text.secondary, mt: 1 }}
+          >
+            Current {stat?.title}
+          </Typography>
+        </Box>
+        {stat?.details && (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {stat.details.map((detail, index) => (
+              <Box
+                key={index}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  p: 2,
+                  backgroundColor: isDark
+                    ? theme.palette.background.default
+                    : "#f8fafc",
+                  borderRadius: 2,
+                  border: `1px solid ${theme.palette.divider}`,
+                }}
               >
-                {stat?.value}
-              </Typography>
-              <Typography
-                variant="h6"
-                sx={{ color: theme.palette.text.secondary, mt: 1 }}
-              >
-                Current {stat?.title}
-              </Typography>
-            </Box>
-          </Grid>
-          {stat?.details &&
-            stat.details.map((detail, index) => (
-              <Grid item xs={6} key={index}>
-                <Box
-                  sx={{
-                    textAlign: "center",
-                    p: 2,
-                    backgroundColor: isDark
-                      ? theme.palette.background.default
-                      : "#f8fafc",
-                    borderRadius: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                  }}
+                <Typography
+                  variant="body1"
+                  sx={{ color: theme.palette.text.secondary }}
                 >
-                  <Typography
-                    variant="h5"
-                    sx={{ fontWeight: 700, color: theme.palette.text.primary }}
-                  >
-                    {detail.value}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: theme.palette.text.secondary }}
-                  >
-                    {detail.label}
-                  </Typography>
-                </Box>
-              </Grid>
+                  {detail.label}
+                </Typography>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 700, color: theme.palette.text.primary }}
+                >
+                  {detail.value}
+                </Typography>
+              </Box>
             ))}
-        </Grid>
+          </Box>
+        )}
       </DialogContent>
-      <DialogActions sx={{ p: 3, pt: 0 }}>
-        <Button
-          onClick={onClose}
-          variant="contained"
-          fullWidth
-          sx={{
-            backgroundColor: stat?.color,
-            py: 1.5,
-            fontWeight: 600,
-            textTransform: "none",
-            "&:hover": {
-              backgroundColor: stat?.color,
-              filter: "brightness(0.9)",
-            },
-          }}
-        >
-          View Detailed Report
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };
