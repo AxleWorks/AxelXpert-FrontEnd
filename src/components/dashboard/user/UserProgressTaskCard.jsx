@@ -51,6 +51,7 @@ const calculateProgress = (subTasks) => {
   const UserProgressTaskCard = ({task}) => {
 
   const [open, setOpen] = useState(false);
+  const [openNotes, setOpenNotes] = useState(false);
 
   const progressPercentage = calculateProgress(task.subTasks);
 
@@ -150,36 +151,51 @@ const calculateProgress = (subTasks) => {
           </ListItem>
           ))}
           </List>
-          <Box>
-          <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
-          Technician Notes
-          </Typography>
-          <List dense sx ={{ pl: 1, bgcolor: 'action.selected', p:2, mb:1, borderRadius:5}}>
-          {task.technicianNotes && task.technicianNotes.length > 0 ? (
-          task.technicianNotes.map((note, index) => (
-            <Box key={index} sx={{ mb: index < task.technicianNotes.length - 1 ? 2 : 0 }}>
-            <Typography variant="body1" fontWeight={400}>
-            {note.content}
-            </Typography>
-            {note.addedAt && (
-            <Typography variant="caption" color="text.secondary">
-            {new Date(note.addedAt).toLocaleString([], {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit', 
-              minute:'2-digit'
-            })}
-            </Typography>
-            )}
+          
+          {/* Technician Notes Section with Dropdown */}
+          <Box sx={{ mb: 2 }}>
+            <Box 
+              sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+              onClick={() => setOpenNotes(!openNotes)}>
+              <Typography variant="subtitle1" fontWeight="500" sx={{ mr: 1 }}>
+                Technician Notes
+              </Typography>
+              <IconButton size="small" aria-label={openNotes ? 'collapse' : 'expand'}>
+                {openNotes ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
             </Box>
-          ))
-          ) : (
-          <Typography variant="body2" color="text.secondary">
-            No technician notes available
-          </Typography>
-          )}
-          </List>
+            
+            <Collapse in={openNotes} timeout="auto" unmountOnExit>
+              <List dense sx={{ pl: 1, bgcolor: 'action.selected', p: 2, mt: 1, borderRadius: 2 }}>
+                {task.technicianNotes && task.technicianNotes.length > 0 ? (
+                  task.technicianNotes.map((note, index) => (
+                    <Box key={index} sx={{ mb: index < task.technicianNotes.length - 1 ? 2 : 0 }}>
+                      <Typography variant="body1" fontWeight={400}>
+                        {note.content}
+                      </Typography>
+                      {note.addedAt && (
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(note.addedAt).toLocaleString([], {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </Typography>
+                      )}
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No technician notes available
+                  </Typography>
+                )}
+              </List>
+            </Collapse>
+          </Box>
+
+          {/* Progress Photos Section */}
           <Box>
           <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
             Progress Photos
@@ -250,7 +266,6 @@ const calculateProgress = (subTasks) => {
             </Typography>
             </Box>
           )}
-        </Box>
         </Box>
       </Box>
       </Collapse>
