@@ -259,7 +259,9 @@ const Chatbot = () => {
                       width: 32,
                       height: 32,
                       backgroundColor:
-                        message.sender === "user" ? theme.palette.primary.main : theme.palette.success.main,
+                        message.sender === "user"
+                          ? theme.palette.primary.main
+                          : theme.palette.success.main,
                     }}
                   >
                     {message.sender === "user" ? <PersonIcon /> : <BotIcon />}
@@ -269,8 +271,13 @@ const Chatbot = () => {
                     sx={{
                       p: 1.5,
                       backgroundColor:
-                        message.sender === "user" ? theme.palette.primary.main : theme.palette.background.paper,
-                      color: message.sender === "user" ? theme.palette.primary.contrastText : theme.palette.text.primary,
+                        message.sender === "user"
+                          ? theme.palette.primary.main
+                          : theme.palette.background.paper,
+                      color:
+                        message.sender === "user"
+                          ? theme.palette.primary.contrastText
+                          : theme.palette.text.primary,
                       borderRadius: 2,
                       borderTopLeftRadius: message.sender === "user" ? 2 : 0.5,
                       borderTopRightRadius: message.sender === "user" ? 0.5 : 2,
@@ -339,7 +346,11 @@ const Chatbot = () => {
                 sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
               >
                 <Avatar
-                  sx={{ width: 32, height: 32, backgroundColor: theme.palette.success.main }}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    backgroundColor: theme.palette.success.main,
+                  }}
                 >
                   <BotIcon />
                 </Avatar>
@@ -354,7 +365,10 @@ const Chatbot = () => {
                 >
                   <Typography
                     variant="caption"
-                    sx={{ fontStyle: "italic", color: theme.palette.text.secondary }}
+                    sx={{
+                      fontStyle: "italic",
+                      color: theme.palette.text.secondary,
+                    }}
                   >
                     Typing...
                   </Typography>
