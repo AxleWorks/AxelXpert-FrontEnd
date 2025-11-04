@@ -1,23 +1,13 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-  Checkbox as MuiCheckbox,
-  FormControlLabel,
-  Chip as MuiChip,
-} from "@mui/material";
-import { PlayArrow, Upload, CheckCircle } from "@mui/icons-material";
-import { Card, CardContent, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
+import { Box, Typography } from "@mui/material";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Textarea } from "../ui/textarea";
 import { TaskImageUploadModal } from "./TaskImageUploadModal";
+import { TaskCard } from "./TaskCard";
+import {toast } from "../ui/toast";
+import { CompletedTaskCard } from "./CompletedTaskCard";
 import { authenticatedAxios } from "../../utils/axiosConfig";
 import { API_BASE } from "../../config/apiEndpoints";
-import { uploadImageToCloudinary } from "../../utils/cloudinaryUtils";
+import { uploadImageToCloudinary, deleteImageFromCloudinary  } from "../../utils/cloudinaryUtils";
 import { getCurrentUser } from "../../utils/jwtUtils";
 
 export function EmployeeTasks() {
@@ -27,8 +17,15 @@ export function EmployeeTasks() {
   const [notesVisibility, setNotesVisibility] = useState({});
   const [uploadingImages, setUploadingImages] = useState({});
 
+  
+  const [expandedImages, setExpandedImages] = useState({});
+  const [expandedNotes, setExpandedNotes] = useState({});
+
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState(null);
+
+  const activeTaskInProgress = activeTasks.find(task => task.status === "IN_PROGRESS");
+  const hasActiveTimer = !!activeTaskInProgress;
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -82,6 +79,7 @@ export function EmployeeTasks() {
             : task
         )
       );
+      toast.success("Task timer started successfully.");
     } catch (error) {
       console.error("Failed to start timer:", error);
     }
@@ -91,7 +89,10 @@ export function EmployeeTasks() {
     const task = activeTasks.find((t) => t.id === taskId);
     const subtask = task.subTasks.find((st) => st.id === subtaskId);
 
-    if (task.status !== "IN_PROGRESS") return;
+    if (task.status !== "IN_PROGRESS"){
+      toast.error("Start the task timer before updating subtasks.");
+      return;
+    } 
 
     const toggledState =
       subtask.status === "COMPLETED" ? "NOT_STARTED" : "COMPLETED";
@@ -203,7 +204,7 @@ export function EmployeeTasks() {
     setUploadingImages((prev) => ({ ...prev, [currentTaskId]: true }));
 
     try {
-      const result = await uploadImageToCloudinary(file);
+      const result = await uploadImageToCloudinary(file,{folder:"task_images"});
 
       if (!result.success) {
         console.error(`Failed to upload ${file.name}:`, result.error);
@@ -211,14 +212,19 @@ export function EmployeeTasks() {
       }
 
       const imageData = {
-        url: result.data.url,
+        imageUrl: result.data.url,
+        publicId: result.data.publicId,
         description: description || "",
       };
 
-      await authenticatedAxios.post(
+      console.log(imageData);
+      
+
+      const response = await authenticatedAxios.post(
         `${API_BASE}/api/tasks/${currentTaskId}/images`,
         {
-          imageUrl: imageData.url,
+          imageUrl: imageData.imageUrl,
+          publicId: imageData.publicId,
           description: imageData.description,
         }
       );
@@ -228,13 +234,15 @@ export function EmployeeTasks() {
           task.id === currentTaskId
             ? {
                 ...task,
-                images: [...(task.images || []), imageData],
+                taskImages: [...(task.taskImages || []), response.data],
               }
             : task
         )
       );
+      toast.success("Image uploaded successfully.");
     } catch (error) {
       console.error("Failed to upload image:", error);
+      toast.error("Failed to upload image.");
     } finally {
       setUploadingImages((prev) => ({ ...prev, [currentTaskId]: false }));
     }
@@ -258,6 +266,11 @@ export function EmployeeTasks() {
     const noteText = taskNotes[taskId] || "";
     const isVisible = notesVisibility[taskId] || false;
 
+    if (!noteText.trim()) {
+      console.warn("Note is empty");
+      return;
+    }
+
     try {
       // Get user from JWT token
       const user = getCurrentUser();
@@ -266,13 +279,33 @@ export function EmployeeTasks() {
         return;
       }
 
-      await authenticatedAxios.post(
+      const response = await authenticatedAxios.post(
         `${API_BASE}/api/tasks/${taskId}/notes?authorId=${user.id}`,
         {
           noteType: "EMPLOYEE_NOTE",
           content: noteText,
           visibleToCustomer: isVisible,
         }
+      );
+
+      // Add note to local state
+      const newNote = {
+        id: response.data.id,
+        content: noteText,
+        visibleToCustomer: isVisible,
+        createdAt: new Date().toISOString(),
+        noteType: "EMPLOYEE_NOTE",
+      };
+
+      setActiveTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === taskId
+            ? {
+                ...task,
+                taskNotes: [...(task.taskNotes || []), newNote],
+              }
+            : task
+        )
       );
 
       setTaskNotes((prev) => ({
@@ -283,11 +316,95 @@ export function EmployeeTasks() {
         ...prev,
         [taskId]: false,
       }));
+      toast.success("Note added successfully.");
     } catch (error) {
       console.error("Failed to submit note:", error);
+      toast.error("Failed to submit note.");
     }
   };
 
+  const handleRemoveImage = async (taskId, imageData) => {
+    const imageId = imageData.id;
+    
+    // Store original state for rollback 
+    const originalTask = activeTasks.find((t) => t.id === taskId);
+    const originalTaskCopy = {
+      ...originalTask,
+      taskImages: [...(originalTask.taskImages || [])],
+    };
+
+    // Optimistic update
+    setActiveTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              taskImages: (task.taskImages || []).filter((img) => {
+                return img.id !== imageId;
+              }),
+            }
+          : task
+      )
+    );
+
+    try {
+
+      const resultCloudinary = await deleteImageFromCloudinary(imageData.publicId);
+      await authenticatedAxios.delete(
+        `${API_BASE}/api/tasks/${taskId}/images/${imageId}`
+      );
+
+      toast.success("Image removed successfully.");
+    } catch (error) {
+      toast.error("Failed to remove image.");
+      console.error("Failed to remove image:", error);
+
+      setActiveTasks((prevTasks) =>
+        prevTasks.map((task) => (task.id === taskId ? originalTaskCopy : task))
+      );
+    }
+  };
+
+const handleRemoveNote = async (taskId, noteId) => {
+  const originalTask = activeTasks.find((t) => t.id === taskId);
+  
+  const originalTaskCopy = {
+    ...originalTask,
+    taskNotes: [...(originalTask.taskNotes || [])],
+  };
+
+  // Optimistic update
+  setActiveTasks((prevTasks) => {
+    const updatedTasks = prevTasks.map((task) => {
+      if (task.id === taskId) {
+        const filteredNotes = (task.taskNotes || []).filter((note) => {
+          return note.id !== noteId;
+        });
+        
+        return {
+          ...task,
+          taskNotes: filteredNotes,
+        };
+      }
+      return task;
+    });
+    
+    return updatedTasks;
+  });
+
+  try {
+    await authenticatedAxios.delete(
+      `${API_BASE}/api/tasks/${taskId}/notes/${noteId}`
+    );
+    toast.success("Note removed successfully.");
+  } catch (error) {
+    console.error("Failed to remove note:", error);
+    toast.error("Failed to remove note.");
+    setActiveTasks((prevTasks) =>
+      prevTasks.map((task) => (task.id === taskId ? originalTaskCopy : task))
+    );
+  }
+};
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <Box>
@@ -317,245 +434,45 @@ export function EmployeeTasks() {
           sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 3 }}
         >
           {activeTasks.map((task) => {
-            const isTaskStarted =
-              task.status != "COMPLETED" && task.status != "NOT_STARTED";
+            const isTaskStarted = task.status === "IN_PROGRESS" || task.status === "COMPLETED";
             const isUploading = uploadingImages[task.id];
 
             return (
-              <Card key={task.id}>
-                <Box sx={{ p: 2, pb: 1 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Box>
-                      <CardTitle sx={{ mb: 1 }}>{task.vehicle}</CardTitle>
-
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <Badge>{task.title}</Badge>
-
-                        <MuiChip
-                          label={task.status}
-                          size="small"
-                          variant={
-                            task.status === "IN_PROGRESS"
-                              ? "filled"
-                              : "outlined"
-                          }
-                          sx={{
-                            fontWeight: "bold",
-                            borderRadius: "4px",
-                            ...(task.status === "IN_PROGRESS" && {
-                              backgroundColor: "info.main",
-                              color: "white",
-                            }),
-                          }}
-                        />
-                      </Box>
-                    </Box>
-
-                    <Box sx={{ textAlign: "right" }}>
-                      <Typography color="text.secondary">Start Time</Typography>
-                      <Typography>{task.sheduledTime}</Typography>
-                    </Box>
-                  </Box>
-                </Box>
-
-                <CardContent
-                  sx={{ display: "flex", flexDirection: "column", gap: 3 }}
-                >
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Typography color="text.secondary">Customer</Typography>
-                      <Typography>{task.customerName}</Typography>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Typography color="text.secondary">
-                        Estimated Time
-                      </Typography>
-                      <Typography>{task.durationMinutes}</Typography>
-                    </Grid>
-                  </Grid>
-
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Typography variant="body2">Overall Progress</Typography>
-                      <Typography variant="body2">
-                        {task.progress || 0}%
-                      </Typography>
-                    </Box>
-                    <Progress value={task.progress} />
-                  </Box>
-
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}
-                  >
-                    <Typography variant="h6" component="h4">
-                      Subtasks
-                    </Typography>
-                    {task.subTasks.map((subtask) => (
-                      <Box
-                        key={subtask.id}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1.5,
-                          p: 1.5,
-                          backgroundColor: "action.hover",
-                          borderRadius: 2,
-                        }}
-                      >
-                        <MuiCheckbox
-                          checked={subtask.status === "COMPLETED"}
-                          size="small"
-                          onChange={() =>
-                            handleSubtaskToggle(task.id, subtask.id)
-                          }
-                        />
-                        <Typography
-                          sx={{
-                            textDecoration:
-                              subtask.status === "COMPLETED"
-                                ? "line-through"
-                                : "none",
-                            color:
-                              subtask.status === "COMPLETED"
-                                ? "text.disabled"
-                                : "text.primary",
-                          }}
-                        >
-                          {subtask.title}
-                        </Typography>
-                        {subtask.status === "COMPLETED" && (
-                          <CheckCircle
-                            sx={{
-                              fontSize: "1rem",
-                              color: "success.main",
-                              ml: "auto",
-                            }}
-                          />
-                        )}
-                      </Box>
-                    ))}
-                  </Box>
-
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <Button
-                      sx={{
-                        flexGrow: 1,
-                        backgroundColor: isTaskStarted
-                          ? "action.disabledBackground"
-                          : "success.main",
-                        color: isTaskStarted ? "action.disabled" : "white",
-                        "&:hover": {
-                          backgroundColor: isTaskStarted
-                            ? "action.disabledBackground"
-                            : "success.dark",
-                        },
-                        "&:disabled": {
-                          backgroundColor: "action.disabledBackground",
-                          color: "action.disabled",
-                        },
-                      }}
-                      onClick={() => handleStartTimer(task.id)}
-                      disabled={isTaskStarted}
-                    >
-                      <PlayArrow sx={{ fontSize: "1.125rem" }} />
-                      {isTaskStarted ? "Task In Progress" : "Start Timer"}
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      disabled={isUploading || !isTaskStarted}
-                      onClick={() => handleOpenUploadModal(task.id)}
-                      sx={{
-                        flexGrow: 1,
-                        backgroundColor: "background.paper",
-                        color: "text.primary",
-                        borderColor: "divider",
-                        "&:hover": {
-                          backgroundColor: "warning.dark",
-                          color: "white",
-                          borderColor: "white",
-                        },
-                        "&:disabled": {
-                          backgroundColor: "action.disabledBackground",
-                          color: "action.disabled",
-                          borderColor: "action.disabledBackground",
-                        },
-                      }}
-                    >
-                      <Upload sx={{ fontSize: "1.125rem" }} />
-                      {isUploading ? "Uploading..." : "Upload Image"}
-                    </Button>
-                  </Box>
-
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                  >
-                    <Typography component="label" sx={{ fontWeight: "medium" }}>
-                      Add Notes
-                    </Typography>
-                    <Textarea
-                      placeholder="Enter any additional notes here..."
-                      value={taskNotes[task.id] || ""}
-                      onChange={(e) =>
-                        handleNotesChange(task.id, e.target.value)
-                      }
-                      rows={4}
-                    />
-                    <FormControlLabel
-                      control={
-                        <MuiCheckbox
-                          id={`visible-${task.id}`}
-                          size="small"
-                          checked={notesVisibility[task.id] || false}
-                          onChange={(e) =>
-                            handleVisibilityChange(task.id, e.target.checked)
-                          }
-                        />
-                      }
-                      label="Make visible to customer"
-                      sx={{ color: "text.secondary" }}
-                    />
-                    <Button
-                      size="small"
-                      onClick={() => handleNotesSubmit(task.id)}
-                      disabled={!taskNotes[task.id]?.trim()}
-                      sx={{
-                        backgroundColor: "primary.main",
-                        color: "white",
-                        "&:hover": {
-                          backgroundColor: "primary.dark",
-                        },
-                        "&:disabled": {
-                          backgroundColor: "action.disabledBackground",
-                          color: "action.disabled",
-                        },
-                      }}
-                    >
-                      Submit Note
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
+              <TaskCard
+                key={task.id}
+                task={task}
+                isTaskStarted={isTaskStarted}
+                hasActiveTimer={hasActiveTimer}
+                isUploading={isUploading}
+                expandedImages={expandedImages[task.id] || false}
+                expandedNotes={expandedNotes[task.id] || false}
+                noteText={taskNotes[task.id] || ""}
+                isNoteVisible={notesVisibility[task.id] || false}
+                onStartTimer={() => handleStartTimer(task.id)}
+                onSubtaskToggle={(subtaskId) =>
+                  handleSubtaskToggle(task.id, subtaskId)
+                }
+                onImageUpload={() => handleOpenUploadModal(task.id)}
+                onImageRemove={(image) => handleRemoveImage(task.id, image)}
+                onImageToggle={() => {
+                  setExpandedImages((prev) => ({
+                    ...prev,
+                    [task.id]: !prev[task.id],
+                  }));
+                }}
+                onNoteToggle={() => {
+                  setExpandedNotes((prev) => ({
+                    ...prev,
+                    [task.id]: !prev[task.id],
+                  }));
+                }}
+                onNoteChange={(value) => handleNotesChange(task.id, value)}
+                onNoteVisibilityChange={(checked) =>
+                  handleVisibilityChange(task.id, checked)
+                }
+                onNoteSubmit={() => handleNotesSubmit(task.id)}
+                onNoteRemove={(noteId) => handleRemoveNote(task.id, noteId)}
+              />
             );
           })}
         </TabsContent>
@@ -565,52 +482,7 @@ export function EmployeeTasks() {
           sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 3 }}
         >
           {completedTasks.map((task) => (
-            <Card key={task.id}>
-              <CardContent sx={{ p: 3 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Box
-                      sx={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 2,
-                        backgroundColor: "success.light",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <CheckCircle
-                        sx={{ fontSize: "1.5rem", color: "success.dark" }}
-                      />
-                    </Box>
-                    <Box>
-                      <Typography variant="h6" component="h4">
-                        {task.vehicle}
-                      </Typography>
-                      <Typography color="text.secondary">
-                        {task.service || task.title}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ textAlign: "right" }}>
-                    <Typography color="text.secondary">Completed</Typography>
-                    <Typography>{task.completedTime}</Typography>
-                    {task.duration && (
-                      <Typography color="text.secondary">
-                        Duration: {task.duration}
-                      </Typography>
-                    )}
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
+            <CompletedTaskCard key={task.id} task={task} />
           ))}
         </TabsContent>
       </Tabs>
