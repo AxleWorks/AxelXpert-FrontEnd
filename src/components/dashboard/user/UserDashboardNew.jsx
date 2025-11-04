@@ -153,20 +153,12 @@ const UserDashboard = () => {
           details: stats.serviceHistory?.details || [],
         },
         {
-          title: "Appointments",
+          title: "Pending Appointments",
           value: stats.appointments?.value || "0",
           icon: <CalendarTodayIcon />,
           color: "#8b5cf6",
           trend: stats.appointments?.trend || "",
           details: stats.appointments?.details || [],
-        },
-        {
-          title: "Satisfaction",
-          value: stats.satisfaction?.value || "0",
-          icon: <StarIcon />,
-          color: "#ef4444",
-          trend: stats.satisfaction?.trend || "",
-          details: stats.satisfaction?.details || [],
         },
       ]
     : [];
@@ -180,10 +172,10 @@ const UserDashboard = () => {
       action: () => navigate("/user/booking-calendar"),
     },
     {
-      title: "View History",
+      title: "View Services",
       icon: <BuildIcon />,
       color: "#3b82f6",
-      description: "Check service records",
+      description: "Check services",
       action: () => navigate("/user/services"),
     },
     {
@@ -194,7 +186,7 @@ const UserDashboard = () => {
       action: () => navigate("/user/vehicles"),
     },
     {
-      title: "Track Service",
+      title: "Track Progress",
       icon: <TrendingUpIcon />,
       color: "#8b5cf6",
       description: "Monitor progress",
@@ -323,7 +315,7 @@ const UserDashboard = () => {
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {statsConfig.map((stat, index) => (
-          <Grid size={{ xs: 12, sm: 6, lg: 2.4 }} key={index}>
+          <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={index}>
             <StatCard {...stat} onClick={() => handleStatClick(stat)} />
           </Grid>
         ))}
