@@ -30,16 +30,16 @@ const DRAWER_WIDTH = 280;
 // User menu configuration - main navigation items
 const menuItems = [
   { text: "Dashboard", icon: DashboardIcon, path: "/user/dashboard" },
-  { text: "Vehicles", icon: DirectionsCarIcon, path: "/user/vehicles" },
-  { text: "Services", icon: BuildIcon, path: "/user/services" },
+  { text: "My Vehicles", icon: DirectionsCarIcon, path: "/user/vehicles" },
+  { text: "Services", icon: BuildIcon, path: "/user/services" }, // shows all services offered
+  { text: "Service Centers", icon: StoreIcon, path: "/user/branches" },
   {
-    text: "Booking Calendar",
+    text: "Appointments",
     icon: CalendarTodayIcon,
     path: "/user/booking-calendar",
   },
-  { text: "Branches", icon: StoreIcon, path: "/user/branches" },
   {
-    text: "Progress Tracking",
+    text: "Track Service",
     icon: TrackChangesIcon,
     path: "/user/progress-tracking",
   },

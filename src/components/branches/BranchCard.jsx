@@ -29,9 +29,9 @@ const BranchCard = ({ branch, onEdit, onDelete, isManager }) => {
     <Card
       elevation={0}
       sx={{
-        width: 370,
-        minWidth: 370,
-        maxWidth: 370,
+        width: 350,
+        minWidth: 350,
+        maxWidth: 350,
         height: 420,
         minHeight: 420,
         maxHeight: 420,

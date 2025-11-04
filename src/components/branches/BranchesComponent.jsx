@@ -270,7 +270,7 @@ export default function BranchesComponent({
           ) : (
             <Grid container spacing={3}>
               {filteredBranches.map((branch) => (
-                <Grid item xs={12} sm={6} md={4} key={branch.id}>
+                <Grid item xs={12} sm={6} md={3} lg={3} key={branch.id}>
                   <BranchCard
                     branch={branch}
                     onEdit={handleEditClick}
