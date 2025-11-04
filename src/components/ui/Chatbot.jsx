@@ -19,6 +19,7 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTheme } from "../../contexts/ThemeContext";
+import { getStoredAccessToken, getCurrentUser } from "../../utils/jwtUtils";
 
 // API configuration for Spring Boot backend
 const API_BASE_URL = "http://localhost:8080"; // Your Spring Boot backend URL
@@ -108,11 +109,14 @@ const Chatbot = () => {
 
     try {
       // Create the request payload matching your backend's ChatMessage DTO
+      const currentUser = getCurrentUser();
       const chatRequest = {
         type: "USER",
         content: inputMessage,
         sessionId: getSessionId(),
         timestamp: Date.now(),
+        accessToken: getStoredAccessToken(),
+        userId: currentUser?.id,
       };
 
       // Make API call to your backend
