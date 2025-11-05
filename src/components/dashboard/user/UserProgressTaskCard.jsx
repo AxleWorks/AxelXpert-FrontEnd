@@ -196,7 +196,7 @@ const calculateProgress = (subTasks) => {
             </Collapse>
           </Box>
 
-          {/*Progress Photos Section with Dropdown*/}
+          {/* Progress Photos Section with Dropdown */}
           <Box sx={{ mb: 2 }}>
             <Box 
               sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
@@ -212,7 +212,7 @@ const calculateProgress = (subTasks) => {
             <Collapse in={openPhotos} timeout="auto" unmountOnExit>
               <List dense sx={{ pl: 1, bgcolor: 'action.selected', p: 2, mt: 1, borderRadius: 2 }}>
                 {task.progressPhotos && task.progressPhotos.length > 0 ? (
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 2,mt: 1}}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 2, mt: 1}}>
                   {task.progressPhotos.map((photoUrl, index) => (
                 <Box
                   key={index}
@@ -256,7 +256,7 @@ const calculateProgress = (subTasks) => {
                 ))}
                 </Box>
               ) : (
-                <Box sx={{p: 2, bgcolor: 'action.hover', borderRadius: 2}}>
+                <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                   <Typography variant="body2" color="text.secondary">
                     No progress photos available yet
                   </Typography>
