@@ -75,7 +75,7 @@ export function TaskCard({
                 size="small"
                 variant="filled"
                 sx={{
-                  fontWeight: "bold",
+                  fontWeight: 500,
                   borderRadius: "4px",
                   ...(task.status === "NOT_STARTED" && {
                     backgroundColor: "#94a3b8",

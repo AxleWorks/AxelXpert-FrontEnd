@@ -428,7 +428,7 @@ const Chatbot = () => {
                           <Typography
                             component="strong"
                             variant="body2"
-                            sx={{ fontWeight: "bold", lineHeight: 1.5 }}
+                            sx={{ fontWeight: 600, lineHeight: 1.5 }}
                           >
                             {children}
                           </Typography>

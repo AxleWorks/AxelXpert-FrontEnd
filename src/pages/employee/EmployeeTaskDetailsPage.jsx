@@ -410,7 +410,7 @@ export default function EmployeeTaskDetailsPage() {
                     size="small"
                     variant="filled"
                     sx={{
-                      fontWeight: "bold",
+                      fontWeight: 600,
                       borderRadius: "4px",
                       ...(task.status === "NOT_STARTED" && {
                         backgroundColor: "#94a3b8",
@@ -574,14 +574,14 @@ export default function EmployeeTaskDetailsPage() {
                             label="DELAYED"
                             size="small"
                             color="error"
-                            sx={{ fontWeight: "bold" }}
+                            sx={{ fontWeight: 600 }}
                           />
                         ) : (
                           <MuiChip
                             label="ON TIME"
                             size="small"
                             color="success"
-                            sx={{ fontWeight: "bold" }}
+                            sx={{ fontWeight: 600 }}
                           />
                         )}
                       </CardContent>
