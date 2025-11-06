@@ -51,6 +51,46 @@ const ManagerProgressTrackingPage = () => {
     fetchProgressData();
   }, [user]); // Re-fetch when user changes
 
+  // Helper to calculate progress percentage of a task based on subtasks
+  const calculateProgress = (subTasks) => {
+    if (!subTasks || subTasks.length === 0) return 0;
+    const completedTasks = subTasks.filter(t => t.status === 'COMPLETED').length;
+    return Math.round((completedTasks / subTasks.length) * 100);
+  };
+
+  const activeJobs = (tasks = []) => {
+    if (!Array.isArray(tasks)) return 0;
+    return tasks.reduce((acc, t) => acc + (t && t.status === 'IN_PROGRESS' ? 1 : 0), 0);
+  };
+
+  const completedToday = (tasks = []) => {
+    if (!Array.isArray(tasks)) return 0;
+    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    return tasks.reduce((acc, t) => {
+      if (t && t.status === 'COMPLETED' && t.completedDate) {
+        const taskDate = new Date(t.completedDate).toISOString().split('T')[0];
+        return acc + (taskDate === today ? 1 : 0);
+      }
+      return acc;
+    }, 0);
+  };
+
+  const overdueTasks = (tasks = []) => {
+    if (!Array.isArray(tasks)) return 0;
+    return tasks.reduce((acc, t) => acc + (t && t.status === 'NOT_STARTED' ? 1 : 0), 0);
+  };
+
+  const avgProgress = (tasks = []) => {
+    if (!Array.isArray(tasks)) return 0;
+    const inProgressTasks = tasks.filter(t => t && t.status === 'IN_PROGRESS');
+    if (inProgressTasks.length === 0) return 0;
+    
+    const totalProgress = inProgressTasks.reduce((acc, task) => {
+      return acc + calculateProgress(task.subTasks);
+    }, 0);
+    
+    return Math.round(totalProgress / inProgressTasks.length);
+  };
 
   const renderContent = () => {
     if (loading) {
@@ -112,7 +152,7 @@ const ManagerProgressTrackingPage = () => {
                     Active Jobs
                   </Typography>
                   <Typography variant="h6" fontWeight={700}>
-                    3
+                    {activeJobs(tasks)}
                   </Typography>
                 </Box>
                 <Chip
@@ -128,7 +168,7 @@ const ManagerProgressTrackingPage = () => {
                     Completed Today
                   </Typography>
                   <Typography variant="h6" fontWeight={700}>
-                    5
+                    {completedToday(tasks)}
                   </Typography>
                 </Box>
                 <Chip
@@ -145,7 +185,7 @@ const ManagerProgressTrackingPage = () => {
                     Overdue
                   </Typography>
                   <Typography variant="h6" fontWeight={700}>
-                    1
+                    {overdueTasks(tasks)}
                   </Typography>
                 </Box>
                 <Chip
@@ -161,7 +201,7 @@ const ManagerProgressTrackingPage = () => {
                     Avg Progress
                   </Typography>
                   <Typography variant="h6" fontWeight={700}>
-                    68%
+                    {avgProgress(tasks)}%
                   </Typography>
                 </Box>
                 <Chip
