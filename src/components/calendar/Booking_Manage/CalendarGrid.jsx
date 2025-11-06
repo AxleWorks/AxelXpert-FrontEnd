@@ -38,7 +38,8 @@ export default function CalendarGrid({
     >
       {days.map((day, idx) => {
         const isPast = day?.date
-          ? new Date(day.date).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0)
+          ? new Date(day.date).setHours(0, 0, 0, 0) <
+            new Date().setHours(0, 0, 0, 0)
           : false;
         const cellBg = !day.isCurrentMonth
           ? "action.hover"
@@ -56,61 +57,74 @@ export default function CalendarGrid({
               bgcolor: cellBg,
               cursor: canClickDay ? "pointer" : "default",
             }}
-            onClick={canClickDay ? () => onDayClick(day.date || day) : undefined}
+            onClick={
+              canClickDay ? () => onDayClick(day.date || day) : undefined
+            }
           >
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-              <Box sx={{ fontWeight: 600, color: isPast ? "text.disabled" : undefined }}>
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+            >
+              <Box
+                sx={{
+                  fontWeight: 600,
+                  color: isPast ? "text.disabled" : undefined,
+                }}
+              >
                 {day.dayNumber}
               </Box>
+              {(() => {
+                const key = dateKey(day.date);
+                const val = availableSlotsByDate[key];
+                const count = Array.isArray(val)
+                  ? val.length
+                  : Number(val) || 0;
+                return count > 0 ? (
+                  <Chip
+                    label={`${count} Slots Remaining`}
+                    size="small"
+                    sx={{
+                      bgcolor: "success.main",
+                      color: "#fff",
+                      fontSize: "0.7rem",
+                      height: "20px",
+                      minWidth: "20px",
+                    }}
+                  />
+                ) : null;
+              })()}
             </Box>
 
             <List dense disablePadding>
-            {/* Optional available slots chip for user view */}
-            {(() => {
-              const key = dateKey(day.date);
-              const val = availableSlotsByDate[key];
-              const count = Array.isArray(val) ? val.length : Number(val) || 0;
-              return count > 0 ? (
-                <ListItem sx={{ p: 0, mb: 0.5 }} onClick={(e) => e.stopPropagation()}>
-                  <Chip
-                    label={`${count} slots`}
-                    size="small"
-                    sx={{ bgcolor: "success.main", color: "#fff", width: "100%" }}
-                  />
-                </ListItem>
-              ) : null;
-            })()}
-
-            {day.appointments &&
-              day.appointments.slice(0, 3).map((apt) => (
-                <ListItem
-                  key={apt.id}
-                  sx={{ p: 0, mb: 0.5, cursor: "pointer" }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAppointmentClick && onAppointmentClick(apt);
-                  }}
-                >
-                  <Chip
-                    label={`${apt.time} • ${apt.customer}`}
-                    size="small"
-                    sx={{
-                      bgcolor: getStatusColor(themeMode, apt.status),
-                      color: "#fff",
-                      width: "100%",
+              {day.appointments &&
+                day.appointments.slice(0, 3).map((apt) => (
+                  <ListItem
+                    key={apt.id}
+                    sx={{ p: 0, mb: 0.5, cursor: "pointer" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAppointmentClick && onAppointmentClick(apt);
                     }}
+                  >
+                    <Chip
+                      label={`${apt.time} • ${apt.customer}`}
+                      size="small"
+                      sx={{
+                        bgcolor: getStatusColor(themeMode, apt.status),
+                        color: "#fff",
+                        width: "100%",
+                      }}
+                    />
+                  </ListItem>
+                ))}
+
+              {day.appointments && day.appointments.length > 3 && (
+                <ListItem sx={{ p: 0 }}>
+                  <ListItemText
+                    primary={`+${day.appointments.length - 3} more`}
+                    primaryTypographyProps={{ variant: "caption" }}
                   />
                 </ListItem>
-              ))}
-
-            {day.appointments && day.appointments.length > 3 && (
-              <ListItem sx={{ p: 0 }}>
-                <ListItemText
-                  primary={`+${day.appointments.length - 3} more`}
-                  primaryTypographyProps={{ variant: "caption" }}
-                />
-              </ListItem>
-            )}
+              )}
             </List>
           </Paper>
         );

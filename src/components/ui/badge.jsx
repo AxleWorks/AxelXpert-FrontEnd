@@ -7,7 +7,7 @@ export const Badge = ({ children, className, ...props }) => {
       label={children}
       size="small"
       sx={{
-        fontWeight: "bold",
+        fontWeight: 500,
         borderRadius: "4px",
         backgroundColor: props.className?.includes("bg-green-600")
           ? "#10b981"

@@ -1,13 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Grid,
-  Paper,
   Typography,
   Box,
   List,
   ListItem,
   ListItemText,
-  ListItemIcon,
   Chip,
   Table,
   TableBody,
@@ -21,6 +19,8 @@ import {
   Button,
   IconButton,
   useTheme,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   People as PeopleIcon,
@@ -32,9 +32,16 @@ import {
   AttachMoney as AttachMoneyIcon,
   ArrowForward as ArrowForwardIcon,
   Notifications as NotificationsIcon,
+  Refresh as RefreshIcon,
+  Analytics as AnalyticsIcon,
+  Groups as GroupsIcon,
+  EventAvailable as EventAvailableIcon,
+  BusinessCenter as BusinessCenterIcon,
 } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import StatCard from "../cards/StatCard";
 import StatModal from "../cards/StatModal";
+import dashboardService from "../../../services/dashboardService";
 import {
   BarChart,
   Bar,
@@ -50,13 +57,78 @@ import {
   Cell,
   AreaChart,
   Area,
+  Legend,
+  ComposedChart,
 } from "recharts";
 
-const ManagerDashboard = () => {
+const AdminDashboard = () => {
   const [selectedStat, setSelectedStat] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [revenueData, setRevenueData] = useState([]);
+  const [branchPerformance, setBranchPerformance] = useState([]);
+  const [serviceDistribution, setServiceDistribution] = useState([]);
+  const [recentBookings, setRecentBookings] = useState([]);
+
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [statsData, revenue, branches, services, bookings] =
+        await Promise.all([
+          dashboardService.getAdminStats(),
+          dashboardService.getAdminRevenueData(),
+          dashboardService.getAdminBranchPerformance(),
+          dashboardService.getAdminServiceDistribution(),
+          dashboardService.getAdminRecentBookings(),
+        ]);
+
+      console.log("Admin Dashboard Data:", {
+        statsData,
+        revenue,
+        branches,
+        services,
+        bookings,
+      });
+
+      setStats(statsData);
+      setRevenueData(Array.isArray(revenue) ? revenue : []);
+      setBranchPerformance(Array.isArray(branches) ? branches : []);
+      setServiceDistribution(Array.isArray(services) ? services : []);
+      setRecentBookings(Array.isArray(bookings) ? bookings : []);
+
+      console.log("State updated:", {
+        revenueLength: revenue?.length || 0,
+        branchesLength: branches?.length || 0,
+        servicesLength: services?.length || 0,
+        bookingsLength: bookings?.length || 0,
+      });
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      setError(
+        "Failed to load dashboard data. Please check your connection and try again."
+      );
+      // Set empty arrays to prevent map errors
+      setStats(null);
+      setRevenueData([]);
+      setBranchPerformance([]);
+      setServiceDistribution([]);
+      setRecentBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleStatClick = (stat) => {
     setSelectedStat(stat);
@@ -68,169 +140,50 @@ const ManagerDashboard = () => {
     setSelectedStat(null);
   };
 
-  const stats = [
-    {
-      title: "Total Revenue",
-      value: "$45.2K",
-      icon: <AttachMoneyIcon />,
-      color: "#10b981",
-      trend: "+12.5% this month",
-      details: [
-        { label: "This Month", value: "$45.2K" },
-        { label: "Last Month", value: "$40.1K" },
-        { label: "Services", value: "$28.5K" },
-        { label: "Parts", value: "$16.7K" },
-      ],
-    },
-    {
-      title: "Active Users",
-      value: "156",
-      icon: <PeopleIcon />,
-      color: "#3b82f6",
-      trend: "+8 this week",
-      details: [
-        { label: "Employees", value: "24" },
-        { label: "Customers", value: "132" },
-        { label: "New This Week", value: "8" },
-        { label: "Active Today", value: "45" },
-      ],
-    },
-    {
-      title: "Total Bookings",
-      value: "89",
-      icon: <CalendarTodayIcon />,
-      color: "#f59e0b",
-      trend: "+15 today",
-      details: [
-        { label: "Today", value: "15" },
-        { label: "This Week", value: "89" },
-        { label: "Confirmed", value: "78" },
-        { label: "Pending", value: "11" },
-      ],
-    },
-    {
-      title: "Service Branches",
-      value: "4",
-      icon: <StoreIcon />,
-      color: "#8b5cf6",
-      trend: "All operational",
-      details: [
-        { label: "Downtown", value: "Active" },
-        { label: "Uptown", value: "Active" },
-        { label: "Eastside", value: "Active" },
-        { label: "Westside", value: "Active" },
-      ],
-    },
-    {
-      title: "Performance Score",
-      value: "94%",
-      icon: <TrendingUpIcon />,
-      color: "#ef4444",
-      trend: "+2% this month",
-      details: [
-        { label: "Customer Satisfaction", value: "94%" },
-        { label: "Service Quality", value: "92%" },
-        { label: "Response Time", value: "96%" },
-        { label: "Overall Rating", value: "4.7/5" },
-      ],
-    },
-  ];
-
-  const revenueData = [
-    { month: "Jan", revenue: 32000, services: 145, customers: 89 },
-    { month: "Feb", revenue: 28000, services: 132, customers: 76 },
-    { month: "Mar", revenue: 38000, services: 167, customers: 102 },
-    { month: "Apr", revenue: 35000, services: 156, customers: 94 },
-    { month: "May", revenue: 42000, services: 189, customers: 118 },
-    { month: "Jun", revenue: 45200, services: 201, customers: 132 },
-  ];
-
-  const branchPerformance = [
-    {
-      branch: "Downtown",
-      services: 156,
-      revenue: 15200,
-      efficiency: 94,
-      employees: 8,
-    },
-    {
-      branch: "Uptown",
-      services: 134,
-      revenue: 12800,
-      efficiency: 91,
-      employees: 6,
-    },
-    {
-      branch: "Eastside",
-      services: 98,
-      revenue: 9650,
-      efficiency: 88,
-      employees: 5,
-    },
-    {
-      branch: "Westside",
-      services: 87,
-      revenue: 7550,
-      efficiency: 85,
-      employees: 5,
-    },
-  ];
-
-  const serviceDistribution = [
-    { name: "Oil Changes", value: 35, color: "#10b981", count: 145 },
-    { name: "Brake Services", value: 25, color: "#3b82f6", count: 104 },
-    { name: "Inspections", value: 20, color: "#f59e0b", count: 83 },
-    { name: "Repairs", value: 15, color: "#ef4444", count: 62 },
-    { name: "Other", value: 5, color: "#8b5cf6", count: 21 },
-  ];
-
-  const recentBookings = [
-    {
-      id: 1,
-      customer: "John Doe",
-      service: "Oil Change",
-      branch: "Downtown",
-      status: "Confirmed",
-      date: "2025-10-01",
-      amount: "$45",
-    },
-    {
-      id: 2,
-      customer: "Jane Smith",
-      service: "Brake Service",
-      branch: "Uptown",
-      status: "In Progress",
-      date: "2025-10-01",
-      amount: "$180",
-    },
-    {
-      id: 3,
-      customer: "Mike Johnson",
-      service: "Tire Rotation",
-      branch: "Eastside",
-      status: "Completed",
-      date: "2025-09-30",
-      amount: "$35",
-    },
-    {
-      id: 4,
-      customer: "Sarah Wilson",
-      service: "Engine Diagnostic",
-      branch: "Westside",
-      status: "Scheduled",
-      date: "2025-10-02",
-      amount: "$120",
-    },
-    {
-      id: 5,
-      customer: "Tom Brown",
-      service: "AC Service",
-      branch: "Downtown",
-      status: "Confirmed",
-      date: "2025-10-01",
-      amount: "$85",
-    },
-  ];
+  const statsConfig = stats
+    ? [
+        {
+          title: "Total Revenue",
+          value: stats.revenue?.value || "$0",
+          icon: <AttachMoneyIcon />,
+          color: "#10b981",
+          trend: stats.revenue?.trend || "",
+          details: stats.revenue?.details || [],
+        },
+        {
+          title: "Active Users",
+          value: stats.users?.value || "0",
+          icon: <PeopleIcon />,
+          color: "#3b82f6",
+          trend: stats.users?.trend || "",
+          details: stats.users?.details || [],
+        },
+        {
+          title: "Total Bookings",
+          value: stats.bookings?.value || "0",
+          icon: <CalendarTodayIcon />,
+          color: "#f59e0b",
+          trend: stats.bookings?.trend || "",
+          details: stats.bookings?.details || [],
+        },
+        {
+          title: "Service Branches",
+          value: stats.branches?.value || "0",
+          icon: <StoreIcon />,
+          color: "#8b5cf6",
+          trend: stats.branches?.trend || "",
+          details: stats.branches?.details || [],
+        },
+        {
+          title: "Performance Score",
+          value: stats.performance?.value || "0%",
+          icon: <TrendingUpIcon />,
+          color: "#ef4444",
+          trend: stats.performance?.trend || "",
+          details: stats.performance?.details || [],
+        },
+      ]
+    : [];
 
   const quickActions = [
     {
@@ -238,24 +191,28 @@ const ManagerDashboard = () => {
       icon: <AssessmentIcon />,
       color: "#3b82f6",
       description: "Monthly analytics",
+      action: () => navigate("/admin/reports"),
     },
     {
       title: "Manage Users",
       icon: <PeopleIcon />,
       color: "#10b981",
       description: "User permissions",
+      action: () => navigate("/admin/users"),
     },
     {
       title: "View Calendar",
       icon: <CalendarTodayIcon />,
       color: "#f59e0b",
       description: "All bookings",
+      action: () => navigate("/admin/calendar"),
     },
     {
       title: "Branch Overview",
       icon: <StoreIcon />,
       color: "#8b5cf6",
       description: "Performance metrics",
+      action: () => navigate("/admin/branches"),
     },
   ];
 
@@ -274,14 +231,61 @@ const ManagerDashboard = () => {
     }
   };
 
-  const getEfficiencyColor = (efficiency) => {
-    if (efficiency >= 90) return "#10b981";
-    if (efficiency >= 80) return "#f59e0b";
-    return "#ef4444";
-  };
+  if (loading) {
+    return (
+      <Container
+        maxWidth="xl"
+        sx={{
+          py: 4,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "60vh",
+        }}
+      >
+        <Box sx={{ textAlign: "center" }}>
+          <CircularProgress size={60} thickness={4} />
+          <Typography
+            variant="h6"
+            sx={{ mt: 2, color: theme.palette.text.secondary }}
+          >
+            Loading admin dashboard...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="xl" sx={{ py: 2 }}>
+      {error && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 3 }}
+          action={
+            <IconButton
+              aria-label="refresh"
+              color="inherit"
+              size="small"
+              onClick={fetchDashboardData}
+            >
+              <RefreshIcon fontSize="inherit" />
+            </IconButton>
+          }
+        >
+          {error}
+        </Alert>
+      )}
+
+      {/* Debug Info */}
+      {process.env.NODE_ENV === "development" && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Debug: Revenue: {revenueData.length}, Branches:{" "}
+          {branchPerformance.length}, Services: {serviceDistribution.length},
+          Bookings: {recentBookings.length}
+        </Alert>
+      )}
+
       {/* Welcome Section */}
       <Box sx={{ mb: 4 }}>
         <Typography
@@ -296,7 +300,7 @@ const ManagerDashboard = () => {
             WebkitTextFillColor: "transparent",
           }}
         >
-          Management Overview
+          Admin Overview
         </Typography>
         <Typography
           variant="h6"
@@ -312,18 +316,20 @@ const ManagerDashboard = () => {
         <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
           <Chip
             icon={<TrendingUpIcon />}
-            label="Revenue +12.5% This Month"
+            label={stats?.revenue?.trend || "Revenue Tracking"}
             color="success"
             variant="outlined"
             sx={{ fontWeight: 600 }}
           />
           <Chip
-            label="89 Bookings This Week"
+            icon={<EventAvailableIcon />}
+            label={`${stats?.bookings?.value || "0"} Bookings This Week`}
             color="primary"
             variant="outlined"
             sx={{ fontWeight: 600 }}
           />
           <Chip
+            icon={<BusinessCenterIcon />}
             label="All Branches Operational"
             color="info"
             variant="outlined"
@@ -334,8 +340,8 @@ const ManagerDashboard = () => {
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} lg={2.4} key={index}>
+        {statsConfig.map((stat, index) => (
+          <Grid size={{ xs: 12, sm: 6, lg: 2.4 }} key={index}>
             <StatCard {...stat} onClick={() => handleStatClick(stat)} />
           </Grid>
         ))}
@@ -359,7 +365,7 @@ const ManagerDashboard = () => {
             Revenue & Performance Trends
           </Typography>
           <ResponsiveContainer width="100%" height={350}>
-            <AreaChart data={revenueData}>
+            <ComposedChart data={Array.isArray(revenueData) ? revenueData : []}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke={theme.palette.divider}
@@ -371,6 +377,14 @@ const ManagerDashboard = () => {
                 tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
               />
               <YAxis
+                yAxisId="left"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
@@ -386,12 +400,30 @@ const ManagerDashboard = () => {
                   color: theme.palette.text.primary,
                 }}
               />
+              <Legend />
               <Area
+                yAxisId="left"
                 type="monotone"
                 dataKey="revenue"
                 stroke="#e11d48"
                 fill="url(#revenueGradient)"
                 strokeWidth={3}
+                name="Revenue ($)"
+              />
+              <Bar
+                yAxisId="right"
+                dataKey="services"
+                fill="#10b981"
+                radius={[4, 4, 0, 0]}
+                name="Services"
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="customers"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                name="Customers"
               />
               <defs>
                 <linearGradient
@@ -405,7 +437,7 @@ const ManagerDashboard = () => {
                   <stop offset="95%" stopColor="#e11d48" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-            </AreaChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </Card>
       </Box>
@@ -413,7 +445,7 @@ const ManagerDashboard = () => {
       {/* Charts Section */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {/* Branch Performance */}
-        <Grid item xs={12} lg={8}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Card
             elevation={0}
             sx={{
@@ -428,10 +460,12 @@ const ManagerDashboard = () => {
               variant="h6"
               sx={{ fontWeight: 700, mb: 3, color: theme.palette.text.primary }}
             >
-              Branch Performance
+              Branch Performance Comparison
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={branchPerformance}>
+              <BarChart
+                data={Array.isArray(branchPerformance) ? branchPerformance : []}
+              >
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke={theme.palette.divider}
@@ -458,14 +492,26 @@ const ManagerDashboard = () => {
                     color: theme.palette.text.primary,
                   }}
                 />
-                <Bar dataKey="services" fill="#e11d48" radius={[4, 4, 0, 0]} />
+                <Legend />
+                <Bar
+                  dataKey="services"
+                  fill="#e11d48"
+                  radius={[4, 4, 0, 0]}
+                  name="Services"
+                />
+                <Bar
+                  dataKey="efficiency"
+                  fill="#10b981"
+                  radius={[4, 4, 0, 0]}
+                  name="Efficiency (%)"
+                />
               </BarChart>
             </ResponsiveContainer>
           </Card>
         </Grid>
 
         {/* Service Distribution */}
-        <Grid item xs={12} lg={4}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <Card
             elevation={0}
             sx={{
@@ -485,7 +531,11 @@ const ManagerDashboard = () => {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={serviceDistribution}
+                  data={
+                    Array.isArray(serviceDistribution)
+                      ? serviceDistribution
+                      : []
+                  }
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
@@ -494,9 +544,10 @@ const ManagerDashboard = () => {
                     `${name} ${(percent * 100).toFixed(0)}%`
                   }
                 >
-                  {serviceDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
+                  {Array.isArray(serviceDistribution) &&
+                    serviceDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
                 </Pie>
                 <Tooltip />
               </PieChart>
@@ -524,9 +575,10 @@ const ManagerDashboard = () => {
           </Typography>
           <Grid container spacing={2}>
             {quickActions.map((action, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
                 <Card
                   elevation={0}
+                  onClick={action.action}
                   sx={{
                     p: 2,
                     borderRadius: 2,
@@ -578,7 +630,7 @@ const ManagerDashboard = () => {
 
       {/* Recent Bookings Table */}
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card
             elevation={0}
             sx={{
@@ -606,6 +658,7 @@ const ManagerDashboard = () => {
                 size="small"
                 endIcon={<ArrowForwardIcon />}
                 sx={{ textTransform: "none" }}
+                onClick={() => navigate("/admin/bookings")}
               >
                 View All Bookings
               </Button>
@@ -623,48 +676,53 @@ const ManagerDashboard = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {recentBookings.map((booking) => (
-                    <TableRow key={booking.id} hover>
-                      <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                        >
-                          <Avatar
-                            sx={{ width: 32, height: 32, bgcolor: "#e11d48" }}
+                  {Array.isArray(recentBookings) &&
+                    recentBookings.map((booking) => (
+                      <TableRow key={booking.id} hover>
+                        <TableCell>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 2,
+                            }}
                           >
-                            {booking.customer.charAt(0)}
-                          </Avatar>
-                          {booking.customer}
-                        </Box>
-                      </TableCell>
-                      <TableCell>{booking.service}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={booking.branch}
-                          size="small"
-                          variant="outlined"
-                          sx={{ fontWeight: 500 }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={booking.status}
-                          size="small"
-                          color={getStatusColor(booking.status)}
-                        />
-                      </TableCell>
-                      <TableCell>{booking.date}</TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="body2"
-                          fontWeight={600}
-                          color="success.main"
-                        >
-                          {booking.amount}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            <Avatar
+                              sx={{ width: 32, height: 32, bgcolor: "#e11d48" }}
+                            >
+                              {booking.customer.charAt(0)}
+                            </Avatar>
+                            {booking.customer}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{booking.service}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={booking.branch}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontWeight: 500 }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={booking.status}
+                            size="small"
+                            color={getStatusColor(booking.status)}
+                          />
+                        </TableCell>
+                        <TableCell>{booking.date}</TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            color="success.main"
+                          >
+                            {booking.amount}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -672,7 +730,6 @@ const ManagerDashboard = () => {
         </Grid>
       </Grid>
 
-      {/* Stat Modal */}
       <StatModal
         open={modalOpen}
         onClose={handleCloseModal}
@@ -682,4 +739,4 @@ const ManagerDashboard = () => {
   );
 };
 
-export default ManagerDashboard;
+export default AdminDashboard;

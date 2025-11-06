@@ -3,10 +3,13 @@
  */
 import axios from "axios";
 import { getAuthHeader, clearStoredToken } from "./jwtUtils.js";
+import { API_BASE } from "../config/apiEndpoints.jsx";
 
 // Create an axios instance with authentication interceptors
 const createAuthenticatedAxios = () => {
-  const instance = axios.create();
+  const instance = axios.create({
+    baseURL: API_BASE,
+  });
 
   // Request interceptor to add authorization header
   instance.interceptors.request.use(
@@ -44,4 +47,6 @@ const createAuthenticatedAxios = () => {
 export const authenticatedAxios = createAuthenticatedAxios();
 
 // Export regular axios for public endpoints (login, signup, etc.)
-export const publicAxios = axios;
+export const publicAxios = axios.create({
+  baseURL: API_BASE,
+});

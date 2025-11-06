@@ -35,23 +35,32 @@ const ManagerBranchesPage = () => {
 
   const handleAddBranch = async (newBranch) => {
     try {
+      console.log("Adding new branch with data:", newBranch);
       const response = await fetch(
         BRANCHES_URL,
         createAuthenticatedFetchOptions({
           method: "POST",
           body: JSON.stringify({
-            ...newBranch,
+            name: newBranch.name,
+            address: newBranch.address,
+            phone: newBranch.phone,
+            email: newBranch.email,
+            mapLink: newBranch.mapLink,
             openHours: newBranch.openHours,
             closeHours: newBranch.closeHours,
+            managerId: newBranch.managerId,
           }),
         })
       );
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to add branch:", response.status, errorText);
         throw new Error("Failed to add branch");
       }
 
       const createdBranch = await response.json();
+      console.log("Branch added successfully:", createdBranch);
       setBranches((prevBranches) => [...prevBranches, createdBranch]);
     } catch (error) {
       console.error("Error adding branch:", error);
@@ -60,6 +69,7 @@ const ManagerBranchesPage = () => {
 
   const handleEditBranch = async (updatedBranch) => {
     try {
+      console.log("Updating branch with data:", updatedBranch);
       const response = await fetch(
         `${BRANCHES_URL}/${updatedBranch.id}`,
         createAuthenticatedFetchOptions({
@@ -68,15 +78,19 @@ const ManagerBranchesPage = () => {
             ...updatedBranch,
             openHours: updatedBranch.openHours,
             closeHours: updatedBranch.closeHours,
+            managerId: updatedBranch.managerId,
           }),
         })
       );
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to update branch:", response.status, errorText);
         throw new Error("Failed to update branch");
       }
 
       const savedBranch = await response.json();
+      console.log("Branch updated successfully:", savedBranch);
       setBranches((prevBranches) =>
         prevBranches.map((branch) =>
           branch.id === savedBranch.id ? savedBranch : branch
