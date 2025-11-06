@@ -67,8 +67,8 @@ const ManagerProgressTrackingPage = () => {
     if (!Array.isArray(tasks)) return 0;
     const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
     return tasks.reduce((acc, t) => {
-      if (t && t.status === 'COMPLETED' && t.completedDate) {
-        const taskDate = new Date(t.completedDate).toISOString().split('T')[0];
+      if (t && t.status === 'COMPLETED' && t.completedTime) {
+        const taskDate = new Date(t.completedTime).toISOString().split('T')[0];
         return acc + (taskDate === today ? 1 : 0);
       }
       return acc;
