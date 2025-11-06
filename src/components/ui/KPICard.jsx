@@ -35,7 +35,7 @@ export function KPICard({
               style={{
                 marginBottom: "8px",
                 fontSize: "1.5rem",
-                fontWeight: "bold",
+                fontWeight: 600,
               }}
             >
               {value}

@@ -179,7 +179,7 @@ const EmployeeHistoryPage = () => {
                         label="Completed"
                         size="small"
                         color="success"
-                        sx={{ fontWeight: "bold" }}
+                        sx={{ fontWeight: 600 }}
                       />
                       <Typography
                         variant="body2"
@@ -258,7 +258,7 @@ const EmployeeHistoryPage = () => {
                                 size="small"
                                 variant="filled"
                                 sx={{
-                                  fontWeight: "bold",
+                                  fontWeight: 600,
                                   borderRadius: "4px",
                                   backgroundColor: "#22c55e",
                                   color: "white",
@@ -409,14 +409,14 @@ const EmployeeHistoryPage = () => {
                                         label="DELAYED"
                                         size="small"
                                         color="error"
-                                        sx={{ fontWeight: "bold" }}
+                                        sx={{ fontWeight: 600 }}
                                       />
                                     ) : (
                                       <MuiChip
                                         label="ON TIME"
                                         size="small"
                                         color="success"
-                                        sx={{ fontWeight: "bold" }}
+                                        sx={{ fontWeight: 600 }}
                                       />
                                     )}
                                   </CardContent>

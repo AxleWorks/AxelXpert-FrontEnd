@@ -82,7 +82,7 @@ const PDFReportTemplate = forwardRef(
                   color: "#1976d2",
                   margin: "0",
                   fontSize: "28px",
-                  fontWeight: "bold",
+                  fontWeight: 600,
                 }}
               >
                 {reportTitle}
@@ -96,7 +96,7 @@ const PDFReportTemplate = forwardRef(
                 style={{
                   color: "#1976d2",
                   fontSize: "20px",
-                  fontWeight: "bold",
+                  fontWeight: 600,
                   backgroundColor: "transparent",
                 }}
               >
@@ -196,7 +196,7 @@ const PDFReportTemplate = forwardRef(
               <div
                 style={{
                   fontSize: "24px",
-                  fontWeight: "bold",
+                  fontWeight: 600,
                   color: "#1976d2",
                   backgroundColor: "transparent",
                 }}
@@ -225,7 +225,7 @@ const PDFReportTemplate = forwardRef(
               <div
                 style={{
                   fontSize: "24px",
-                  fontWeight: "bold",
+                  fontWeight: 600,
                   color: "#4caf50",
                   backgroundColor: "transparent",
                 }}
@@ -254,7 +254,7 @@ const PDFReportTemplate = forwardRef(
               <div
                 style={{
                   fontSize: "24px",
-                  fontWeight: "bold",
+                  fontWeight: 600,
                   color: "#ff9800",
                   backgroundColor: "transparent",
                 }}
@@ -283,7 +283,7 @@ const PDFReportTemplate = forwardRef(
               <div
                 style={{
                   fontSize: "24px",
-                  fontWeight: "bold",
+                  fontWeight: 600,
                   color: "#9c27b0",
                   backgroundColor: "transparent",
                 }}
@@ -564,7 +564,7 @@ const PDFReportTemplate = forwardRef(
               <div
                 style={{
                   fontSize: "18px",
-                  fontWeight: "bold",
+                  fontWeight: 600,
                   color: "#1976d2",
                   backgroundColor: "transparent",
                 }}
@@ -592,7 +592,7 @@ const PDFReportTemplate = forwardRef(
               <div
                 style={{
                   fontSize: "18px",
-                  fontWeight: "bold",
+                  fontWeight: 600,
                   color: "#4caf50",
                   backgroundColor: "transparent",
                 }}
@@ -620,7 +620,7 @@ const PDFReportTemplate = forwardRef(
               <div
                 style={{
                   fontSize: "18px",
-                  fontWeight: "bold",
+                  fontWeight: 600,
                   color: "#ff9800",
                   backgroundColor: "transparent",
                 }}

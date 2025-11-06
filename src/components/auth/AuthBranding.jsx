@@ -7,7 +7,7 @@ const AuthBranding = ({ subtitle }) => {
       <Typography
         variant="h1"
         sx={{
-          fontWeight: "bold",
+          fontWeight: 700,
           mb: { xs: 1, md: 1.5 },
           fontSize: { xs: "2.4rem", sm: "3rem", md: "4.5rem", lg: "5.5rem" },
           textAlign: "center",
@@ -20,7 +20,7 @@ const AuthBranding = ({ subtitle }) => {
       <Typography
         variant="h3"
         sx={{
-          fontWeight: "bold",
+          fontWeight: 600,
           fontSize: { xs: "1rem", sm: "1.3rem", md: "2rem", lg: "2.5rem" },
           textAlign: "center",
           color: "rgba(255,255,255,0.95)",

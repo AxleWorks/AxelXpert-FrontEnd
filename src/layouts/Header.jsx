@@ -29,10 +29,12 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme as useCustomTheme } from "../contexts/ThemeContext";
 import { API_BASE } from "../config/apiEndpoints";
+import { useNavigate } from "react-router-dom";
 
 const Header = ({ onMenuClick }) => {
   const { user, clearAuthUser } = useAuth();
   const { isDarkMode, toggleTheme } = useCustomTheme();
+  const navigate = useNavigate();
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
 
@@ -56,6 +58,12 @@ const Header = ({ onMenuClick }) => {
     clearAuthUser(); // Use auth context logout which clears JWT token
     handleCloseProfileMenu();
     window.location.href = "/signin"; // Navigate to login page
+  };
+
+  const handleSettings = () => {
+    handleCloseProfileMenu();
+    const role = user?.role || "user";
+    navigate(`/${role}/settings`);
   };
 
   const getRoleBadge = (role) => {
@@ -377,7 +385,7 @@ const Header = ({ onMenuClick }) => {
           </Box>
 
           {/* Menu Items */}
-          <MenuItem onClick={handleCloseProfileMenu} sx={{ py: 1.5, px: 3 }}>
+          <MenuItem onClick={handleSettings} sx={{ py: 1.5, px: 3 }}>
             <ListItemIcon>
               <SettingsIcon fontSize="small" />
             </ListItemIcon>

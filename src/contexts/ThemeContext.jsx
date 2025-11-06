@@ -17,6 +17,78 @@ export const useTheme = () => {
 
 // Light theme configuration
 const lightTheme = createTheme({
+  typography: {
+    fontFamily:
+      "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
+    h1: {
+      fontWeight: 700,
+      fontSize: "2.5rem",
+      lineHeight: 1.2,
+    },
+    h2: {
+      fontWeight: 600,
+      fontSize: "2rem",
+      lineHeight: 1.3,
+    },
+    h3: {
+      fontWeight: 600,
+      fontSize: "1.75rem",
+      lineHeight: 1.3,
+    },
+    h4: {
+      fontWeight: 600,
+      fontSize: "1.5rem",
+      lineHeight: 1.4,
+    },
+    h5: {
+      fontWeight: 500,
+      fontSize: "1.25rem",
+      lineHeight: 1.4,
+    },
+    h6: {
+      fontWeight: 500,
+      fontSize: "1rem",
+      lineHeight: 1.5,
+    },
+    body1: {
+      fontWeight: 400,
+      fontSize: "1rem",
+      lineHeight: 1.6,
+    },
+    body2: {
+      fontWeight: 400,
+      fontSize: "0.875rem",
+      lineHeight: 1.6,
+    },
+    subtitle1: {
+      fontWeight: 500,
+      fontSize: "1rem",
+      lineHeight: 1.5,
+    },
+    subtitle2: {
+      fontWeight: 500,
+      fontSize: "0.875rem",
+      lineHeight: 1.5,
+    },
+    button: {
+      fontWeight: 500,
+      fontSize: "0.875rem",
+      textTransform: "none",
+      letterSpacing: "0.02em",
+    },
+    caption: {
+      fontWeight: 400,
+      fontSize: "0.75rem",
+      lineHeight: 1.5,
+    },
+    overline: {
+      fontWeight: 600,
+      fontSize: "0.75rem",
+      lineHeight: 2.5,
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+    },
+  },
   palette: {
     mode: "light",
     primary: {
@@ -32,7 +104,6 @@ const lightTheme = createTheme({
       contrastText: "#ffffff",
     },
     background: {
-     
       default: "#ffffff",
       paper: "#ffffff",
     },
@@ -77,11 +148,90 @@ const lightTheme = createTheme({
         },
       },
     },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          fontWeight: 500,
+        },
+      },
+    },
   },
 });
 
 // Dark theme configuration
 const darkTheme = createTheme({
+  typography: {
+    fontFamily:
+      "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
+    h1: {
+      fontWeight: 700,
+      fontSize: "2.5rem",
+      lineHeight: 1.2,
+    },
+    h2: {
+      fontWeight: 600,
+      fontSize: "2rem",
+      lineHeight: 1.3,
+    },
+    h3: {
+      fontWeight: 600,
+      fontSize: "1.75rem",
+      lineHeight: 1.3,
+    },
+    h4: {
+      fontWeight: 600,
+      fontSize: "1.5rem",
+      lineHeight: 1.4,
+    },
+    h5: {
+      fontWeight: 500,
+      fontSize: "1.25rem",
+      lineHeight: 1.4,
+    },
+    h6: {
+      fontWeight: 500,
+      fontSize: "1rem",
+      lineHeight: 1.5,
+    },
+    body1: {
+      fontWeight: 400,
+      fontSize: "1rem",
+      lineHeight: 1.6,
+    },
+    body2: {
+      fontWeight: 400,
+      fontSize: "0.875rem",
+      lineHeight: 1.6,
+    },
+    subtitle1: {
+      fontWeight: 500,
+      fontSize: "1rem",
+      lineHeight: 1.5,
+    },
+    subtitle2: {
+      fontWeight: 500,
+      fontSize: "0.875rem",
+      lineHeight: 1.5,
+    },
+    button: {
+      fontWeight: 500,
+      fontSize: "0.875rem",
+      textTransform: "none",
+      letterSpacing: "0.02em",
+    },
+    caption: {
+      fontWeight: 400,
+      fontSize: "0.75rem",
+      lineHeight: 1.5,
+    },
+    overline: {
+      fontWeight: 600,
+      fontSize: "0.75rem",
+      lineHeight: 2.5,
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+    },
+  },
   palette: {
     mode: "dark",
     primary: {
@@ -138,6 +288,13 @@ const darkTheme = createTheme({
         paper: {
           backgroundColor: "#1e293b",
           borderRight: "1px solid #334155",
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          fontWeight: 500,
         },
       },
     },
