@@ -214,20 +214,30 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
 
   return (
     <Box>      {/* Header with Date and Stats */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
-          Attendance for {selectedDate.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </Typography>
-        {branchName && (
-          <Typography variant="h6" color="primary" sx={{ fontWeight: 500, mb: 2 }}>
-            {branchName} Branch
-          </Typography>
-        )}
+      <Box sx={{ mb: 3 }}>        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+              Attendance for {selectedDate.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </Typography>
+            {branchName && (
+              <Typography variant="h6" color="primary" sx={{ fontWeight: 500 }}>
+                {branchName} Branch
+              </Typography>
+            )}
+          </Box>
+          <Chip
+            label="Click Edit to Modify Attendance"
+            color="info"
+            variant="outlined"
+            size="small"
+            sx={{ fontWeight: 500 }}
+          />
+        </Box>
 
         {/* Quick Stats Cards */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -334,7 +344,31 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                 <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
               </TableRow>
             </TableHead>            <TableBody>
-              {employees.map((employee) => {
+              {employees.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                      No employee attendance records found for this date
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      This could mean:
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      • No employees were scheduled for this date<br/>
+                      • Attendance has not been recorded yet<br/>
+                      • This is a weekend or holiday
+                    </Typography>
+                    <Button 
+                      variant="outlined" 
+                      size="small" 
+                      onClick={() => window.location.reload()}
+                    >
+                      Refresh Data
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                employees.map((employee) => {
                 const mappedStatus = mapBackendStatus(employee.status);
                 const statusInfo = statusConfig[mappedStatus] || statusConfig.present;
                 const StatusIcon = statusInfo.icon;
@@ -349,16 +383,26 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                         bgcolor: theme.palette.action.hover,
                       }
                     }}
-                  >
-                    <TableCell>
+                  >                    <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                         <Avatar sx={{ width: 40, height: 40 }}>
                           {(employee.username || employee.name || 'U').charAt(0).toUpperCase()}
                         </Avatar>
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {employee.username || employee.name || 'Unknown User'}
-                          </Typography>
+                        <Box sx={{ flex: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {employee.username || employee.name || 'Unknown User'}
+                            </Typography>
+                            {employee.isNewRecord && (
+                              <Chip
+                                label="New"
+                                size="small"
+                                color="secondary"
+                                variant="outlined"
+                                sx={{ fontSize: '0.65rem', height: 20 }}
+                              />
+                            )}
+                          </Box>
                           <Typography variant="caption" color="text.secondary">
                             {employee.userEmail || employee.email || 'No email'}
                           </Typography>
@@ -447,10 +491,10 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                       >
                         <Edit fontSize="small" />
                       </IconButton>
-                    </TableCell>
-                  </TableRow>
+                    </TableCell>                  </TableRow>
                 );
-              })}
+                })
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -463,13 +507,32 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
         maxWidth="sm"
         fullWidth
       >        <DialogTitle>
-          Edit Attendance
-          {editingEmployee && (
-            <Typography variant="body2" color="text.secondary">
-              {employees.find(emp => (emp.userId || emp.id) === editingEmployee)?.username || 
-               employees.find(emp => (emp.userId || emp.id) === editingEmployee)?.name || 'Unknown User'}
-            </Typography>
-          )}
+          {(() => {
+            const employee = employees.find(emp => (emp.userId || emp.id) === editingEmployee);
+            const isNewRecord = employee?.isNewRecord;
+            return (
+              <Box>
+                <Typography variant="h6">
+                  {isNewRecord ? 'Create Attendance Record' : 'Edit Attendance'}
+                </Typography>
+                {employee && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {employee.username || employee.name || 'Unknown User'}
+                    </Typography>
+                    {isNewRecord && (
+                      <Chip
+                        label="New Record"
+                        size="small"
+                        color="success"
+                        variant="outlined"
+                      />
+                    )}
+                  </Box>
+                )}
+              </Box>
+            );
+          })()}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
