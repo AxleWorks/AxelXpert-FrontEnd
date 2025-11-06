@@ -89,7 +89,7 @@ const calculateProgress = (subTasks) => {
               <Typography variant="body2">{task.customerName}</Typography>
             </Box>
             <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <Typography variant="body2">{task.employeeName || 'N/A'}</Typography>
+              <Typography variant="body2">{task.assignedEmployeeName || 'N/A'}</Typography>
             </Box>
             <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0.5 }}>
               <LinearProgress 

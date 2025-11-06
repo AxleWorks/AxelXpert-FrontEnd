@@ -14,7 +14,7 @@ import { CheckCircle as CheckCircleIcon,
          } from '@mui/icons-material';
 import UserLayout from "../../layouts/user/UserLayout";
 import ManagerProgressTaskCard from "../../components/dashboard/manager/ManagerProgressTaskCard";
-import { getProgressTrackingTasks } from "../../services/userProgressTrackingService";
+import { getManagerProgressTrackingTasks } from "../../services/managerProgressTrackingService";
 import { useAuth } from "../../contexts/AuthContext";
 
 const ManagerProgressTrackingPage = () => {
@@ -36,9 +36,9 @@ const ManagerProgressTrackingPage = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        const data = await getProgressTrackingTasks(user.id);
-        
+
+        const data = await getManagerProgressTrackingTasks(user.id);
+
         setTasks(data);
         setLoading(false);
       } catch (err) {
