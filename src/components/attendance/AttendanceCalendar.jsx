@@ -82,18 +82,19 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {}, s
     if (typeof actualDate.toISOString !== 'function') return "";
     return actualDate.toISOString().split('T')[0];
   };
-
   const getAttendanceStats = (date) => {
     const dateKey = formatDateKey(date);
     const dayData = attendanceData[dateKey] || {};
     
-    const total = dayData.employees?.length || 0;
-    const present = dayData.employees?.filter(emp => emp.status === 'present').length || 0;
-    const late = dayData.employees?.filter(emp => emp.status === 'late').length || 0;
-    const absent = dayData.employees?.filter(emp => emp.status === 'absent').length || 0;
-    const onLeave = dayData.employees?.filter(emp => emp.status === 'leave').length || 0;
+    // New API data structure
+    const total = dayData.totalEmployees || 0;
+    const present = dayData.presentCount || 0;
+    const late = dayData.lateArrivalCount || 0;
+    const absent = dayData.absentCount || 0;
+    const onLeave = dayData.shortLeaveCount || 0;
+    const earlyDeparture = dayData.earlyDepartureCount || 0;
 
-    return { total, present, late, absent, onLeave };
+    return { total, present, late, absent, onLeave, earlyDeparture };
   };  const getAttendanceColor = (dayData) => {
     if (!dayData || !dayData.date) return "transparent";
     

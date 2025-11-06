@@ -128,22 +128,23 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
       return 0;
     }
   };
-
   const handleEditEmployee = (employee) => {
-    setEditingEmployee(employee.id);
+    setEditingEmployee(employee.userId || employee.id);
     setEditData({
-      status: employee.status,
-      checkInTime: employee.checkInTime || "",
-      checkOutTime: employee.checkOutTime || "",
-      breakTime: employee.breakTime || 0,
+      status: mapBackendStatus(employee.status),
+      checkInTime: employee.arrivalTime || "",
+      checkOutTime: employee.leaveTime || "",
       notes: employee.notes || "",
-      warningReason: employee.warningReason || "",
     });
   };
-
   const handleSaveEdit = () => {
     if (onUpdateAttendance) {
-      onUpdateAttendance(editingEmployee, editData);
+      // Send the edited data with mapped status
+      const updateData = {
+        ...editData,
+        status: mapFrontendStatus(editData.status)
+      };
+      onUpdateAttendance(editingEmployee, updateData);
     }
     setEditingEmployee(null);
     setEditData({});
@@ -153,16 +154,49 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
     setEditingEmployee(null);
     setEditData({});
   };
-
   const getEmployeeStats = () => {
     const total = employees.length;
-    const present = employees.filter(emp => emp.status === 'present').length;
-    const late = employees.filter(emp => emp.status === 'late').length;
-    const absent = employees.filter(emp => emp.status === 'absent').length;
-    const onLeave = employees.filter(emp => emp.status === 'leave').length;
-    const warnings = employees.filter(emp => emp.status === 'warning').length;
+    
+    // Map backend enum values to frontend status
+    const statusMap = {
+      'PRESENT': 'present',
+      'ABSENT': 'absent',
+      'LATE_ARRIVAL': 'late',
+      'SHORT_LEAVE': 'leave',
+      'EARLY_DEPARTURE': 'halfDay'
+    };
 
-    return { total, present, late, absent, onLeave, warnings };
+    const present = employees.filter(emp => statusMap[emp.status] === 'present').length;
+    const late = employees.filter(emp => statusMap[emp.status] === 'late').length;
+    const absent = employees.filter(emp => statusMap[emp.status] === 'absent').length;
+    const onLeave = employees.filter(emp => statusMap[emp.status] === 'leave').length;
+    const halfDay = employees.filter(emp => statusMap[emp.status] === 'halfDay').length;
+
+    return { total, present, late, absent, onLeave, halfDay };
+  };
+
+  // Helper function to convert backend status to frontend status
+  const mapBackendStatus = (backendStatus) => {
+    const statusMap = {
+      'PRESENT': 'present',
+      'ABSENT': 'absent',
+      'LATE_ARRIVAL': 'late',
+      'SHORT_LEAVE': 'leave',
+      'EARLY_DEPARTURE': 'halfDay'
+    };
+    return statusMap[backendStatus] || 'absent';
+  };
+
+  // Helper function to convert frontend status to backend status
+  const mapFrontendStatus = (frontendStatus) => {
+    const statusMap = {
+      'present': 'PRESENT',
+      'absent': 'ABSENT',
+      'late': 'LATE_ARRIVAL',
+      'leave': 'SHORT_LEAVE',
+      'halfDay': 'EARLY_DEPARTURE'
+    };
+    return statusMap[frontendStatus] || 'ABSENT';
   };
 
   const stats = getEmployeeStats();
@@ -267,17 +301,15 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                 </Typography>
               </CardContent>
             </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={2}>
+          </Grid>          <Grid item xs={12} sm={6} md={2}>
             <Card elevation={2}>
               <CardContent sx={{ textAlign: "center", py: 2 }}>
-                <Warning sx={{ fontSize: 32, color: theme.palette.error.dark }} />
-                <Typography variant="h6" sx={{ mt: 1, fontWeight: 600, color: theme.palette.error.dark }}>
-                  {stats.warnings}
+                <Timer sx={{ fontSize: 32, color: theme.palette.secondary.main }} />
+                <Typography variant="h6" sx={{ mt: 1, fontWeight: 600, color: theme.palette.secondary.main }}>
+                  {stats.halfDay}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Warnings
+                  Half Day
                 </Typography>
               </CardContent>
             </Card>
@@ -301,16 +333,16 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                 <TableCell sx={{ fontWeight: 600 }}>Notes</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
+            </TableHead>            <TableBody>
               {employees.map((employee) => {
-                const statusInfo = statusConfig[employee.status] || statusConfig.present;
+                const mappedStatus = mapBackendStatus(employee.status);
+                const statusInfo = statusConfig[mappedStatus] || statusConfig.present;
                 const StatusIcon = statusInfo.icon;
-                const overtime = calculateOvertime(employee.checkInTime, employee.checkOutTime);
+                const overtime = calculateOvertime(employee.arrivalTime, employee.leaveTime);
 
                 return (
                   <TableRow 
-                    key={employee.id} 
+                    key={employee.id || employee.userId} 
                     hover
                     sx={{
                       '&:hover': {
@@ -320,18 +352,15 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                   >
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Avatar
-                          src={employee.avatar}
-                          sx={{ width: 40, height: 40 }}
-                        >
-                          {employee.name.charAt(0)}
+                        <Avatar sx={{ width: 40, height: 40 }}>
+                          {(employee.username || employee.name || 'U').charAt(0).toUpperCase()}
                         </Avatar>
                         <Box>
                           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {employee.name}
+                            {employee.username || employee.name || 'Unknown User'}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            ID: {employee.employeeId}
+                            {employee.userEmail || employee.email || 'No email'}
                           </Typography>
                         </Box>
                       </Box>
@@ -348,34 +377,27 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                           fontWeight: 600,
                         }}
                       />
-                      {employee.status === 'warning' && employee.warningReason && (
-                        <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                          {employee.warningReason}
-                        </Typography>
-                      )}
                     </TableCell>
 
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <AccessTime sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
                         <Typography variant="body2">
-                          {formatTime(employee.checkInTime)}
+                          {formatTime(employee.arrivalTime)}
                         </Typography>
                       </Box>
-                    </TableCell>
-
-                    <TableCell>
+                    </TableCell>                    <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <ExitToApp sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
                         <Typography variant="body2">
-                          {formatTime(employee.checkOutTime)}
+                          {formatTime(employee.leaveTime)}
                         </Typography>
                       </Box>
                     </TableCell>
 
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {calculateWorkingHours(employee.checkInTime, employee.checkOutTime)}
+                        {calculateWorkingHours(employee.arrivalTime, employee.leaveTime)}
                       </Typography>
                     </TableCell>
 
@@ -393,13 +415,12 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                           None
                         </Typography>
                       )}
-                    </TableCell>
-
-                    <TableCell>
+                    </TableCell>                    <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Coffee sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
                         <Typography variant="body2">
-                          {employee.breakTime || 0}m
+                          {/* Break time is not in the API, show default */}
+                          -
                         </Typography>
                       </Box>
                     </TableCell>
@@ -441,12 +462,12 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
         onClose={handleCancelEdit}
         maxWidth="sm"
         fullWidth
-      >
-        <DialogTitle>
+      >        <DialogTitle>
           Edit Attendance
           {editingEmployee && (
             <Typography variant="body2" color="text.secondary">
-              {employees.find(emp => emp.id === editingEmployee)?.name}
+              {employees.find(emp => (emp.userId || emp.id) === editingEmployee)?.username || 
+               employees.find(emp => (emp.userId || emp.id) === editingEmployee)?.name || 'Unknown User'}
             </Typography>
           )}
         </DialogTitle>
@@ -459,13 +480,11 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                   value={editData.status || ""}
                   label="Status"
                   onChange={(e) => setEditData({ ...editData, status: e.target.value })}
-                >
-                  <MenuItem value="present">Present</MenuItem>
-                  <MenuItem value="late">Late</MenuItem>
+                >                  <MenuItem value="present">Present</MenuItem>
+                  <MenuItem value="late">Late Arrival</MenuItem>
                   <MenuItem value="absent">Absent</MenuItem>
-                  <MenuItem value="leave">On Leave</MenuItem>
-                  <MenuItem value="halfDay">Half Day</MenuItem>
-                  <MenuItem value="warning">Warning</MenuItem>
+                  <MenuItem value="leave">Short Leave</MenuItem>
+                  <MenuItem value="halfDay">Early Departure</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -490,32 +509,7 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                 onChange={(e) => setEditData({ ...editData, checkOutTime: e.target.value })}
                 InputLabelProps={{ shrink: true }}
               />
-            </Grid>
-
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Break Time (minutes)"
-                type="number"
-                value={editData.breakTime || ""}
-                onChange={(e) => setEditData({ ...editData, breakTime: parseInt(e.target.value) || 0 })}
-              />
-            </Grid>
-
-            {editData.status === 'warning' && (
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Warning Reason"
-                  value={editData.warningReason || ""}
-                  onChange={(e) => setEditData({ ...editData, warningReason: e.target.value })}
-                  multiline
-                  rows={2}
-                />
-              </Grid>
-            )}
-
-            <Grid item xs={12}>
+            </Grid>            <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Notes"

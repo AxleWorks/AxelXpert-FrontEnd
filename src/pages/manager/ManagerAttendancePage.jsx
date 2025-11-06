@@ -14,273 +14,124 @@ import {
   Select,
   MenuItem,
   Chip,
+  CircularProgress,
+  Snackbar,
 } from "@mui/material";
 import {
   LocationOn,
   Business,
+  Refresh,
 } from "@mui/icons-material";
 
 import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import AttendanceCalendar from "../../components/attendance/AttendanceCalendar";
 import EmployeeAttendanceDetails from "../../components/attendance/EmployeeAttendanceDetails";
-import AttendanceStatistics from "../../components/attendance/AttendanceStatistics";
-import AttendanceReports from "../../components/attendance/AttendanceReports";
+import { attendanceService } from "../../services/attendanceService";
+import { branchService } from "../../services/branchService";
+
 
 const ManagerAttendancePage = () => {
   const theme = useTheme();
   const [selectedDate, setSelectedDate] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [selectedBranch, setSelectedBranch] = useState('kiribathgoda'); // Default to Kiribathgoda
+  const [selectedBranch, setSelectedBranch] = useState(''); // Default to empty until branches load
   const [attendanceData, setAttendanceData] = useState({});
-  const [allEmployees, setAllEmployees] = useState({}); // Store employees by branch
+  const [calendarData, setCalendarData] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // Available branches
-  const branches = [
-    { id: 'kiribathgoda', name: 'Kiribathgoda', location: 'Kiribathgoda, Gampaha' },
-    { id: 'galle', name: 'Galle', location: 'Galle, Southern Province' },
-    { id: 'kandy', name: 'Kandy', location: 'Kandy, Central Province' },
-    { id: 'negombo', name: 'Negombo', location: 'Negombo, Western Province' },
-  ];
-
-  // Mock data - Replace with actual API calls
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  // Load initial data
   useEffect(() => {
-    loadMockData();
+    loadInitialData();
   }, []);
-  const loadMockData = () => {
-    // Mock employees data by branch
-    const mockEmployeesByBranch = {
-      kiribathgoda: [
-        {
-          id: "KIR001",
-          name: "John Doe",
-          employeeId: "KIR001",
-          department: "Technical",
-          position: "Senior Mechanic",
-          email: "john.doe@axelxpert.com",
-          phone: "+1234567890",
-          avatar: null,
-          branch: "kiribathgoda",
-        },
-        {
-          id: "KIR002", 
-          name: "Jane Smith",
-          employeeId: "KIR002",
-          department: "Customer Service",
-          position: "Service Advisor",
-          email: "jane.smith@axelxpert.com",
-          phone: "+1234567891",
-          avatar: null,
-          branch: "kiribathgoda",
-        },
-        {
-          id: "KIR003",
-          name: "Mike Johnson",
-          employeeId: "KIR003", 
-          department: "Technical",
-          position: "Technician",
-          email: "mike.johnson@axelxpert.com",
-          phone: "+1234567892",
-          avatar: null,
-          branch: "kiribathgoda",
-        },
-        {
-          id: "KIR004",
-          name: "Sarah Wilson",
-          employeeId: "KIR004",
-          department: "Administration",
-          position: "HR Manager",
-          email: "sarah.wilson@axelxpert.com",
-          phone: "+1234567893",
-          avatar: null,
-          branch: "kiribathgoda",
-        },
-        {
-          id: "KIR005",
-          name: "David Brown",
-          employeeId: "KIR005",
-          department: "Technical",
-          position: "Junior Mechanic",
-          email: "david.brown@axelxpert.com",
-          phone: "+1234567894",
-          avatar: null,
-          branch: "kiribathgoda",
-        },
-      ],
-      galle: [
-        {
-          id: "GAL001",
-          name: "Priya Fernando",
-          employeeId: "GAL001",
-          department: "Technical",
-          position: "Senior Mechanic",
-          email: "priya.fernando@axelxpert.com",
-          phone: "+9471234567",
-          avatar: null,
-          branch: "galle",
-        },
-        {
-          id: "GAL002",
-          name: "Kasun Perera",
-          employeeId: "GAL002",
-          department: "Customer Service",
-          position: "Service Advisor",
-          email: "kasun.perera@axelxpert.com",
-          phone: "+9471234568",
-          avatar: null,
-          branch: "galle",
-        },
-        {
-          id: "GAL003",
-          name: "Nilani Silva",
-          employeeId: "GAL003",
-          department: "Technical",
-          position: "Technician",
-          email: "nilani.silva@axelxpert.com",
-          phone: "+9471234569",
-          avatar: null,
-          branch: "galle",
-        },
-        {
-          id: "GAL004",
-          name: "Ruwan Kumara",
-          employeeId: "GAL004",
-          department: "Administration",
-          position: "Branch Manager",
-          email: "ruwan.kumara@axelxpert.com",
-          phone: "+9471234570",
-          avatar: null,
-          branch: "galle",
-        },
-      ],
-      kandy: [
-        {
-          id: "KAN001",
-          name: "Chamara Jayasinghe",
-          employeeId: "KAN001",
-          department: "Technical",
-          position: "Senior Mechanic",
-          email: "chamara.jayasinghe@axelxpert.com",
-          phone: "+9478123456",
-          avatar: null,
-          branch: "kandy",
-        },
-        {
-          id: "KAN002",
-          name: "Anusha Rathnayake",
-          employeeId: "KAN002",
-          department: "Customer Service",
-          position: "Service Advisor",
-          email: "anusha.rathnayake@axelxpert.com",
-          phone: "+9478123457",
-          avatar: null,
-          branch: "kandy",
-        },
-        {
-          id: "KAN003",
-          name: "Tharindu Wickramasinghe",
-          employeeId: "KAN003",
-          department: "Technical",
-          position: "Technician",
-          email: "tharindu.wickramasinghe@axelxpert.com",
-          phone: "+9478123458",
-          avatar: null,
-          branch: "kandy",
-        },
-      ],
-      negombo: [
-        {
-          id: "NEG001",
-          name: "Ishara Mendis",
-          employeeId: "NEG001",
-          department: "Technical",
-          position: "Senior Mechanic",
-          email: "ishara.mendis@axelxpert.com",
-          phone: "+9477123456",
-          avatar: null,
-          branch: "negombo",
-        },
-        {
-          id: "NEG002",
-          name: "Lakshani Gunawardena",
-          employeeId: "NEG002",
-          department: "Customer Service",
-          position: "Service Advisor",
-          email: "lakshani.gunawardena@axelxpert.com",
-          phone: "+9477123457",
-          avatar: null,
-          branch: "negombo",
-        },
-      ],
-    };    // Mock attendance data for the past month
-    const mockAttendanceData = {};
-    const today = new Date();
-    
-    // Generate attendance data for each branch
-    branches.forEach(branch => {
-      mockAttendanceData[branch.id] = {};
+
+  // Load calendar data when branch changes
+  useEffect(() => {
+    if (selectedBranch) {
+      loadCalendarData();
+    }
+  }, [selectedBranch]);
+
+  // Load attendance details when date is selected
+  useEffect(() => {
+    if (selectedDate && selectedBranch) {
+      loadAttendanceDetails();
+    }
+  }, [selectedDate, selectedBranch]);  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
       
-      for (let i = 30; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        const dateKey = date.toISOString().split('T')[0];
-        
-        // Skip weekends for attendance
-        if (date.getDay() !== 0 && date.getDay() !== 6) {
-          mockAttendanceData[branch.id][dateKey] = {
-            employees: mockEmployeesByBranch[branch.id].map(emp => {
-              const randomStatus = Math.random();
-              let status, checkInTime, checkOutTime, notes = "";
-            
-            if (randomStatus > 0.9) {
-              status = "absent";
-              checkInTime = null;
-              checkOutTime = null;
-              notes = "Sick leave";
-            } else if (randomStatus > 0.8) {
-              status = "leave";
-              checkInTime = null;
-              checkOutTime = null;
-              notes = "Planned leave";
-            } else if (randomStatus > 0.7) {
-              status = "late";
-              checkInTime = "09:30:00";
-              checkOutTime = "18:30:00";
-              notes = "Traffic delay";
-            } else if (randomStatus > 0.05) {
-              status = "present";
-              checkInTime = "08:00:00";
-              checkOutTime = Math.random() > 0.3 ? "17:00:00" : "19:00:00";
-              notes = "";
-            } else {
-              status = "warning";
-              checkInTime = "10:00:00";
-              checkOutTime = "17:00:00";
-              notes = "Multiple late arrivals this week";
-            }
-              return {
-              ...emp,
-              status,
-              checkInTime,
-              checkOutTime,
-              breakTime: Math.floor(Math.random() * 30) + 30, // 30-60 minutes
-              notes,
-              warningReason: status === 'warning' ? "Frequent tardiness" : "",
-            };
-          }),
-        };
-        }
+      // Load branches from API
+      const branchesData = await branchService.getAllBranches();
+      setBranches(branchesData);
+      
+      // Set default branch if not set
+      if (branchesData.length > 0 && !selectedBranch) {
+        setSelectedBranch(branchesData[0].id);
       }
-    });
-
-    setAllEmployees(mockEmployeesByBranch);
-    setAttendanceData(mockAttendanceData);
+      
+    } catch (err) {
+      console.error('Error loading initial data:', err);
+      setError('Failed to load branches. Please ensure you are logged in and the server is running.');
+    } finally {
+      setLoading(false);
+    }
+  };  const loadCalendarData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get current month's start and end dates
+      const now = new Date();
+      const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      const calendarResponse = await attendanceService.getAttendanceCalendarData(
+        selectedBranch,
+        attendanceService.formatDateForAPI(startDate),
+        attendanceService.formatDateForAPI(endDate)
+      );
+      
+      setCalendarData(calendarResponse || []);
+      
+    } catch (err) {
+      console.error('Error loading calendar data:', err);
+      setError('Failed to load calendar data. Please ensure you are logged in and the server is running.');
+    } finally {
+      setLoading(false);
+    }
+  };  const loadAttendanceDetails = async () => {
+    try {
+      setLoading(true);
+      
+      const dateStr = attendanceService.formatDateForAPI(selectedDate);
+      const attendanceResponse = await attendanceService.getAttendanceByBranchAndDate(
+        selectedBranch,
+        dateStr
+      );
+      
+      setEmployees(attendanceResponse || []);
+      
+    } catch (err) {
+      console.error('Error loading attendance details:', err);
+      setError('Failed to load attendance details. Please ensure you are logged in and the server is running.');
+    } finally {
+      setLoading(false);
+    }
   };
-
+  const refreshData = () => {
+    loadCalendarData();
+    if (selectedDate) {
+      loadAttendanceDetails();
+    }
+  };
   const handleDateSelect = (date) => {
     setSelectedDate(date);
     setActiveTab(1); // Switch to employee details tab
   };
+
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
@@ -290,48 +141,117 @@ const ManagerAttendancePage = () => {
     setSelectedDate(null); // Reset selected date when branch changes
     setActiveTab(0); // Go back to calendar view
   };
-  const handleUpdateAttendance = (employeeId, updatedData) => {
-    if (!selectedDate || !selectedBranch) return;
-    
-    const dateKey = selectedDate.toISOString().split('T')[0];
-    const updatedAttendanceData = { ...attendanceData };
-    
-    if (updatedAttendanceData[selectedBranch] && updatedAttendanceData[selectedBranch][dateKey]) {
-      const employeeIndex = updatedAttendanceData[selectedBranch][dateKey].employees.findIndex(
-        emp => emp.id === employeeId
-      );
+
+  const handleUpdateAttendance = async (employeeId, updatedData) => {
+    try {
+      setLoading(true);
       
-      if (employeeIndex !== -1) {
-        updatedAttendanceData[selectedBranch][dateKey].employees[employeeIndex] = {
-          ...updatedAttendanceData[selectedBranch][dateKey].employees[employeeIndex],
-          ...updatedData,
+      // Find the attendance record to update
+      const attendanceRecord = employees.find(emp => emp.userId === employeeId);
+      
+      if (attendanceRecord) {
+        // Map frontend status to backend enum
+        const statusMap = {
+          'present': 'PRESENT',
+          'absent': 'ABSENT',
+          'late': 'LATE_ARRIVAL',
+          'leave': 'SHORT_LEAVE',
+          'halfDay': 'EARLY_DEPARTURE'
         };
+
+        const updatePayload = {
+          arrivalTime: attendanceService.formatTimeForAPI(updatedData.checkInTime),
+          leaveTime: attendanceService.formatTimeForAPI(updatedData.checkOutTime),
+          status: statusMap[updatedData.status] || updatedData.status,
+          notes: updatedData.notes || ''
+        };
+
+        await attendanceService.updateAttendance(attendanceRecord.id, updatePayload);
         
-        setAttendanceData(updatedAttendanceData);
+        // Refresh the attendance data
+        await loadAttendanceDetails();
+        
+        setSuccess('Attendance updated successfully!');
       }
+      
+    } catch (err) {
+      console.error('Error updating attendance:', err);
+      setError('Failed to update attendance. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getSelectedDateEmployees = () => {
-    if (!selectedDate || !selectedBranch) return [];
-    const dateKey = selectedDate.toISOString().split('T')[0];
-    return attendanceData[selectedBranch]?.[dateKey]?.employees || [];
+  const getCurrentBranch = () => {
+    return branches.find(branch => branch.id === selectedBranch);
   };
 
+  const processCalendarData = () => {
+    // Convert calendar data to the format expected by the calendar component
+    const processedData = {};
+    
+    calendarData.forEach(dayData => {
+      const dateKey = dayData.date;
+      processedData[dateKey] = {
+        totalEmployees: dayData.totalEmployees,
+        presentCount: dayData.presentCount,
+        absentCount: dayData.absentCount,
+        shortLeaveCount: dayData.shortLeaveCount,
+        lateArrivalCount: dayData.lateArrivalCount,
+        earlyDepartureCount: dayData.earlyDepartureCount
+      };
+    });
+    
+    return processedData;
+  };
   const getCurrentBranchEmployees = () => {
-    return allEmployees[selectedBranch] || [];
+    return employees || [];
   };
 
   const getBranchAttendanceData = () => {
-    return attendanceData[selectedBranch] || {};
+    return processCalendarData();
+  };
+
+  const getSelectedDateEmployees = () => {
+    return employees || [];
+  };
+
+  const handleCloseError = () => {
+    setError(null);
+  };
+
+  const handleCloseSuccess = () => {
+    setSuccess(null);
   };
 
   return (
     <ManagerLayout>
-      <Container maxWidth="xl" sx={{ py: 3 }}>        {/* Page Header */}
+      <Container maxWidth="xl" sx={{ py: 3 }}>        {/* Page Header */}        {/* Error and Success Messages */}
+        <Snackbar 
+          open={!!error} 
+          autoHideDuration={6000} 
+          onClose={handleCloseError}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
+            {error}
+          </Alert>
+        </Snackbar>
+
+        <Snackbar 
+          open={!!success} 
+          autoHideDuration={4000} 
+          onClose={handleCloseSuccess}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <Alert onClose={handleCloseSuccess} severity="success" sx={{ width: '100%' }}>
+            {success}
+          </Alert>
+        </Snackbar>
+
         <Box sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-            <Box>
+            <Box sx={{ flex: 1 }}>
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
                 Employee Attendance Management
               </Typography>
@@ -339,6 +259,17 @@ const ManagerAttendancePage = () => {
                 Track and manage employee attendance, punctuality, and working hours
               </Typography>
             </Box>
+
+            {/* Refresh Button */}
+            <Button
+              variant="outlined"
+              startIcon={<Refresh />}
+              onClick={refreshData}
+              disabled={loading}
+              sx={{ mr: 2 }}
+            >
+              Refresh
+            </Button>
             
             {/* Branch Selection */}
             <Box sx={{ minWidth: 280 }}>
@@ -382,19 +313,20 @@ const ManagerAttendancePage = () => {
                   ))}
                 </Select>
               </FormControl>
-              
-              {/* Current Branch Indicator */}
+                {/* Current Branch Indicator */}
               <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Chip
                   icon={<Business sx={{ fontSize: 16 }} />}
-                  label={`Current: ${branches.find(b => b.id === selectedBranch)?.name}`}
+                  label={`Current: ${getCurrentBranch()?.name || 'Loading...'}`}
                   color="primary"
                   variant="outlined"
                   size="small"
                 />
-                <Typography variant="caption" color="text.secondary">
-                  {getCurrentBranchEmployees().length} employees
-                </Typography>
+                {selectedDate && (
+                  <Typography variant="caption" color="text.secondary">
+                    {getCurrentBranchEmployees().length} employees
+                  </Typography>
+                )}
               </Box>
             </Box>
           </Box>
@@ -418,30 +350,36 @@ const ManagerAttendancePage = () => {
               label={`Employee Details${selectedDate ? ` - ${selectedDate.toLocaleDateString()}` : ''}`}
               sx={{ textTransform: "none", fontWeight: 600 }}
             />
-          </Tabs>
+          </Tabs>          <Box sx={{ p: 3 }}>
+            {loading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            )}
 
-          <Box sx={{ p: 3 }}>            {activeTab === 0 && (
+            {!loading && activeTab === 0 && (
               <Box>
                 <AttendanceCalendar
                   onDateSelect={handleDateSelect}
                   selectedDate={selectedDate}
                   attendanceData={getBranchAttendanceData()}
                   selectedBranch={selectedBranch}
-                  branchName={branches.find(b => b.id === selectedBranch)?.name}
+                  branchName={getCurrentBranch()?.name}
                 />
               </Box>
             )}
 
-            {activeTab === 1 && (
+            {!loading && activeTab === 1 && (
               <Box>
                 <EmployeeAttendanceDetails
                   selectedDate={selectedDate}
                   employees={getSelectedDateEmployees()}
                   onUpdateAttendance={handleUpdateAttendance}
                   selectedBranch={selectedBranch}
-                  branchName={branches.find(b => b.id === selectedBranch)?.name}
+                  branchName={getCurrentBranch()?.name}
                 />
-              </Box>            )}
+              </Box>
+            )}
           </Box>
         </Paper>
       </Container>

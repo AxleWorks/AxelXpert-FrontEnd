@@ -11,6 +11,7 @@ export const VEHICLES_URL = `${API_BASE}${API_PREFIX}/vehicles`;
 export const SERVICES_URL = `${API_BASE}${API_PREFIX}/services`;
 export const TASKS_URL = `${API_BASE}${API_PREFIX}/tasks`;
 export const AUTH_URL = `${API_BASE}${API_PREFIX}/auth`;
+export const ATTENDANCE_URL = `${API_BASE}${API_PREFIX}/attendance`;
 export const PROFILE_IMAGE_URL = `${API_BASE}${API_PREFIX}/users/{id}/profile-image`;
 
 export default {
