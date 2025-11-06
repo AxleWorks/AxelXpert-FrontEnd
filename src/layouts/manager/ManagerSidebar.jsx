@@ -59,6 +59,7 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
     },
     { text: "Services", icon: BuildIcon, path: `${basePath}/services` },
     { text: "Branches", icon: StoreIcon, path: `${basePath}/branches` },
+    { text: "Attendance", icon: AttendanceIcon, path: `${basePath}/attendance` },
     { text: "Reports", icon: AssessmentIcon, path: `${basePath}/reports` },
   ];
 
@@ -66,37 +67,6 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
   const bottomMenuItems = [
     { text: "Settings", icon: SettingsIcon, path: `${basePath}/settings` },
   ];
-// Manager menu configuration
-const menuItems = [
-  { text: "Dashboard", icon: DashboardIcon, path: "/manager/dashboard" },
-  {
-    text: "Booking Calendar",
-    icon: CalendarTodayIcon,
-    path: "/manager/booking-calendar",
-  },
-  {
-    text: "Progress Tracking",
-    icon: TrackChangesIcon,
-    path: "/manager/progress-tracking",
-  },
-  {
-    text: "User Management",
-    icon: PeopleIcon,
-    path: "/manager/user-management",
-  },
-  { text: "Services", icon: BuildIcon, path: "/manager/services" },
-  { text: "Branches", icon: StoreIcon, path: "/manager/branches" },
-  { text: "Attendance", icon: AttendanceIcon, path: "/manager/attendance" },
-  { text: "Reports", icon: AssessmentIcon, path: "/manager/reports" },
-];
-
-// Settings menu item (separate for bottom positioning)
-const settingsMenuItem = { text: "Settings", icon: SettingsIcon, path: "/manager/settings" };
-
-const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
-  const location = useLocation();
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
 
   const isSelected = (path) => {
     return (
@@ -193,19 +163,11 @@ const ManagerSidebar = ({ mobileOpen, onDrawerToggle }) => {
       </Toolbar>
 
       {/* Main Menu Items */}
-      </Toolbar>      {/* Menu Items */}
       <Box sx={{ flexGrow: 1, overflowY: "auto", p: 1 }}>
         <List disablePadding sx={{ mt: 2 }}>
           {menuItems.map((item) => (
             <MenuItem key={item.text} item={item} />
           ))}
-        </List>
-      </Box>
-
-      {/* Settings - Bottom positioned */}
-      <Box sx={{ p: 1, borderTop: `1px solid ${theme.palette.divider}` }}>
-        <List disablePadding>
-          <MenuItem key={settingsMenuItem.text} item={settingsMenuItem} />
         </List>
       </Box>
 

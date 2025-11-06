@@ -80,6 +80,9 @@ const AdminDashboardPage = lazy(() =>
   import("./pages/admin/AdminDashboardPage")
 );
 
+import ManagerAttendancePage from "./pages/manager/ManagerAttendancePage";
+
+
 // Loading fallback
 const LoadingFallback = () => (
   <div
@@ -93,23 +96,7 @@ const LoadingFallback = () => (
     Loading...
   </div>
 );
-// Employee Pages
-import EmployeeDashboardPage from "./pages/employee/EmployeeDashboardPage";
-import EmployeeServicesPage from "./pages/employee/EmployeeServicesPage";
-import EmployeeSettingsPage from "./pages/employee/EmployeeSettingsPage";
-import EmployeeTasksPage from "./pages/employee/EmployeeTasksPage";
-import EmployeeHistoryPage from "./pages/employee/EmployeeHistoryPage";
 
-// Manager Pages
-import ManagerDashboardPage from "./pages/manager/ManagerDashboardPage";
-import ManagerBookingCalendarPage from "./pages/manager/ManagerBookingCalendarPage";
-import ManagerProgressTrackingPage from "./pages/manager/ManagerProgressTrackingPage";
-import ManagerUserManagementPage from "./pages/manager/ManagerUserManagementPage";
-import ManagerReportsPage from "./pages/manager/ManagerReportsPage";
-import ManagerSettingsPage from "./pages/manager/ManagerSettingsPage";
-import ManagerServicesPage from "./pages/manager/ManagerServicesPage";
-import ManagerBranchesPage from "./pages/manager/ManagerBranchesPage";
-import ManagerAttendancePage from "./pages/manager/ManagerAttendancePage";
 
 const App = () => {
   return (
