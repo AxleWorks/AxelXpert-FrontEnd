@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
 import UserProgressTaskCard from "../../components/dashboard/user/UserProgressTaskCard";
-import { getProgressTrackingTasks } from "../../services/progressTrackingService";
+import { getProgressTrackingTasks } from "../../services/userProgressTrackingService";
 import { useAuth } from "../../contexts/AuthContext";
 
 const UserProgressTrackingPage = () => {
