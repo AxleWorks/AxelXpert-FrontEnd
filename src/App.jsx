@@ -352,12 +352,19 @@ const App = () => {
                       <ManagerBranchesPage />
                     </ProtectedRoute>
                   }
-                />
-                <Route
+                />                <Route
                   path="/admin/reports"
                   element={
                     <ProtectedRoute requiredRole="admin">
                       <ManagerReportsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/attendance"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <ManagerAttendancePage />
                     </ProtectedRoute>
                   }
                 />

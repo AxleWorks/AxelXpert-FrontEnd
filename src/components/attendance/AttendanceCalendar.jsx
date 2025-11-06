@@ -99,14 +99,14 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {}, s
     if (!dayData || !dayData.date) return "transparent";
     
     const stats = getAttendanceStats(dayData);
-    if (stats.total === 0) return theme.palette.grey[200];
+    if (stats.total === 0) return theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : theme.palette.grey[100];
     
     const attendanceRate = (stats.present + stats.late) / stats.total;
     
-    // Using vibrant, rich colors instead of light ones
-    if (attendanceRate >= 0.9) return "#22c55e"; // Rich green
-    if (attendanceRate >= 0.7) return "#f59e0b"; // Rich amber/orange
-    return "#ef4444"; // Rich red
+    // Using theme-appropriate colors
+    if (attendanceRate >= 0.9) return theme.palette.success.main;
+    if (attendanceRate >= 0.7) return theme.palette.warning.main;
+    return theme.palette.error.main;
   };
 
   const navigateMonth = (direction) => {
@@ -132,9 +132,17 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {}, s
   };
 
   const days = getDaysInMonth(currentDate);
-
   return (
-    <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>      {/* Calendar Header */}
+    <Paper 
+      elevation={0} 
+      sx={{ 
+        p: 3, 
+        borderRadius: 3,
+        border: 1,
+        borderColor: 'divider',
+        bgcolor: 'background.paper'
+      }}
+    >{/* Calendar Header */}
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <CalendarMonth sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
@@ -167,36 +175,36 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {}, s
             <ChevronRight />
           </IconButton>
         </Box>
-      </Box>{/* Legend */}
+      </Box>      {/* Legend */}
       <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
         <Chip
           size="small"
           label="High Attendance (90%+)"
           sx={{ 
-            bgcolor: "#22c55e", 
+            bgcolor: theme.palette.success.main,
             color: "white",
             fontWeight: 600,
-            boxShadow: "0 2px 4px rgba(34, 197, 94, 0.3)"
+            boxShadow: 1
           }}
         />
         <Chip
           size="small"
           label="Medium Attendance (70-89%)"
           sx={{ 
-            bgcolor: "#f59e0b", 
+            bgcolor: theme.palette.warning.main,
             color: "white",
             fontWeight: 600,
-            boxShadow: "0 2px 4px rgba(245, 158, 11, 0.3)"
+            boxShadow: 1
           }}
         />
         <Chip
           size="small"
           label="Low Attendance (<70%)"
           sx={{ 
-            bgcolor: "#ef4444", 
+            bgcolor: theme.palette.error.main,
             color: "white",
             fontWeight: 600,
-            boxShadow: "0 2px 4px rgba(239, 68, 68, 0.3)"
+            boxShadow: 1
           }}
         />
       </Box>{/* Days of Week Header */}
@@ -228,7 +236,7 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {}, s
                 sx={{
                   height: 120,
                   border: 1,
-                  borderColor: theme.palette.divider,
+                  borderColor: 'divider',
                   borderRadius: 2,
                   cursor: dayData && dayData.date ? "pointer" : "default",
                   bgcolor: dayData ? getAttendanceColor(dayData) : "transparent",
@@ -244,28 +252,26 @@ const AttendanceCalendar = ({ onDateSelect, selectedDate, attendanceData = {}, s
                     `linear-gradient(135deg, ${getAttendanceColor(dayData)}, ${getAttendanceColor(dayData)}dd)` : 
                     "none",
                   boxShadow: dayData && stats && stats.total > 0 ? 
-                    `0 2px 8px ${getAttendanceColor(dayData)}40` : 
-                    "none",
+                    1 : 
+                    0,
                   "&:hover": dayData && dayData.date ? {
-                    transform: "scale(1.05)",
-                    boxShadow: dayData && stats && stats.total > 0 ? 
-                      `0 4px 16px ${getAttendanceColor(dayData)}60` : 
-                      theme.shadows[4],
+                    transform: "scale(1.03)",
+                    boxShadow: 2,
                     zIndex: 1,
                   } : {},
                   ...(isSelected(dayData) && {
-                    border: 3,
-                    borderColor: "#6366f1", // Indigo color for selection
-                    boxShadow: "0 0 0 2px rgba(99, 102, 241, 0.3)",
+                    border: 2,
+                    borderColor: "primary.main",
+                    boxShadow: 2,
                   }),
                   ...(isToday(dayData) && {
-                    border: 3,
-                    borderColor: "#8b5cf6", // Purple color for today
-                    boxShadow: "0 0 0 2px rgba(139, 92, 246, 0.3)",
+                    border: 2,
+                    borderColor: "secondary.main",
+                    boxShadow: 2,
                   }),
                 }}
                 onClick={() => dayData && dayData.date && onDateSelect(dayData.date)}
-              >                {dayData && dayData.date && (
+              >{dayData && dayData.date && (
                   <>
                     <Typography
                       variant="body2"

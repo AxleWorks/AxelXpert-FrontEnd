@@ -214,7 +214,7 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
 
   return (
     <Box>      {/* Header with Date and Stats */}
-      <Box sx={{ mb: 3 }}>        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+      <Box sx={{ mb: 3 }}>        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
               Attendance for {selectedDate.toLocaleDateString('en-US', { 
@@ -225,9 +225,13 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
               })}
             </Typography>
             {branchName && (
-              <Typography variant="h6" color="primary" sx={{ fontWeight: 500 }}>
-                {branchName} Branch
-              </Typography>
+              <Chip
+                label={`${branchName} Branch`}
+                color="primary"
+                variant="outlined"
+                size="small"
+                sx={{ fontWeight: 500 }}
+              />
             )}
           </Box>
           <Chip
@@ -237,101 +241,194 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
             size="small"
             sx={{ fontWeight: 500 }}
           />
+        </Box>        {/* Quick Stats Cards */}
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 3, 
+          mb: 4,
+          flexWrap: 'wrap'
+        }}>
+          {/* Total Employees Card */}
+          <Card 
+            elevation={0}
+            sx={{
+              flex: '1 1 0',
+              minWidth: '150px',
+              border: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              transition: 'all 0.2s',
+              '&:hover': {
+                borderColor: 'primary.main',
+                boxShadow: 2,
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            <CardContent sx={{ textAlign: "center", py: 3, px: 2 }}>
+              <Badge badgeContent={stats.total} color="primary">
+                <Person sx={{ fontSize: 42, color: theme.palette.primary.main }} />
+              </Badge>
+              <Typography variant="h4" sx={{ mt: 2, mb: 0.5, fontWeight: 700 }}>
+                {stats.total}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                Total Employees
+              </Typography>
+            </CardContent>
+          </Card>
+
+          {/* Present Card */}
+          <Card 
+            elevation={0}
+            sx={{
+              flex: '1 1 0',
+              minWidth: '150px',
+              border: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              transition: 'all 0.2s',
+              '&:hover': {
+                borderColor: 'success.main',
+                boxShadow: 2,
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            <CardContent sx={{ textAlign: "center", py: 3, px: 2 }}>
+              <CheckCircle sx={{ fontSize: 42, color: theme.palette.success.main }} />
+              <Typography variant="h4" sx={{ mt: 2, mb: 0.5, fontWeight: 700, color: theme.palette.success.main }}>
+                {stats.present}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                Present
+              </Typography>
+            </CardContent>
+          </Card>
+
+          {/* Late Card */}
+          <Card 
+            elevation={0}
+            sx={{
+              flex: '1 1 0',
+              minWidth: '150px',
+              border: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              transition: 'all 0.2s',
+              '&:hover': {
+                borderColor: 'warning.main',
+                boxShadow: 2,
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            <CardContent sx={{ textAlign: "center", py: 3, px: 2 }}>
+              <Schedule sx={{ fontSize: 42, color: theme.palette.warning.main }} />
+              <Typography variant="h4" sx={{ mt: 2, mb: 0.5, fontWeight: 700, color: theme.palette.warning.main }}>
+                {stats.late}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                Late
+              </Typography>
+            </CardContent>
+          </Card>
+
+          {/* Absent Card */}
+          <Card 
+            elevation={0}
+            sx={{
+              flex: '1 1 0',
+              minWidth: '150px',
+              border: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              transition: 'all 0.2s',
+              '&:hover': {
+                borderColor: 'error.main',
+                boxShadow: 2,
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            <CardContent sx={{ textAlign: "center", py: 3, px: 2 }}>
+              <Cancel sx={{ fontSize: 42, color: theme.palette.error.main }} />
+              <Typography variant="h4" sx={{ mt: 2, mb: 0.5, fontWeight: 700, color: theme.palette.error.main }}>
+                {stats.absent}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                Absent
+              </Typography>
+            </CardContent>
+          </Card>
+
+          {/* On Leave Card */}
+          <Card 
+            elevation={0}
+            sx={{
+              flex: '1 1 0',
+              minWidth: '150px',
+              border: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              transition: 'all 0.2s',
+              '&:hover': {
+                borderColor: 'info.main',
+                boxShadow: 2,
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            <CardContent sx={{ textAlign: "center", py: 3, px: 2 }}>
+              <WorkOff sx={{ fontSize: 42, color: theme.palette.info.main }} />
+              <Typography variant="h4" sx={{ mt: 2, mb: 0.5, fontWeight: 700, color: theme.palette.info.main }}>
+                {stats.onLeave}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                On Leave
+              </Typography>
+            </CardContent>
+          </Card>
+
+          {/* Half Day Card */}
+          <Card 
+            elevation={0}
+            sx={{
+              flex: '1 1 0',
+              minWidth: '150px',
+              border: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              transition: 'all 0.2s',
+              '&:hover': {
+                borderColor: 'secondary.main',
+                boxShadow: 2,
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            <CardContent sx={{ textAlign: "center", py: 3, px: 2 }}>
+              <Timer sx={{ fontSize: 42, color: theme.palette.secondary.main }} />
+              <Typography variant="h4" sx={{ mt: 2, mb: 0.5, fontWeight: 700, color: theme.palette.secondary.main }}>
+                {stats.halfDay}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                Half Day
+              </Typography>
+            </CardContent>          </Card>
         </Box>
-
-        {/* Quick Stats Cards */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: "center", py: 2 }}>
-                <Badge badgeContent={stats.total} color="primary">
-                  <Person sx={{ fontSize: 32, color: theme.palette.primary.main }} />
-                </Badge>
-                <Typography variant="h6" sx={{ mt: 1, fontWeight: 600 }}>
-                  {stats.total}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Total Employees
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: "center", py: 2 }}>
-                <CheckCircle sx={{ fontSize: 32, color: theme.palette.success.main }} />
-                <Typography variant="h6" sx={{ mt: 1, fontWeight: 600, color: theme.palette.success.main }}>
-                  {stats.present}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Present
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: "center", py: 2 }}>
-                <Schedule sx={{ fontSize: 32, color: theme.palette.warning.main }} />
-                <Typography variant="h6" sx={{ mt: 1, fontWeight: 600, color: theme.palette.warning.main }}>
-                  {stats.late}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Late
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: "center", py: 2 }}>
-                <Cancel sx={{ fontSize: 32, color: theme.palette.error.main }} />
-                <Typography variant="h6" sx={{ mt: 1, fontWeight: 600, color: theme.palette.error.main }}>
-                  {stats.absent}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Absent
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: "center", py: 2 }}>
-                <WorkOff sx={{ fontSize: 32, color: theme.palette.info.main }} />
-                <Typography variant="h6" sx={{ mt: 1, fontWeight: 600, color: theme.palette.info.main }}>
-                  {stats.onLeave}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  On Leave
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: "center", py: 2 }}>
-                <Timer sx={{ fontSize: 32, color: theme.palette.secondary.main }} />
-                <Typography variant="h6" sx={{ mt: 1, fontWeight: 600, color: theme.palette.secondary.main }}>
-                  {stats.halfDay}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Half Day
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Box>
-
-      {/* Employee Attendance Table */}
-      <Paper elevation={2} sx={{ borderRadius: 3 }}>
+      </Box>{/* Employee Attendance Table */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          borderRadius: 3,
+          border: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper'
+        }}
+      >
         <TableContainer>
-          <Table>
-            <TableHead sx={{ bgcolor: theme.palette.grey[50] }}>
+          <Table>            <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 600 }}>Employee</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
@@ -343,7 +440,7 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                 <TableCell sx={{ fontWeight: 600 }}>Notes</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
               </TableRow>
-            </TableHead>            <TableBody>
+            </TableHead><TableBody>
               {employees.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} sx={{ textAlign: 'center', py: 4 }}>
@@ -372,18 +469,17 @@ const EmployeeAttendanceDetails = ({ selectedDate, employees = [], onUpdateAtten
                 const mappedStatus = mapBackendStatus(employee.status);
                 const statusInfo = statusConfig[mappedStatus] || statusConfig.present;
                 const StatusIcon = statusInfo.icon;
-                const overtime = calculateOvertime(employee.arrivalTime, employee.leaveTime);
-
-                return (
+                const overtime = calculateOvertime(employee.arrivalTime, employee.leaveTime);                return (
                   <TableRow 
                     key={employee.id || employee.userId} 
                     hover
                     sx={{
+                      transition: 'background-color 0.2s',
                       '&:hover': {
-                        bgcolor: theme.palette.action.hover,
+                        bgcolor: 'action.hover',
                       }
                     }}
-                  >                    <TableCell>
+                  ><TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                         <Avatar sx={{ width: 40, height: 40 }}>
                           {(employee.username || employee.name || 'U').charAt(0).toUpperCase()}
