@@ -8,9 +8,10 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
+  Button,
+  IconButton,
 } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
-import CalendarHeader from "../../components/calendar/Booking_Manage/CalendarHeader";
 import CalendarGrid from "../../components/calendar/Booking_Manage/CalendarGrid";
 import CustomerBookingModal from "../../components/calendar/CustomerBookingModal";
 import AppointmentDetailModal from "../../components/calendar/AppointmentDetailModal";
@@ -20,14 +21,12 @@ import {
   getCustomerBookings,
   deleteBooking,
 } from "../../services/bookingService";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 
 const UserBookingCalendarPage = () => {
   const theme = useTheme();
   const { user } = useAuth?.() || { user: null };
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedBranch, setSelectedBranch] = useState("Downtown");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -48,8 +47,6 @@ const UserBookingCalendarPage = () => {
 
   // Only the current customer's own bookings should be visible here
   const [bookings, setBookings] = useState([]);
-
-  const branches = ["Downtown", "Westside", "North Branch", "South Branch"]; // demo
 
   // Fetch customer's bookings on component mount
   useEffect(() => {
@@ -107,18 +104,16 @@ const UserBookingCalendarPage = () => {
     }
   };
 
-  const filteredAppointments = useMemo(() => {
-    // Filter ONLY this user's bookings (already isolated in `bookings` state)
+  const appointments = useMemo(() => {
+    // Filter ONLY this user's bookings (already isolated in `bookings` state) and current month
     return bookings.filter((apt) => {
       const d = new Date(apt.date);
-      const matchesStatus =
-        statusFilter === "All" || apt.status === statusFilter;
       const inMonth =
         d.getMonth() === currentDate.getMonth() &&
         d.getFullYear() === currentDate.getFullYear();
-      return matchesStatus && inMonth;
+      return inMonth;
     });
-  }, [bookings, statusFilter, currentDate]);
+  }, [bookings, currentDate]);
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -145,7 +140,7 @@ const UserBookingCalendarPage = () => {
     // current month
     for (let i = 1; i <= daysInMonth; i++) {
       const dayDate = new Date(year, month, i);
-      const dayAppointments = filteredAppointments.filter((apt) => {
+      const dayAppointments = appointments.filter((apt) => {
         const ad = new Date(apt.date);
         return (
           ad.getDate() === i &&
@@ -179,7 +174,7 @@ const UserBookingCalendarPage = () => {
 
   const days = useMemo(
     () => getDaysInMonth(currentDate),
-    [currentDate, filteredAppointments]
+    [currentDate, appointments]
   );
 
   const previousMonth = () =>
@@ -386,25 +381,84 @@ const UserBookingCalendarPage = () => {
         {/* Show calendar content */}
         {!loading && (
           <>
-            {/* Reuse manager header for identical look */}
-            <CalendarHeader
-              currentDate={currentDate}
-              onPrev={previousMonth}
-              onNext={nextMonth}
-              onToday={goToToday}
-              selectedBranch={selectedBranch}
-              setSelectedBranch={setSelectedBranch}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-              counts={{
-                pending: bookings.filter((a) => a.status === "Pending").length,
-                approved: bookings.filter((a) => a.status === "Approved")
-                  .length,
-                completed: bookings.filter((a) => a.status === "Completed")
-                  .length,
+            {/* Status Legend */}
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                mb: 3,
+                justifyContent: "center",
               }}
-              branches={branches}
-            />
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  sx={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 1,
+                    bgcolor:
+                      theme.palette.mode === "dark" ? "#d97706" : "#f59e0b",
+                  }}
+                />
+                <Typography variant="body2">Pending</Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  sx={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 1,
+                    bgcolor:
+                      theme.palette.mode === "dark" ? "#15803d" : "#16a34a",
+                  }}
+                />
+                <Typography variant="body2">Approved</Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  sx={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 1,
+                    bgcolor:
+                      theme.palette.mode === "dark" ? "#1e3a8a" : "#2563eb",
+                  }}
+                />
+                <Typography variant="body2">Completed</Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  sx={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 1,
+                    bgcolor:
+                      theme.palette.mode === "dark" ? "#b91c1c" : "#dc2626",
+                  }}
+                />
+                <Typography variant="body2">Cancelled</Typography>
+              </Box>
+            </Box>
+
+            {/* Simple header with navigation */}
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                {currentDate.toLocaleDateString(undefined, {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </Typography>
+              <Button variant="outlined" onClick={goToToday} sx={{ mr: 1 }}>
+                Today
+              </Button>
+              <IconButton onClick={previousMonth}>
+                <ChevronLeft />
+              </IconButton>
+              <IconButton onClick={nextMonth}>
+                <ChevronRight />
+              </IconButton>
+            </Box>
 
             <Paper sx={{ p: 2, mb: 2 }}>
               <Box sx={{ mb: 1 }}>
@@ -431,7 +485,6 @@ const UserBookingCalendarPage = () => {
           selectedDate={selectedDate}
           selectedTimeSlot={selectedTimeSlot}
           onSubmit={handleBookingSubmit}
-          branchId={selectedBranch}
           // pass only today's available slot times (defaults minus any bookings)
           dayTimeSlots={
             selectedDate ? getAvailableTimesForDate(selectedDate) : []
