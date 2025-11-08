@@ -176,8 +176,13 @@ const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
                 mx: 1,
                 borderRadius: 2,
                 minHeight: 48,
+                bgcolor: isDark ? "rgba(239, 68, 68, 0.1)" : "#fef2f2",
+                border: `1px solid ${
+                  isDark ? "rgba(239, 68, 68, 0.3)" : "#fecaca"
+                }`,
                 "&:hover": {
-                  bgcolor: isDark ? "rgba(239, 68, 68, 0.15)" : "#fee2e2",
+                  bgcolor: isDark ? "rgba(239, 68, 68, 0.2)" : "#fee2e2",
+                  borderColor: "error.main",
                   transform: "translateX(2px)",
                   transition: "all 0.2s ease-in-out",
                   "& .MuiListItemIcon-root": { color: "error.main" },
@@ -188,7 +193,7 @@ const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
               <ListItemIcon
                 sx={{
                   minWidth: 40,
-                  color: theme.palette.text.secondary,
+                  color: "error.main",
                 }}
               >
                 <LogoutIcon />
@@ -198,8 +203,8 @@ const UserSidebar = ({ mobileOpen, onDrawerToggle }) => {
                   <Typography
                     variant="body2"
                     sx={{
-                      fontWeight: 500,
-                      color: theme.palette.text.primary,
+                      fontWeight: 600,
+                      color: "error.main",
                     }}
                   >
                     Logout

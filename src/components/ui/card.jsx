@@ -31,7 +31,7 @@ export const CardContent = ({ children, ...props }) => {
 
 export const CardTitle = ({ children, ...props }) => {
   return (
-    <Typography variant="h6" fontWeight="bold" {...props}>
+    <Typography variant="h6" fontWeight={500} {...props}>
       {children}
     </Typography>
   );

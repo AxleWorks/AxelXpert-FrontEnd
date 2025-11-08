@@ -33,6 +33,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTheme as useCustomTheme } from "../contexts/ThemeContext";
 import { API_BASE } from "../config/apiEndpoints";
 import notificationService from "../services/notificationService";
+import { createAuthenticatedFetchOptions } from "../utils/jwtUtils";
+
+
 
 const Header = ({ onMenuClick }) => {
   const {
@@ -43,12 +46,12 @@ const Header = ({ onMenuClick }) => {
   } = useAuth();
   const { isDarkMode, toggleTheme } = useCustomTheme();
   const navigate = useNavigate();
-
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
   
   // Track whether currently fetching to prevent duplicate calls
   const isFetchingRef = useRef(false);
@@ -96,6 +99,39 @@ const Header = ({ onMenuClick }) => {
       return () => clearTimeout(fetchTimer);
     }
   }, [notification, loadNotifications, clearNotification]);
+
+  // Fetch user details when user changes
+  useEffect(() => {
+    if (user && user.id) {
+      fetchUserDetails();
+    } else {
+      setProfileImageUrl(null);
+    }
+  }, [user]);
+
+  // Function to fetch user details from API
+  const fetchUserDetails = async () => {
+    if (!user || !user.id) return;
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/users/${user.id}`,
+        createAuthenticatedFetchOptions()
+      );
+
+      if (response.ok) {
+        const userData = await response.json();
+        // Set the profile image URL from user details
+        setProfileImageUrl(
+          userData.profileImageUrl || userData.profilePhotoUrl
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      setProfileImageUrl(null);
+    }
+  };
+
 
   const handleProfileMenu = (event) => {
     setProfileAnchorEl(event.currentTarget);
@@ -182,6 +218,12 @@ const Header = ({ onMenuClick }) => {
     window.location.href = "/signin"; // Navigate to login page
   };
 
+  const handleSettings = () => {
+    handleCloseProfileMenu();
+    const role = user?.role || "user";
+    navigate(`/${role}/settings`);
+  };
+
   const getRoleBadge = (role) => {
     const roleConfig = {
       user: {
@@ -223,13 +265,6 @@ const Header = ({ onMenuClick }) => {
       manager: "#f59e0b",
     };
     return colors[role] || colors.user;
-  };
-
-  // Helper function to get full image URL
-  const getProfileImageUrl = (imageUrl) => {
-    if (!imageUrl) return null;
-    if (imageUrl.startsWith("http")) return imageUrl;
-    return `${API_BASE}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
   };
 
   return (
@@ -337,9 +372,7 @@ const Header = ({ onMenuClick }) => {
                 }}
               >
                 <Avatar
-                  src={getProfileImageUrl(
-                    user.profileImageUrl || user.profilePhotoUrl
-                  )}
+                  src={profileImageUrl}
                   sx={{
                     width: 40,
                     height: 40,
@@ -348,8 +381,7 @@ const Header = ({ onMenuClick }) => {
                     fontWeight: 600,
                   }}
                 >
-                  {!(user.profileImageUrl || user.profilePhotoUrl) &&
-                    user.username?.charAt(0).toUpperCase()}
+                  {!profileImageUrl && user.username?.charAt(0).toUpperCase()}
                 </Avatar>
                 <Typography variant="body2" sx={{ ml: 1 }}>
                   {user.username}
@@ -542,9 +574,7 @@ const Header = ({ onMenuClick }) => {
           <Box sx={{ p: 3, borderBottom: 1, borderColor: "divider" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Avatar
-                src={getProfileImageUrl(
-                  user?.profileImageUrl || user?.profilePhotoUrl
-                )}
+                src={profileImageUrl}
                 sx={{
                   width: 50,
                   height: 50,
@@ -553,7 +583,7 @@ const Header = ({ onMenuClick }) => {
                   fontWeight: 600,
                 }}
               >
-                {!(user?.profileImageUrl || user?.profilePhotoUrl) &&
+                {!profileImageUrl &&
                   (user?.name?.charAt(0).toUpperCase() ||
                     user?.username?.charAt(0).toUpperCase())}
               </Avatar>
@@ -569,7 +599,7 @@ const Header = ({ onMenuClick }) => {
           </Box>
 
           {/* Menu Items */}
-          <MenuItem onClick={handleCloseProfileMenu} sx={{ py: 1.5, px: 3 }}>
+          <MenuItem onClick={handleSettings} sx={{ py: 1.5, px: 3 }}>
             <ListItemIcon>
               <SettingsIcon fontSize="small" />
             </ListItemIcon>

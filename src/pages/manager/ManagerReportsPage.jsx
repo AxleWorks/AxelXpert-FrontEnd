@@ -838,7 +838,7 @@ const ManagerReportsPage = () => {
                 >
                   Customer Satisfaction
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                <Typography variant="h4" sx={{ fontWeight: 600 }}>
                   {reportData.performanceMetrics.customerSatisfaction > 0
                     ? `${reportData.performanceMetrics.customerSatisfaction} / 5.0`
                     : "N/A"}
@@ -863,7 +863,7 @@ const ManagerReportsPage = () => {
                 >
                   Employee Utilization
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                <Typography variant="h4" sx={{ fontWeight: 600 }}>
                   {reportData.performanceMetrics.employeeUtilization}%
                 </Typography>
                 <Typography
@@ -894,7 +894,7 @@ const ManagerReportsPage = () => {
                 >
                   Repeat Customers
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                <Typography variant="h4" sx={{ fontWeight: 600 }}>
                   {reportData.performanceMetrics.repeatCustomers}%
                 </Typography>
                 <Typography
@@ -925,7 +925,7 @@ const ManagerReportsPage = () => {
                 >
                   Average Revenue per Job
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                <Typography variant="h4" sx={{ fontWeight: 600 }}>
                   ${reportData.performanceMetrics.avgRevenuePerJob}
                 </Typography>
                 <Typography
@@ -956,7 +956,7 @@ const ManagerReportsPage = () => {
                 >
                   On-Time Completion
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                <Typography variant="h4" sx={{ fontWeight: 600 }}>
                   {reportData.performanceMetrics.onTimeCompletion}%
                 </Typography>
                 <Typography
@@ -987,7 +987,7 @@ const ManagerReportsPage = () => {
                 >
                   Booking Conversion
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                <Typography variant="h4" sx={{ fontWeight: 600 }}>
                   {reportData.performanceMetrics.bookingConversion}%
                 </Typography>
                 <Typography

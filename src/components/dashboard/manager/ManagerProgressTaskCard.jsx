@@ -48,10 +48,9 @@ const calculateProgress = (subTasks) => {
     }
   };
 
-  const UserProgressTaskCard = ({task}) => {
+  const ManagerProgressTaskCard = ({task}) => {
 
   const [open, setOpen] = useState(false);
-  const [openNotes, setOpenNotes] = useState(false);
   const [openPhotos, setOpenPhotos] = useState(false);
 
   const progressPercentage = calculateProgress(task.subTasks);
@@ -71,61 +70,53 @@ const calculateProgress = (subTasks) => {
     });
 
     return (
-      <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3 }}>
-
+      <Paper sx={{ mb: 0 }}>
       {/* Clickable Header Section */}
       <ListItem
-      onClick={() => setOpen(!open)}
-      sx={{ cursor: 'pointer', pl: 0, pr: 0, pb: 2, alignItems: 'flex-start' }}>
-      
-      <DirectionsCarIcon color="primary" sx={{ fontSize: 40, mr: 2, mt: 0.5 }} />
-      
-      <Box sx={{ flexGrow: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: -0.5 }}>
-        <Typography variant="subtitle1" component="div" fontWeight="600">
-          {task.vehicle} - {task.title}
-        </Typography>
-        <IconButton size="small" aria-label={open ? 'collapse' : 'expand'}>
-          {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </IconButton>
-        </Box>
-        
-        <Typography color="text.secondary" variant="body2" sx={{ mb: 2 }}>
-        Started: {new Date(task.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-        {task.durationMinutes && ` • ETA: ${new Date(new Date(task.startTime).getTime() + task.durationMinutes * 60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
-        </Typography>
+      onClick={() => setOpen(!open)} sx={{ cursor: 'pointer', py: 0, px: 0, minHeight: 60, '&:hover': { bgcolor: 'action.hover' } }}>
 
-        {/* Progress Bar */}
-        <Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-          <Typography variant="body2" color="text.secondary">Progress</Typography>
-          <Typography variant="body2" color="text.primary">{progressPercentage}%</Typography>
+        <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', gap: 2, minWidth: '900px', px: 2, minHeight: 60 }}>
+            <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5 }}>
+              <IconButton size="small" aria-label={open ? 'collapse' : 'expand'}>
+                {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+              <Typography variant="body2">{task.id}</Typography>
+            </Box>
+            <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Typography variant="body2">{task.vehicle}</Typography>
+            </Box>
+            <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Typography variant="body2">{task.customerName}</Typography>
+            </Box>
+            <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Typography variant="body2">{task.employeeName || 'N/A'}</Typography>
+            </Box>
+            <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0.5 }}>
+              <LinearProgress 
+                variant="determinate"
+                value={progressPercentage}
+                sx={{ height: 8, borderRadius: 5, width: '100%' }}
+              />
+              <Typography variant="caption">{progressPercentage}%</Typography>
+            </Box>
+            <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Typography variant="body2">
+                {task.durationMinutes && ` ${new Date(new Date(task.startTime).getTime() + task.durationMinutes * 60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+              </Typography>
+            </Box>
+            <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Chip
+                label={task.status.replace('_', ' ')}
+                color={getStatusColor(task.status)}
+                size="small"
+                sx={{ fontWeight: 500, fontSize: '10px', height: 24, maxWidth: '100%', '& .MuiChip-label': { px: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }}/>
+            </Box>
         </Box>
-        <LinearProgress 
-          variant="determinate"
-          value={progressPercentage}
-          sx={{ height: 10, borderRadius: 5 }}
-        />
-        </Box>
-      </Box>
-
-      {/* Status Chip and Expand Icon */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, ml: 2 }}>
-        <Chip
-        label={task.status.replace('_', ' ')}
-        color={getStatusColor(task.status)}
-        sx={{ 
-          fontWeight: 500, 
-          fontSize: '10px', 
-          height: 25
-        }}
-        />
-      </Box>
       </ListItem>
 
       {/* Collapsible Sub-Task List */}
       <Collapse in={open} timeout="auto" unmountOnExit>
-      <Box sx={{ pt: 1, pb: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ p: 1, borderTop: '1px solid', borderColor: 'divider' }}>
         <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 1 }}>
         Tasks Progress
         </Typography>
@@ -152,51 +143,8 @@ const calculateProgress = (subTasks) => {
           </ListItem>
           ))}
           </List>
-          
-          {/* Technician Notes Section with Dropdown */}
-          <Box sx={{ mb: 2 }}>
-            <Box 
-              sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-              onClick={() => setOpenNotes(!openNotes)}>
-              <Typography variant="subtitle1" fontWeight="500" sx={{ mr: 1 }}>
-                Technician Notes
-              </Typography>
-              <IconButton size="small" aria-label={openNotes ? 'collapse' : 'expand'}>
-                {openNotes ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            
-            <Collapse in={openNotes} timeout="auto" unmountOnExit>
-              <List dense sx={{ pl: 1, bgcolor: 'action.selected', p: 2, mt: 1, borderRadius: 2 }}>
-                {task.technicianNotes && task.technicianNotes.length > 0 ? (
-                  task.technicianNotes.map((note, index) => (
-                    <Box key={index} sx={{ mb: index < task.technicianNotes.length - 1 ? 2 : 0 }}>
-                      <Typography variant="body1" fontWeight={400}>
-                        {note.content}
-                      </Typography>
-                      {note.addedAt && (
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(note.addedAt).toLocaleString([], {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </Typography>
-                      )}
-                    </Box>
-                  ))
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    No technician notes available
-                  </Typography>
-                )}
-              </List>
-            </Collapse>
-          </Box>
 
-          {/* Progress Photos Section with Dropdown */}
+          {/*Progress Photos Section with Dropdown*/}
           <Box sx={{ mb: 2 }}>
             <Box 
               sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
@@ -212,7 +160,7 @@ const calculateProgress = (subTasks) => {
             <Collapse in={openPhotos} timeout="auto" unmountOnExit>
               <List dense sx={{ pl: 1, bgcolor: 'action.selected', p: 2, mt: 1, borderRadius: 2 }}>
                 {task.progressPhotos && task.progressPhotos.length > 0 ? (
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 2, mt: 1}}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 2,mt: 1}}>
                   {task.progressPhotos.map((photoUrl, index) => (
                 <Box
                   key={index}
@@ -256,7 +204,7 @@ const calculateProgress = (subTasks) => {
                 ))}
                 </Box>
               ) : (
-                <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                <Box sx={{p: 2, bgcolor: 'action.hover', borderRadius: 2}}>
                   <Typography variant="body2" color="text.secondary">
                     No progress photos available yet
                   </Typography>
@@ -270,5 +218,5 @@ const calculateProgress = (subTasks) => {
       </Paper>
     );
   };
-  
-export default UserProgressTaskCard;
+
+export default ManagerProgressTaskCard;

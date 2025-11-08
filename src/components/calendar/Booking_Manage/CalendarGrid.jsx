@@ -3,14 +3,15 @@ import { Box, Paper, List, ListItem, ListItemText, Chip } from "@mui/material";
 
 function getStatusColor(mode, status) {
   const dark = mode === "dark";
-  switch (status) {
-    case "Pending":
+  const statusLower = status?.toLowerCase();
+  switch (statusLower) {
+    case "pending":
       return dark ? "#d97706" : "#f59e0b";
-    case "Approved":
+    case "approved":
       return dark ? "#15803d" : "#16a34a";
-    case "Completed":
+    case "completed":
       return dark ? "#1e3a8a" : "#2563eb";
-    case "Cancelled":
+    case "cancelled":
       return dark ? "#b91c1c" : "#dc2626";
     default:
       return dark ? "#374151" : "#6b7280";
@@ -106,7 +107,7 @@ export default function CalendarGrid({
                     }}
                   >
                     <Chip
-                      label={`${apt.time} • ${apt.customer}`}
+                      label={`${apt.status}:• ${apt.customer}`}
                       size="small"
                       sx={{
                         bgcolor: getStatusColor(themeMode, apt.status),
