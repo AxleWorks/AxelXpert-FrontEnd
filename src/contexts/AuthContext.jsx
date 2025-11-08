@@ -5,6 +5,7 @@ import {
   storeAccessToken,
   clearStoredToken,
 } from "../utils/jwtUtils";
+import useFirebaseNotifications from "../hooks/useFirebaseNotifications";
 
 const AuthContext = createContext();
 
@@ -21,6 +22,14 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [loading, setLoading] = useState(false);
+
+  const { 
+    token: fcmToken, 
+    notification, 
+    isLoading: fcmLoading,
+    error: fcmError,
+    clearNotification 
+  } = useFirebaseNotifications(user);
 
   // Monitor token changes and update user accordingly
   useEffect(() => {
@@ -64,7 +73,18 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated, loading, setAuthUser, clearAuthUser }}
+      value={{ 
+        user, 
+        isAuthenticated, 
+        loading, 
+        setAuthUser, 
+        clearAuthUser,
+        fcmToken,
+        notification,
+        fcmLoading,
+        fcmError,
+        clearNotification
+      }}
     >
       {children}
     </AuthContext.Provider>
