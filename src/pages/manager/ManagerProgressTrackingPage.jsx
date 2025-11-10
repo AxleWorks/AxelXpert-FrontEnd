@@ -22,19 +22,67 @@ import UserLayout from "../../layouts/user/UserLayout";
 import AdminLayout from "../../layouts/admin/AdminLayout";
 import ManagerProgressTaskCard from "../../components/dashboard/manager/ManagerProgressTaskCard";
 import { getManagerProgressTrackingTasks } from "../../services/managerProgressTrackingService";
-import { getAllBranches } from "../../services/branchService";
 import { useAuth } from "../../contexts/AuthContext";
+import { API_BASE, API_PREFIX } from "../../config/apiEndpoints.jsx";
+import { getAuthHeader } from "../../utils/jwtUtils";
 
 const ManagerProgressTrackingPage = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [branches, setBranches] = useState([]);
-  const [selectedBranchId, setSelectedBranchId] = useState("all");
+  const [selectedBranchId, setSelectedBranchId] = useState("");
 
   // Get the authenticated user from AuthContext
   const { user } = useAuth();
 
+  // Fetch branches for admin on mount
+  useEffect(() => {
+    const ac = new AbortController();
+    async function loadBranches() {
+      if (!user) return;
+
+      const isAdmin = user?.role === "admin";
+
+      try {
+        const authHeader = getAuthHeader();
+        const res = await fetch(`${API_BASE}${API_PREFIX}/branches/all`, {
+          signal: ac.signal,
+          headers: {
+            ...(authHeader && { Authorization: authHeader }),
+          },
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        setBranches(data || []);
+        
+        if (isAdmin) {
+          // Admin can see all branches - set the first branch as default
+          if (data && data.length > 0) {
+            console.log("Setting first branch as default:", data[0]);
+            setSelectedBranchId(data[0].id);
+          }
+        } else {
+          // Manager is locked to their branch
+          if (user?.branchId) {
+            console.log("Setting manager's branch:", user.branchId);
+            setSelectedBranchId(user.branchId);
+          }
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Error fetching branches:", err);
+          setError("Failed to load branches");
+        }
+      }
+    }
+    loadBranches();
+    return () => ac.abort();
+  }, [user]);
+
+  // Fetch progress tracking data based on user role and selected branch
   useEffect(() => {
     const fetchData = async () => {
       if (!user || !user.id) {
@@ -42,17 +90,50 @@ const ManagerProgressTrackingPage = () => {
         setLoading(false);
         return;
       }
+
+      // For admin, wait until a branch is selected
+      if (user.role === "admin" && !selectedBranchId) {
+        console.log("Waiting for branch selection...");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
 
-        // Only admins can fetch all branches
+        let data;
         if (user.role === "admin") {
-          const branchList = await getAllBranches();
-          setBranches(branchList);
+          // For admin: fetch progress tracking for the selected branch
+          console.log("Admin fetching data for branch:", selectedBranchId);
+          console.log("Available branches:", branches);
+          
+          // Find the manager of the selected branch
+          const selectedBranch = branches.find(
+            (branch) => branch.id === selectedBranchId
+          );
+          
+          console.log("Selected branch object:", selectedBranch);
+
+          if (selectedBranch && selectedBranch.managerId) {
+            console.log("Fetching progress for manager:", selectedBranch.managerId);
+            data = await getManagerProgressTrackingTasks(
+              selectedBranch.managerId
+            );
+          } else {
+            data = [];
+            const errorMsg = selectedBranch 
+              ? "Selected branch has no manager assigned"
+              : "Branch not found";
+            console.error(errorMsg, { selectedBranchId, branches });
+            setError(errorMsg);
+          }
+        } else {
+          // For manager: fetch their own branch's progress tracking
+          console.log("Manager fetching own progress data");
+          data = await getManagerProgressTrackingTasks(user.id);
         }
 
-        const data = await getManagerProgressTrackingTasks(user.id);
         setTasks(data);
         setLoading(false);
       } catch (err) {
@@ -62,7 +143,7 @@ const ManagerProgressTrackingPage = () => {
       }
     };
     fetchData();
-  }, [user]);
+  }, [user, selectedBranchId, branches]);
 
   // Helper to calculate progress percentage of a task based on subtasks
   const calculateProgress = (subTasks) => {
@@ -115,15 +196,9 @@ const ManagerProgressTrackingPage = () => {
     return Math.round(totalProgress / inProgressTasks.length);
   };
 
-  // Filter tasks by selected branch if admin
-  const filteredTasks = React.useMemo(() => {
-    if (user?.role === "admin" && selectedBranchId !== "all") {
-      return tasks.filter(
-        (task) => String(task.branchId) === String(selectedBranchId)
-      );
-    }
-    return tasks;
-  }, [tasks, user, selectedBranchId]);
+  // For admin, tasks are already filtered by selected branch
+  // For manager, show all their branch's tasks
+  const filteredTasks = tasks;
 
   const renderContent = () => {
     if (loading) {
@@ -174,15 +249,15 @@ const ManagerProgressTrackingPage = () => {
         {user?.role === "admin" && (
           <Box sx={{ mb: 3, maxWidth: 320 }}>
             <FormControl fullWidth size="small">
-              <InputLabel id="branch-filter-label">Branch</InputLabel>
+              <InputLabel id="branch-filter-label">Select Branch</InputLabel>
               <Select
                 labelId="branch-filter-label"
                 id="branch-filter"
                 value={selectedBranchId}
-                label="Branch"
+                label="Select Branch"
                 onChange={(e) => setSelectedBranchId(e.target.value)}
+                disabled={branches.length === 0}
               >
-                <MenuItem value="all">All Branches</MenuItem>
                 {branches.map((branch) => (
                   <MenuItem key={branch.id} value={branch.id}>
                     {branch.name}
