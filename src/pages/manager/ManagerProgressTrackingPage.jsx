@@ -57,7 +57,7 @@ const ManagerProgressTrackingPage = () => {
         const data = await res.json();
 
         setBranches(data || []);
-        
+
         if (isAdmin) {
           // Admin can see all branches - set the first branch as default
           if (data && data.length > 0) {
@@ -107,22 +107,25 @@ const ManagerProgressTrackingPage = () => {
           // For admin: fetch progress tracking for the selected branch
           console.log("Admin fetching data for branch:", selectedBranchId);
           console.log("Available branches:", branches);
-          
+
           // Find the manager of the selected branch
           const selectedBranch = branches.find(
             (branch) => branch.id === selectedBranchId
           );
-          
+
           console.log("Selected branch object:", selectedBranch);
 
           if (selectedBranch && selectedBranch.managerId) {
-            console.log("Fetching progress for manager:", selectedBranch.managerId);
+            console.log(
+              "Fetching progress for manager:",
+              selectedBranch.managerId
+            );
             data = await getManagerProgressTrackingTasks(
               selectedBranch.managerId
             );
           } else {
             data = [];
-            const errorMsg = selectedBranch 
+            const errorMsg = selectedBranch
               ? "Selected branch has no manager assigned"
               : "Branch not found";
             console.error(errorMsg, { selectedBranchId, branches });
