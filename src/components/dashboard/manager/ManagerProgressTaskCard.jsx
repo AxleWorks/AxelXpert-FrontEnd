@@ -89,7 +89,7 @@ const calculateProgress = (subTasks) => {
               <Typography variant="body2">{task.customerName}</Typography>
             </Box>
             <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <Typography variant="body2">{task.employeeName || 'N/A'}</Typography>
+              <Typography variant="body2">{task.assignedEmployeeName || 'N/A'}</Typography>
             </Box>
             <Box sx={{ flex: '0 0 13%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0.5 }}>
               <LinearProgress 
@@ -212,6 +212,27 @@ const calculateProgress = (subTasks) => {
               )}
               </List>
             </Collapse>
+            {/* Display start time if task is in progress */}
+            {task.status === 'IN_PROGRESS' && (
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, p: 1, bgcolor: 'action.hover', borderRadius: 1 }}>
+                <Chip
+                  icon={getStatusIcon(task.status)}
+                  size="small"
+                  color={getStatusColor(task.status)}
+                  sx={{ 
+                    height: 24, 
+                    mr: 2,
+                    '& .MuiChip-icon': {
+                      marginLeft: '8px',
+                      marginRight: '-4px'
+                    }
+                  }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Started at: {new Date(task.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} 
+                </Typography>
+              </Box>
+            )}
           </Box>
       </Box>
       </Collapse>

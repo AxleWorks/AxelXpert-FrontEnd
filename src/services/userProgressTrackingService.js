@@ -53,7 +53,7 @@ apiClient.interceptors.request.use((config) => {
  *   }
  * ]
  */
-export const getProgressTrackingTasks = async (customerId) => {
+export const getUserProgressTrackingTasks = async (customerId) => {
   try {
     const response = await apiClient.get(
       `/tasks/customer/${customerId}/progress-tracking`
@@ -72,4 +72,4 @@ export const getProgressTrackingTasks = async (customerId) => {
   }
 };
 
-export default getProgressTrackingTasks;
+export default getUserProgressTrackingTasks;

@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import UserLayout from "../../layouts/user/UserLayout";
 import UserProgressTaskCard from "../../components/dashboard/user/UserProgressTaskCard";
-import { getProgressTrackingTasks } from "../../services/progressTrackingService";
+import { getUserProgressTrackingTasks } from "../../services/userProgressTrackingService";
 import { useAuth } from "../../contexts/AuthContext";
 
 const UserProgressTrackingPage = () => {
@@ -34,7 +34,7 @@ const UserProgressTrackingPage = () => {
         setLoading(true);
         setError(null);
 
-        const data = await getProgressTrackingTasks(user.id);
+        const data = await getUserProgressTrackingTasks(user.id);
 
         setTasks(data);
         setLoading(false);
