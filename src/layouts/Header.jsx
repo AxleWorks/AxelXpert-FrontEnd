@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   AppBar,
   Toolbar,
@@ -24,21 +24,81 @@ import {
   Person as PersonIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
-  Email as EmailIcon,
+  Close as CloseIcon,
+  NotificationsNone as NotificationsNoneIcon,
+  NotificationsActive as NotificationsActiveIcon,
 } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme as useCustomTheme } from "../contexts/ThemeContext";
 import { API_BASE } from "../config/apiEndpoints";
+import notificationService from "../services/notificationService";
 import { createAuthenticatedFetchOptions } from "../utils/jwtUtils";
-import { useNavigate } from "react-router-dom";
+
+
 
 const Header = ({ onMenuClick }) => {
-  const { user, clearAuthUser } = useAuth();
+  const {
+    user,
+    clearAuthUser,
+    notification,
+    clearNotification,
+  } = useAuth();
   const { isDarkMode, toggleTheme } = useCustomTheme();
   const navigate = useNavigate();
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState(null);
+  
+  // Track whether currently fetching to prevent duplicate calls
+  const isFetchingRef = useRef(false);
+
+  // Load notifications from backend
+  const loadNotifications = useCallback(async () => {
+    if (!user?.id || isFetchingRef.current) return;
+
+    try {
+      isFetchingRef.current = true;
+      setLoading(true);
+      
+      const response = await notificationService.getNotifications(user.id);
+
+      const allNotifications = Array.isArray(response) ? response : [];
+
+      const unread = allNotifications.filter(
+        (n) => n.isRead === false || n.read === false
+      ).length;
+      setUnreadCount(unread);
+      setNotifications(allNotifications);
+    } catch (error) {
+      console.error("Error loading notifications:", error);
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  }, [user?.id]); 
+
+  useEffect(() => {
+    if (user?.id) {
+      loadNotifications(); 
+    }
+  }, [user?.id, loadNotifications]);
+
+  // Listen for new FCM notifications
+  useEffect(() => {
+    if (notification) {
+      // load notification from backend
+      const fetchTimer = setTimeout(async () => {
+        await loadNotifications();
+        clearNotification();
+      }, 500); 
+
+      return () => clearTimeout(fetchTimer);
+    }
+  }, [notification, loadNotifications, clearNotification]);
 
   // Fetch user details when user changes
   useEffect(() => {
@@ -72,6 +132,7 @@ const Header = ({ onMenuClick }) => {
     }
   };
 
+
   const handleProfileMenu = (event) => {
     setProfileAnchorEl(event.currentTarget);
   };
@@ -86,6 +147,69 @@ const Header = ({ onMenuClick }) => {
 
   const handleCloseNotificationsMenu = () => {
     setNotificationsAnchorEl(null);
+  };
+
+  const handleNotificationClick = async (notif) => {
+
+    if (notif.isRead === false) {
+      try {
+        await notificationService.markAsRead(notif.id);
+        // Update local state
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notif.id ? { ...n, isRead: true } : n
+          )
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      } catch (error) {
+        console.error("Error marking as read:", error);
+      }
+    }
+
+    if (notif.type) {
+      switch (notif.type) {
+        case "EMPLOYEE":
+          navigate("/employee/tasks");
+          break;
+        case "CUSTOMER":
+          navigate("/user/progress-tracking");
+          break;
+      }
+    } 
+    handleCloseNotificationsMenu();
+  };
+
+  const handleDeleteNotification = async (notifId, event) => {
+    event.stopPropagation();
+    try {
+      await notificationService.deleteNotification(notifId);
+
+      // Update local state
+      setNotifications((prev) => {
+        const deleted = prev.find((n) => n.id === notifId);
+        if (deleted && (deleted.isRead === false)) {
+          setUnreadCount((count) => Math.max(0, count - 1));
+        }
+        return prev.filter((n) => n.id !== notifId);
+      });
+
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
+  const getTimeAgo = (timestamp) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - time) / 1000);
+
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800)
+      return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return time.toLocaleDateString();
   };
 
   const handleLogout = () => {
@@ -142,19 +266,6 @@ const Header = ({ onMenuClick }) => {
     };
     return colors[role] || colors.user;
   };
-
-  const mockNotifications = [
-    { id: 1, title: "New service request", time: "2 min ago", unread: true },
-    { id: 2, title: "Payment received", time: "1 hour ago", unread: true },
-    {
-      id: 3,
-      title: "Vehicle inspection due",
-      time: "2 hours ago",
-      unread: false,
-    },
-  ];
-
-  const unreadCount = mockNotifications.filter((n) => n.unread).length;
 
   return (
     <AppBar
@@ -239,7 +350,7 @@ const Header = ({ onMenuClick }) => {
                 },
               }}
             >
-              <Badge badgeContent={unreadCount} color="error">
+              <Badge badgeContent={unreadCount} color="error" max={99}>
                 <NotificationsIcon />
               </Badge>
             </IconButton>
@@ -296,8 +407,9 @@ const Header = ({ onMenuClick }) => {
           PaperProps={{
             sx: {
               mt: 1,
-              minWidth: 320,
-              maxWidth: 400,
+              width: 460,
+              maxHeight: 600,
+              overflow: "hidden",
               borderRadius: 2,
               boxShadow: (theme) =>
                 theme.palette.mode === "dark"
@@ -307,50 +419,130 @@ const Header = ({ onMenuClick }) => {
           }}
         >
           <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Notifications
-            </Typography>
-          </Box>
-          {mockNotifications.map((notification) => (
-            <MenuItem
-              key={notification.id}
-              onClick={handleCloseNotificationsMenu}
+            <Box
               sx={{
-                py: 2,
-                px: 2,
-                borderLeft: notification.unread ? 3 : 0,
-                borderColor: "primary.main",
-                backgroundColor: notification.unread
-                  ? "action.hover"
-                  : "transparent",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
-              <Box>
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: notification.unread ? 600 : 400 }}
-                >
-                  {notification.title}
-                </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Notifications
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Notification List */}
+          <Box sx={{ maxHeight: 450, overflow: "auto" }}>
+            {notifications.length === 0 ? (
+              <Box
+                sx={{
+                  py: 6,
+                  px: 3,
+                  textAlign: "center",
+                  color: "text.secondary",
+                }}
+              >
+                <NotificationsNoneIcon
+                  sx={{ fontSize: 48, mb: 2, opacity: 0.5 }}
+                />
+                <Typography variant="body2">No notifications yet</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {notification.time}
+                  You'll see notifications here when you receive them
                 </Typography>
               </Box>
-            </MenuItem>
-          ))}
-          <Divider />
-          <MenuItem
-            onClick={handleCloseNotificationsMenu}
-            sx={{ justifyContent: "center", py: 1.5 }}
-          >
-            <Typography
-              variant="body2"
-              color="primary.main"
-              sx={{ fontWeight: 600 }}
-            >
-              View All Notifications
-            </Typography>
-          </MenuItem>
+            ) : (
+              <>
+                {notifications.map((notif, index) => (
+                  <React.Fragment key={notif.id}>
+                    <MenuItem
+                      onClick={() => handleNotificationClick(notif)}
+                      sx={{
+                        py: 2,
+                        px: 2,
+                        borderLeft: notif.isRead ? 0 : 3,
+                        borderColor: "primary.main",
+                        backgroundColor: notif.isRead
+                          ? "transparent"
+                          : "action.hover",
+                        "&:hover": { backgroundColor: "action.selected" },
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 2,
+                      }}
+                    >
+                      <Box sx={{ mt: 0.5 }}>
+                        <NotificationsActiveIcon fontSize="small" />
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            mb: 0.5,
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: notif.isRead ? 400 : 600,
+                              flex: 1,
+                            }}
+                          >
+                            {notif.title}
+                          </Typography>
+                          {!notif.isRead && (
+                            <Box
+                              sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                backgroundColor: "primary.main",
+                              }}
+                            />
+                          )}
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            fontSize: "0.85rem",
+                            mb: 0.5,
+                            wordBreak: "break-word",
+                            whiteSpace: "normal",
+                            overflowWrap: "break-word",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3, 
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {notif.body}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontSize: "0.75rem" }}
+                        >
+                          {getTimeAgo(notif.createdAt)}
+                        </Typography>
+                      </Box>
+                      <Tooltip title="Delete">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleDeleteNotification(notif.id, e)}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </MenuItem>
+                    {index < notifications.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))}
+              </>
+            )}
+          </Box>
         </Menu>
 
         {/* Profile Menu */}
