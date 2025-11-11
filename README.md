@@ -363,6 +363,30 @@ npm run lint
 
 ## 🎯 User Roles & Permissions
 
+## 🐳 Docker (Development)
+
+This project can be run inside a Docker container for development. The dev server will run on port 5173 and is bound to 0.0.0.0 so it can be accessed from the host.
+
+Files added:
+
+- `Dockerfile` — development Dockerfile that installs deps and runs `npm run dev` on 0.0.0.0:5173
+- `.dockerignore` — files to exclude from build context
+- `docker-compose.yml` — convenience compose file mapping port 5173 and mounting the repo for live reload
+
+Quick start (requires Docker and Docker Compose):
+
+```powershell
+# Build and run with docker-compose (from project root)
+docker compose up --build
+
+# Open http://localhost:5173 in your browser
+```
+
+Notes:
+
+- The compose file mounts the repo into the container so changes are reflected immediately.
+- If file watching is unreliable on your platform, try enabling polling via `CHOKIDAR_USEPOLLING=true` (already set in compose).
+
 ### 🧑‍💼 Customer Role
 
 **Routes**: `/user/*`
