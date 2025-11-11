@@ -59,10 +59,24 @@ const ManagerProgressTrackingPage = () => {
         setBranches(data || []);
 
         if (isAdmin) {
-          // Admin can see all branches - set the first branch as default
+          // Admin can see all branches - find the first branch with a manager
           if (data && data.length > 0) {
-            console.log("Setting first branch as default:", data[0]);
-            setSelectedBranchId(data[0].id);
+            // Try to find a branch with a manager first
+            const branchWithManager = data.find((branch) => branch.managerId);
+            if (branchWithManager) {
+              console.log(
+                "Setting first branch with manager as default:",
+                branchWithManager
+              );
+              setSelectedBranchId(branchWithManager.id);
+            } else {
+              // If no branch has a manager, still select the first one but we'll handle it gracefully
+              console.log(
+                "No branches have managers, selecting first branch:",
+                data[0]
+              );
+              setSelectedBranchId(data[0].id);
+            }
           }
         } else {
           // Manager is locked to their branch
@@ -123,13 +137,14 @@ const ManagerProgressTrackingPage = () => {
             data = await getManagerProgressTrackingTasks(
               selectedBranch.managerId
             );
+          } else if (selectedBranch) {
+            // Branch exists but has no manager - show empty state instead of error
+            console.log("Branch has no manager assigned, showing empty state");
+            data = [];
+            // Don't set error, just show empty state
           } else {
             data = [];
-            const errorMsg = selectedBranch
-              ? "Selected branch has no manager assigned"
-              : "Branch not found";
-            console.error(errorMsg, { selectedBranchId, branches });
-            setError(errorMsg);
+            setError("Branch not found");
           }
         } else {
           // For manager: fetch their own branch's progress tracking
@@ -238,6 +253,12 @@ const ManagerProgressTrackingPage = () => {
   };
 
   const Layout = user?.role === "admin" ? AdminLayout : UserLayout;
+  console.log(
+    "User role:",
+    user?.role,
+    "Using layout:",
+    Layout === AdminLayout ? "AdminLayout" : "UserLayout"
+  );
   return (
     <Layout>
       <Box sx={{ width: "100%", maxWidth: "100vw", overflow: "hidden" }}>
