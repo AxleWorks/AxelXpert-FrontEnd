@@ -11,6 +11,7 @@ const SecurityTab = ({
   handleChangePassword,
   handleDeleteAccount,
   saving,
+  username,
 }) => {
   return (
     <div
@@ -29,6 +30,7 @@ const SecurityTab = ({
         togglePasswordVisibility={togglePasswordVisibility}
         handleChangePassword={handleChangePassword}
         saving={saving}
+        username={username}
       />
 
       <TwoFactorAuthCard />

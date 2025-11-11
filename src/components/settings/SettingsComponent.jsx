@@ -165,19 +165,65 @@ const SettingsComponent = ({ role = "user" }) => {
     });
   };
 
+  const validatePassword = (password, username) => {
+    const errors = [];
+    
+    // Check minimum length
+    if (password.length < 8) {
+      errors.push("Password must be at least 8 characters long");
+    }
+    
+    // Check for at least one uppercase letter
+    if (!/[A-Z]/.test(password)) {
+      errors.push("Password must contain at least one uppercase letter");
+    }
+    
+    // Check for at least one lowercase letter
+    if (!/[a-z]/.test(password)) {
+      errors.push("Password must contain at least one lowercase letter");
+    }
+    
+    // Check for at least one digit
+    if (!/\d/.test(password)) {
+      errors.push("Password must contain at least one digit");
+    }
+    
+    // Check for at least one symbol
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push("Password must contain at least one symbol (!@#$%^&*...)");
+    }
+    
+    // Check if password contains username
+    if (username && password.toLowerCase().includes(username.toLowerCase())) {
+      errors.push("Password cannot contain your username");
+    }
+    
+    return errors;
+  };
+
   const handleChangePassword = () => {
     if (!userDetails) return;
 
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("Passwords do not match", {
-        description: "Please make sure both password fields match",
+    // Check if current password is same as new password
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      toast.error("Invalid Password", {
+        description: "New password cannot be the same as current password",
       });
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      toast.error("Password too short", {
-        description: "Password must be at least 6 characters long",
+    // Validate new password
+    const passwordErrors = validatePassword(passwordData.newPassword, formData.username);
+    if (passwordErrors.length > 0) {
+      toast.error("Password Requirements Not Met", {
+        description: passwordErrors.join(". "),
+      });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Passwords do not match", {
+        description: "Please make sure both password fields match",
       });
       return;
     }
@@ -439,6 +485,7 @@ const SettingsComponent = ({ role = "user" }) => {
               handleChangePassword={handleChangePassword}
               handleDeleteAccount={handleDeleteAccount}
               saving={saving}
+              username={formData.username}
             />
           </TabsContent>
         </Tabs>
