@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
+import { toast } from "../../ui/toast";
 import { Box, CircularProgress, IconButton } from "@mui/material";
 
 const ChangePasswordCard = ({
@@ -13,7 +14,99 @@ const ChangePasswordCard = ({
   togglePasswordVisibility,
   handleChangePassword,
   saving,
+  username,
 }) => {
+  const [lastValidationState, setLastValidationState] = useState({});
+  const [validationTimeout, setValidationTimeout] = useState(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (validationTimeout) {
+        clearTimeout(validationTimeout);
+      }
+    };
+  }, [validationTimeout]);
+
+  const showValidationMessage = (type, title, description, delay = 500) => {
+    // Clear any existing timeout
+    if (validationTimeout) {
+      clearTimeout(validationTimeout);
+    }
+    
+    const timeout = setTimeout(() => {
+      if (type === "error") {
+        toast.error(title, { description });
+      } else if (type === "success") {
+        toast.success(title, { description });
+      }
+    }, delay);
+    
+    setValidationTimeout(timeout);
+  };
+
+  const validatePasswordRequirement = (password, username, currentPassword) => {
+    if (!password) return { valid: false, requirements: [] };
+    
+    const requirements = [
+      { text: "At least 8 characters", valid: password.length >= 8, key: "length" },
+      { text: "One uppercase letter (A-Z)", valid: /[A-Z]/.test(password), key: "uppercase" },
+      { text: "One lowercase letter (a-z)", valid: /[a-z]/.test(password), key: "lowercase" },
+      { text: "One digit (0-9)", valid: /\d/.test(password), key: "digit" },
+      { text: "One symbol (!@#$%^&*...)", valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password), key: "symbol" },
+      { text: "Cannot contain username", valid: username ? !password.toLowerCase().includes(username.toLowerCase()) : true, key: "username" },
+      { text: "Different from current password", valid: currentPassword ? password !== currentPassword : true, key: "current" },
+    ];
+
+    const allValid = requirements.every(req => req.valid);
+    
+    return { valid: allValid, requirements };
+  };
+
+  const passwordValidation = validatePasswordRequirement(passwordData.newPassword, username, passwordData.currentPassword);
+
+  const showValidationFeedback = (validation) => {
+    const invalidReqs = validation.requirements.filter(req => !req.valid);
+    
+    if (invalidReqs.length > 0) {
+      // Show all invalid requirements at once, but only if they changed
+      const currentInvalidKeys = invalidReqs.map(req => req.key).sort().join(',');
+      if (lastValidationState.invalidKeys !== currentInvalidKeys) {
+        toast.error("Password Requirements", {
+          description: invalidReqs.map(req => `• ${req.text}`).join('\n'),
+        });
+        setLastValidationState({ invalidKeys: currentInvalidKeys, isValid: false });
+      }
+    } else if (validation.valid && validation.requirements.length > 0 && !lastValidationState.isValid) {
+      toast.success("Password Requirements", {
+        description: "All requirements met! ✓",
+      });
+      setLastValidationState({ invalidKeys: '', isValid: true });
+    }
+  };
+
+  const handlePasswordInput = (field, value) => {
+    handlePasswordChange(field, value);
+    
+    if (field === "newPassword") {
+      // Clear previous timeout
+      if (validationTimeout) {
+        clearTimeout(validationTimeout);
+      }
+      
+      if (value.length > 0) {
+        // Debounced validation feedback
+        const timeout = setTimeout(() => {
+          const validation = validatePasswordRequirement(value, username, passwordData.currentPassword);
+          showValidationFeedback(validation);
+        }, 500); // Show feedback after 500ms of no typing
+        
+        setValidationTimeout(timeout);
+      } else {
+        setLastValidationState({});
+      }
+    }
+  };
   return (
     <Card
       sx={{
@@ -56,18 +149,33 @@ const ChangePasswordCard = ({
           Change Password
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <Label>Current Password</Label>
+      <CardContent sx={{ p: 4, pt: 2 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>Current Password</Label>
           <Box sx={{ position: "relative" }}>
             <Input
               type={showPasswords.current ? "text" : "password"}
               placeholder="Enter current password"
               value={passwordData.currentPassword}
-              onChange={(e) =>
-                handlePasswordChange("currentPassword", e.target.value)
-              }
-              sx={{ pr: 6 }}
+              onChange={(e) => {
+                const value = e.target.value;
+                handlePasswordInput("currentPassword", value);
+                
+                // Only validate if both passwords exist and have content
+                if (value.length > 0 && passwordData.newPassword && passwordData.newPassword.length > 0) {
+                  if (value === passwordData.newPassword) {
+                    showValidationMessage("error", "Invalid Password", "New password cannot be the same as current password", 500);
+                  }
+                }
+              }}
+              sx={{ 
+                pr: 6,
+                "& .MuiInputBase-root": {
+                  borderRadius: 2,
+                  fontSize: "1rem",
+                  py: 1.5,
+                },
+              }}
             />
             <IconButton
               sx={{
@@ -84,17 +192,32 @@ const ChangePasswordCard = ({
           </Box>
         </div>
 
-        <div className="space-y-4">
-          <Label>New Password</Label>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>New Password</Label>
           <Box sx={{ position: "relative" }}>
             <Input
               type={showPasswords.new ? "text" : "password"}
               placeholder="Enter new password"
               value={passwordData.newPassword}
-              onChange={(e) =>
-                handlePasswordChange("newPassword", e.target.value)
-              }
-              sx={{ pr: 6 }}
+              onChange={(e) => handlePasswordInput("newPassword", e.target.value)}
+              onFocus={() => {
+                if (passwordData.newPassword.length === 0) {
+                  toast.info("Password Requirements", {
+                    description: "Must be 8+ chars with uppercase, lowercase, digit & symbol. Cannot contain username or be same as current password.",
+                  });
+                }
+              }}
+              sx={{ 
+                pr: 6,
+                "& .MuiInputBase-root": {
+                  borderRadius: 2,
+                  fontSize: "1rem",
+                  py: 1.5,
+                  borderColor: passwordData.newPassword 
+                    ? (passwordValidation.valid ? "success.main" : "error.main")
+                    : "inherit",
+                },
+              }}
             />
             <IconButton
               sx={{
@@ -111,17 +234,33 @@ const ChangePasswordCard = ({
           </Box>
         </div>
 
-        <div className="space-y-4">
-          <Label>Confirm New Password</Label>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "32px" }}>
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>Confirm New Password</Label>
           <Box sx={{ position: "relative" }}>
             <Input
               type={showPasswords.confirm ? "text" : "password"}
               placeholder="Confirm new password"
               value={passwordData.confirmPassword}
-              onChange={(e) =>
-                handlePasswordChange("confirmPassword", e.target.value)
-              }
-              sx={{ pr: 6 }}
+              onChange={(e) => {
+                const value = e.target.value;
+                handlePasswordInput("confirmPassword", value);
+                
+                if (value.length > 0 && passwordData.newPassword) {
+                  if (value !== passwordData.newPassword) {
+                    showValidationMessage("error", "Password Mismatch", "Confirmation password does not match new password", 800);
+                  } else {
+                    showValidationMessage("success", "Password Match", "Passwords match! ✓", 800);
+                  }
+                }
+              }}
+              sx={{ 
+                pr: 6,
+                "& .MuiInputBase-root": {
+                  borderRadius: 2,
+                  fontSize: "1rem",
+                  py: 1.5,
+                },
+              }}
             />
             <IconButton
               sx={{
@@ -138,22 +277,39 @@ const ChangePasswordCard = ({
           </Box>
         </div>
 
-        <Box sx={{ display: "flex", justifyContent: "center", pt: 3 }}>
+        <Box 
+          sx={{ 
+            display: "flex", 
+            justifyContent: "center", 
+            pt: 4,
+            pb: 2,
+            mt: 3,
+            borderTop: (theme) =>
+              `1px solid ${
+                theme.palette.mode === "light" ? "#e2e8f0" : "#374151"
+              }`,
+          }}
+        >
           <Button
             onClick={handleChangePassword}
             disabled={
               saving ||
               !passwordData.currentPassword ||
               !passwordData.newPassword ||
-              !passwordData.confirmPassword
+              !passwordData.confirmPassword ||
+              !passwordValidation.valid ||
+              passwordData.newPassword !== passwordData.confirmPassword
             }
             variant="contained"
             sx={{
-              minWidth: 180,
-              py: 1.5,
-              borderRadius: 2,
+              minWidth: 200,
+              py: 2,
+              px: 4,
+              borderRadius: 3,
               bgcolor: "warning.main",
               color: "warning.contrastText",
+              fontSize: "1rem",
+              fontWeight: 600,
               "&:hover": {
                 bgcolor: "warning.dark",
                 transform: "translateY(-1px)",

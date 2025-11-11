@@ -11,14 +11,16 @@ const SecurityTab = ({
   handleChangePassword,
   handleDeleteAccount,
   saving,
+  username,
 }) => {
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "16px",
-        marginTop: "24px",
+        gap: "32px",
+        marginTop: "32px",
+        paddingBottom: "24px",
       }}
     >
       <ChangePasswordCard
@@ -28,6 +30,7 @@ const SecurityTab = ({
         togglePasswordVisibility={togglePasswordVisibility}
         handleChangePassword={handleChangePassword}
         saving={saving}
+        username={username}
       />
 
       <TwoFactorAuthCard />
