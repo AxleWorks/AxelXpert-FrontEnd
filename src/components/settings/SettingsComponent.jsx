@@ -319,9 +319,9 @@ const SettingsComponent = ({ role = "user" }) => {
         flexDirection: "column",
         alignItems: "center",
         width: "100%",
-        minHeight: "100%",
-        py: { xs: 2, sm: 4, md: 6 },
-        px: { xs: 1, sm: 2 },
+        minHeight: "100vh",
+        py: { xs: 3, sm: 5, md: 7 },
+        px: { xs: 2, sm: 3, md: 4 },
         boxSizing: "border-box",
         bgcolor: "background.default",
       }}
@@ -329,20 +329,20 @@ const SettingsComponent = ({ role = "user" }) => {
       <Box
         sx={{
           width: "100%",
-          maxWidth: 800,
+          maxWidth: 900,
           background: "none",
         }}
       >
         {/* Header */}
-        <Box sx={{ mb: 2, textAlign: "center" }}>
+        <Box sx={{ mb: 5, textAlign: "center", px: 2 }}>
           <Typography
             variant="h3"
             sx={{
               fontWeight: 700,
-              mb: 0.5,
+              mb: 1.5,
               color: (theme) =>
                 theme.palette.mode === "light" ? "#000000" : "#ffffff",
-              fontSize: { xs: "1.5rem", sm: "2rem", md: "2.2rem" },
+              fontSize: { xs: "1.75rem", sm: "2.25rem", md: "2.5rem" },
             }}
           >
             Settings
@@ -352,9 +352,11 @@ const SettingsComponent = ({ role = "user" }) => {
             color="text.secondary"
             sx={{
               fontWeight: 400,
-              fontSize: "1rem",
+              fontSize: "1.1rem",
               opacity: 0.8,
-              mt: 0.5,
+              mt: 1,
+              maxWidth: "600px",
+              mx: "auto",
             }}
           >
             Manage your account settings and preferences
@@ -366,33 +368,37 @@ const SettingsComponent = ({ role = "user" }) => {
             sx={{
               display: "flex",
               justifyContent: "center",
-              mb: 4,
+              mb: 6,
               bgcolor: "background.paper",
               borderRadius: 3,
-              p: 0.5,
+              p: 1,
               boxShadow: (theme) =>
                 theme.palette.mode === "light"
-                  ? "0 2px 8px rgba(0, 0, 0, 0.1)"
-                  : "0 2px 8px rgba(0, 0, 0, 0.3)",
+                  ? "0 4px 12px rgba(0, 0, 0, 0.1)"
+                  : "0 4px 12px rgba(0, 0, 0, 0.3)",
               border: (theme) =>
                 `1px solid ${
                   theme.palette.mode === "light" ? "#e2e8f0" : "#374151"
                 }`,
-              maxWidth: 400,
+              maxWidth: 450,
               mx: "auto",
               "& .MuiTabs-flexContainer": {
                 justifyContent: "center",
               },
               "& .MuiTab-root": {
-                minWidth: 180,
+                minWidth: 200,
                 flex: 1,
                 borderRadius: 2,
-                py: 1.5,
-                transition: "all 0.2s ease",
+                py: 2,
+                px: 3,
+                fontSize: "1rem",
+                fontWeight: 600,
+                transition: "all 0.3s ease",
                 "&.Mui-selected": {
                   bgcolor: "primary.main",
                   color: "primary.contrastText",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+                  transform: "translateY(-1px)",
                 },
                 "&:hover": {
                   bgcolor: (theme) =>

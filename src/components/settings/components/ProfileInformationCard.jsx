@@ -5,7 +5,7 @@ import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 import ProfilePhotoManager from "../../ui/ProfilePhotoManager";
-import { Box, CircularProgress } from "@mui/material";
+import { Box, CircularProgress, Chip } from "@mui/material";
 
 const ProfileInformationCard = ({
   userDetails,
@@ -57,15 +57,15 @@ const ProfileInformationCard = ({
           Personal Information
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent sx={{ p: 4, pt: 2 }}>
         {/* Profile Photo Section - Centered */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            mb: 2,
-            py: 1.5,
+            mb: 5,
+            py: 3,
           }}
         >
           <Box
@@ -73,7 +73,7 @@ const ProfileInformationCard = ({
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 1,
+              gap: 2,
             }}
           >
             <ProfilePhotoManager
@@ -92,7 +92,7 @@ const ProfileInformationCard = ({
                 textAlign: "center",
                 color: "text.secondary",
                 fontWeight: 500,
-                mt: 0.5,
+                mt: 1,
                 fontSize: "1rem",
               }}
             >
@@ -101,67 +101,119 @@ const ProfileInformationCard = ({
           </Box>
         </Box>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <Label>Username</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: "24px", marginBottom: "32px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px",marginBottom: "28px" }}>
+            <Label sx={{ fontWeight: 600, fontSize: "0.95rem", color: "text.primary" }}>Username</Label>
             <Input
               placeholder="Enter username"
               value={formData.username}
               onChange={(e) => handleInputChange("username", e.target.value)}
-            />
-          </div>
-          <div className="space-y-4">
-            <Label>Role</Label>
-            <Input
-              value={formData.role}
-              disabled={true}
               sx={{
-                "& .MuiInputBase-input.Mui-disabled": {
-                  color: "text.secondary",
+                "& .MuiInputBase-root": {
+                  borderRadius: 2,
+                  fontSize: "1rem",
+                  py: 1.5,
                 },
               }}
             />
           </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px",marginBottom: "28px" }}>
+            <Label sx={{ fontWeight: 600, fontSize: "0.95rem", color: "text.primary" }}>Role</Label>
+            <Box sx={{ display: "flex", alignItems: "center", minHeight: "56px" }}>
+              <Chip
+                label={formData.role === "user" ? "Customer" : formData.role?.charAt(0).toUpperCase() + formData.role?.slice(1)}
+                sx={{
+                  bgcolor: (theme) => {
+                    const roleColors = {
+                      admin: theme.palette.error.main,
+                      manager: theme.palette.warning.main,
+                      employee: theme.palette.info.main,
+                      user: theme.palette.success.main,
+                      customer: theme.palette.success.main,
+                    };
+                    const role = formData.role === "user" ? "customer" : formData.role;
+                    return roleColors[role] || theme.palette.primary.main;
+                  },
+                  color: "white",
+                  fontWeight: 600,
+                  fontSize: "0.95rem",
+                  px: 2,
+                  py: 1,
+                  borderRadius: 2,
+                  "& .MuiChip-label": {
+                    px: 2,
+                  },
+                }}
+              />
+            </Box>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <Label>Email Address</Label>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "28px" }}>
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", color: "text.primary" }}>Email Address</Label>
           <Input
             type="email"
             placeholder="Enter email address"
             value={formData.email}
             onChange={(e) => handleInputChange("email", e.target.value)}
+            sx={{
+              "& .MuiInputBase-root": {
+                borderRadius: 2,
+                fontSize: "1rem",
+                py: 1.5,
+              },
+            }}
           />
         </div>
 
-        <div className="space-y-4">
-          <Label>Contact Number</Label>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "28px" }}>
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", color: "text.primary" }}>Contact Number</Label>
           <Input
             type="tel"
             placeholder="Enter phone number"
             value={formData.phoneNumber}
             onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+            sx={{
+              "& .MuiInputBase-root": {
+                borderRadius: 2,
+                fontSize: "1rem",
+                py: 1.5,
+              },
+            }}
           />
         </div>
 
-        <div className="space-y-4">
-          <Label>Address</Label>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "28px" }}>
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", color: "text.primary" }}>Address</Label>
           <Input
             placeholder="Enter your address"
             value={formData.address}
             onChange={(e) => handleInputChange("address", e.target.value)}
+            sx={{
+              "& .MuiInputBase-root": {
+                borderRadius: 2,
+                fontSize: "1rem",
+                py: 1.5,
+              },
+            }}
           />
         </div>
 
         {(role === "manager" || role === "employee") && formData.branchName && (
-          <div className="space-y-4">
-            <Label>Branch</Label>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "28px" }}>
+            <Label sx={{ fontWeight: 600, fontSize: "0.95rem", color: "text.primary" }}>Branch</Label>
             <Input
               value={formData.branchName}
               disabled={true}
               sx={{
                 "& .MuiInputBase-input.Mui-disabled": {
                   color: "text.secondary",
+                  textTransform: "capitalize",
+                },
+                "& .MuiInputBase-root": {
+                  borderRadius: 2,
+                  fontSize: "1rem",
+                  py: 1.5,
                 },
               }}
             />
@@ -172,8 +224,13 @@ const ProfileInformationCard = ({
           sx={{
             display: "flex",
             justifyContent: "center",
-            pt: 4,
-            mb: 3,
+            pt: 5,
+            pb: 2,
+            mt: 4,
+            borderTop: (theme) =>
+              `1px solid ${
+                theme.palette.mode === "light" ? "#e2e8f0" : "#374151"
+              }`,
           }}
         >
           <Button
@@ -181,11 +238,14 @@ const ProfileInformationCard = ({
             disabled={saving}
             variant="contained"
             sx={{
-              minWidth: 180,
-              py: 1.5,
-              borderRadius: 2,
+              minWidth: 200,
+              py: 2,
+              px: 4,
+              borderRadius: 3,
               bgcolor: "primary.main",
               color: "primary.contrastText",
+              fontSize: "1rem",
+              fontWeight: 600,
               "&:hover": {
                 bgcolor: "primary.dark",
                 transform: "translateY(-1px)",

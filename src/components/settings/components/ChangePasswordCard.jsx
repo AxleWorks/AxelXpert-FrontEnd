@@ -56,9 +56,9 @@ const ChangePasswordCard = ({
           Change Password
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <Label>Current Password</Label>
+      <CardContent sx={{ p: 4, pt: 2 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>Current Password</Label>
           <Box sx={{ position: "relative" }}>
             <Input
               type={showPasswords.current ? "text" : "password"}
@@ -67,7 +67,14 @@ const ChangePasswordCard = ({
               onChange={(e) =>
                 handlePasswordChange("currentPassword", e.target.value)
               }
-              sx={{ pr: 6 }}
+              sx={{ 
+                pr: 6,
+                "& .MuiInputBase-root": {
+                  borderRadius: 2,
+                  fontSize: "1rem",
+                  py: 1.5,
+                },
+              }}
             />
             <IconButton
               sx={{
@@ -84,8 +91,8 @@ const ChangePasswordCard = ({
           </Box>
         </div>
 
-        <div className="space-y-4">
-          <Label>New Password</Label>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>New Password</Label>
           <Box sx={{ position: "relative" }}>
             <Input
               type={showPasswords.new ? "text" : "password"}
@@ -94,7 +101,14 @@ const ChangePasswordCard = ({
               onChange={(e) =>
                 handlePasswordChange("newPassword", e.target.value)
               }
-              sx={{ pr: 6 }}
+              sx={{ 
+                pr: 6,
+                "& .MuiInputBase-root": {
+                  borderRadius: 2,
+                  fontSize: "1rem",
+                  py: 1.5,
+                },
+              }}
             />
             <IconButton
               sx={{
@@ -111,8 +125,8 @@ const ChangePasswordCard = ({
           </Box>
         </div>
 
-        <div className="space-y-4">
-          <Label>Confirm New Password</Label>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "32px" }}>
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>Confirm New Password</Label>
           <Box sx={{ position: "relative" }}>
             <Input
               type={showPasswords.confirm ? "text" : "password"}
@@ -121,7 +135,14 @@ const ChangePasswordCard = ({
               onChange={(e) =>
                 handlePasswordChange("confirmPassword", e.target.value)
               }
-              sx={{ pr: 6 }}
+              sx={{ 
+                pr: 6,
+                "& .MuiInputBase-root": {
+                  borderRadius: 2,
+                  fontSize: "1rem",
+                  py: 1.5,
+                },
+              }}
             />
             <IconButton
               sx={{
@@ -138,7 +159,19 @@ const ChangePasswordCard = ({
           </Box>
         </div>
 
-        <Box sx={{ display: "flex", justifyContent: "center", pt: 3 }}>
+        <Box 
+          sx={{ 
+            display: "flex", 
+            justifyContent: "center", 
+            pt: 4,
+            pb: 2,
+            mt: 3,
+            borderTop: (theme) =>
+              `1px solid ${
+                theme.palette.mode === "light" ? "#e2e8f0" : "#374151"
+              }`,
+          }}
+        >
           <Button
             onClick={handleChangePassword}
             disabled={
@@ -149,11 +182,14 @@ const ChangePasswordCard = ({
             }
             variant="contained"
             sx={{
-              minWidth: 180,
-              py: 1.5,
-              borderRadius: 2,
+              minWidth: 200,
+              py: 2,
+              px: 4,
+              borderRadius: 3,
               bgcolor: "warning.main",
               color: "warning.contrastText",
+              fontSize: "1rem",
+              fontWeight: 600,
               "&:hover": {
                 bgcolor: "warning.dark",
                 transform: "translateY(-1px)",

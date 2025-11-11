@@ -12,8 +12,13 @@ const ProfileTab = ({
 }) => {
   return (
     <div
-      className="mt-6"
-      style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+      className="mt-8"
+      style={{ 
+        display: "flex", 
+        flexDirection: "column", 
+        gap: "32px",
+        paddingBottom: "24px"
+      }}
     >
       <ProfileInformationCard
         userDetails={userDetails}
