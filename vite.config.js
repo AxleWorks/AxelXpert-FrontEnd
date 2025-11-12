@@ -5,10 +5,11 @@ import { visualizer } from 'rollup-plugin-visualizer'
 export default defineConfig({
   plugins: [
     react(),
-    visualizer({
+    // Only use visualizer in build mode, not in test mode
+    process.env.VITEST ? null : visualizer({
       open: true,
       gzipSize: true,
       brotliSize: true,
     })
-  ],
+  ].filter(Boolean),
 })
