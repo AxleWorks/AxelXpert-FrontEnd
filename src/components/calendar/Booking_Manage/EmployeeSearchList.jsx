@@ -31,7 +31,7 @@ export default function EmployeeSearchList({
     const q = (searchTerm || "").toLowerCase().trim();
     if (!q) return employees;
     return employees.filter((e) =>
-      (e.name + " " + (e.role || "")).toLowerCase().includes(q)
+      ((e.name || e.username) + " " + (e.role || "")).toLowerCase().includes(q)
     );
   }, [employees, searchTerm]);
 
@@ -111,30 +111,41 @@ export default function EmployeeSearchList({
             <ListItemAvatar>
               <Avatar
                 sx={{
-                  bgcolor: emp.available ? "success.main" : "grey.500",
+                  bgcolor:
+                    emp.available || emp.status === "available"
+                      ? "success.main"
+                      : "grey.500",
                   fontWeight: 600,
                   boxShadow: isSelected ? 2 : 1,
                 }}
               >
-                {initials(emp.name)}
+                {initials(emp.name || emp.username)}
               </Avatar>
             </ListItemAvatar>
             <ListItemText
               primary={
                 <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {emp.name}
+                  {emp.name || emp.username}
                 </Typography>
               }
               secondary={
                 <Typography variant="body2" color="text.secondary">
-                  {emp.role}
+                  {emp.role} {emp.branchName ? `• ${emp.branchName}` : ""}
                 </Typography>
               }
             />
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Chip
-                label={emp.available ? "Available" : "Busy"}
-                color={emp.available ? "success" : "default"}
+                label={
+                  emp.available || emp.status === "available"
+                    ? "Available"
+                    : "Busy"
+                }
+                color={
+                  emp.available || emp.status === "available"
+                    ? "success"
+                    : "default"
+                }
                 size="small"
                 sx={{ fontWeight: 600 }}
               />

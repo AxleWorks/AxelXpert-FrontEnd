@@ -114,9 +114,13 @@ export default function ManagerBookingCalendar({
         const mapped = (data || []).map((u) => ({
           id: u.id,
           name: u.username || u.email || `emp-${u.id}`,
+          username: u.username,
           role: u.role || "employee",
-          available: !!u.is_Active && !u.is_Blocked,
+          available: u.status === "available",
+          status: u.status,
           phone: u.phoneNumber,
+          branchName: u.branchName,
+          email: u.email,
         }));
         setEmployees(mapped);
       } catch (err) {
