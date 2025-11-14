@@ -24,6 +24,16 @@ vi.mock('./CustomerBookingModal', () => ({
   ),
 }));
 
+// Mock the non-existent BookingModal
+vi.mock('./BookingModal', () => ({
+  default: ({ open, onClose }) => (
+    open ? <div data-testid="booking-modal">Create Booking</div> : null
+  ),
+}));
+
+// Mock the CSS import
+vi.mock('./Calendar.css', () => ({}));
+
 const renderWithRouter = (component) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);
 };

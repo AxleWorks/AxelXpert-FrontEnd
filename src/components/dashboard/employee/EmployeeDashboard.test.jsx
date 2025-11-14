@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import EmployeeDashboard from './EmployeeDashboard';
+import EmployeeDashboard from './EmployeeDashboardImproved';
 import { useAuth } from '../../../contexts/AuthContext';
 
 // Mock the auth context
