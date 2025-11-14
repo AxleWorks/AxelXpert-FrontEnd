@@ -50,75 +50,75 @@ const ManagerUserManagementPage = () => {
   // Check if user is admin
   const isAdmin = user?.role === "admin";
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        console.log("Fetching user data...", {
-          userRole: user?.role,
-          userBranchId: user?.branchId,
-          isAdmin,
+  const fetchEmployees = useCallback(async () => {
+    try {
+      console.log("Fetching user data...", {
+        userRole: user?.role,
+        userBranchId: user?.branchId,
+        isAdmin,
+      });
+
+      // Fetch all user types: employees, managers, and users
+      const [employeesRes, managersRes, usersRes] = await Promise.all([
+        authenticatedAxios.get(`${USERS_URL}/employees`),
+        authenticatedAxios.get(`${USERS_URL}/managers`),
+        authenticatedAxios.get(`${USERS_URL}/users`),
+      ]);
+
+      console.log("=== RAW API Response ===");
+      console.log("Employees:", employeesRes.data);
+      console.log("Managers:", managersRes.data);
+      console.log("Users (Customers):", usersRes.data);
+      console.log("========================");
+
+      console.log("API Response:", {
+        employees: employeesRes.data.length,
+        managers: managersRes.data.length,
+        users: usersRes.data.length,
+        usersData: usersRes.data,
+      });
+
+      // Both admin and manager can see ALL users (customers) regardless of branch
+      // Manager can only see employees from their branch
+      // Admin can see employees from all branches
+
+      if (!isAdmin && user?.branchId) {
+        // MANAGER VIEW
+        const branchEmployees = employeesRes.data.filter(
+          (emp) => emp.branchId === user.branchId
+        );
+
+        console.log("Manager view:", {
+          branchEmployees: branchEmployees.length,
+          allCustomers: usersRes.data.length,
         });
 
-        // Fetch all user types: employees, managers, and users
-        const [employeesRes, managersRes, usersRes] = await Promise.all([
-          authenticatedAxios.get(`${USERS_URL}/employees`),
-          authenticatedAxios.get(`${USERS_URL}/managers`),
-          authenticatedAxios.get(`${USERS_URL}/users`),
-        ]);
+        setEmployees(branchEmployees); // Only their branch employees
+        setUsers(usersRes.data); // ALL users/customers regardless of branch
+      } else {
+        // Admin view: all employees/managers in one tab, all users in another
+        const allEmployees = [...employeesRes.data, ...managersRes.data];
 
-        console.log("=== RAW API Response ===");
-        console.log("Employees:", employeesRes.data);
-        console.log("Managers:", managersRes.data);
-        console.log("Users (Customers):", usersRes.data);
-        console.log("========================");
-
-        console.log("API Response:", {
-          employees: employeesRes.data.length,
-          managers: managersRes.data.length,
-          users: usersRes.data.length,
-          usersData: usersRes.data,
-        });
-
-        // Both admin and manager can see ALL users (customers) regardless of branch
-        // Manager can only see employees from their branch
-        // Admin can see employees from all branches
-
-        if (!isAdmin && user?.branchId) {
-          // MANAGER VIEW
-          const branchEmployees = employeesRes.data.filter(
-            (emp) => emp.branchId === user.branchId
-          );
-
-          console.log("Manager view:", {
-            branchEmployees: branchEmployees.length,
-            allCustomers: usersRes.data.length,
-          });
-
-          setEmployees(branchEmployees); // Only their branch employees
-          setUsers(usersRes.data); // ALL users/customers regardless of branch
-        } else {
-          // Admin view: all employees/managers in one tab, all users in another
-          const allEmployees = [...employeesRes.data, ...managersRes.data];
-
-          console.log(
-            "Admin view - employees:",
-            allEmployees.length,
-            "users:",
-            usersRes.data.length
-          );
-          setEmployees(allEmployees);
-          setUsers(usersRes.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch employees:", err);
-        setError("Failed to load employees. Please try again later.");
-      } finally {
-        setLoading(false);
+        console.log(
+          "Admin view - employees:",
+          allEmployees.length,
+          "users:",
+          usersRes.data.length
+        );
+        setEmployees(allEmployees);
+        setUsers(usersRes.data);
       }
-    };
-
-    fetchEmployees();
+    } catch (err) {
+      console.error("Failed to fetch employees:", err);
+      setError("Failed to load employees. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   }, [user, isAdmin]);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
 
   const handleOpenAdd = useCallback(() => {
     console.log("Add Employee button clicked - opening modal");
@@ -145,9 +145,9 @@ const ManagerUserManagementPage = () => {
       try {
         await authenticatedAxios.delete(`${USERS_URL}/${employeeToDelete.id}`);
 
-        setEmployees((prev) =>
-          prev.filter((e) => e.id !== employeeToDelete.id)
-        );
+        // Refetch the user list after successful deletion
+        await fetchEmployees();
+
         setSuccessTitle("Employee deleted!");
         setSuccessMessage(
           `${employeeToDelete.username} has been deleted successfully.`
@@ -189,7 +189,7 @@ const ManagerUserManagementPage = () => {
         setShowError(true);
       }
     }
-  }, [employeeToDelete]);
+  }, [employeeToDelete, fetchEmployees]);
 
   const cancelDelete = useCallback(() => {
     setDeleteDialogOpen(false);
@@ -212,9 +212,8 @@ const ManagerUserManagementPage = () => {
           { blocked: newBlockedStatus }
         );
 
-        setEmployees((prev) =>
-          prev.map((e) => (e.id === response.data.id ? response.data : e))
-        );
+        // Refetch the user list after successful block/unblock
+        await fetchEmployees();
 
         setSuccessTitle(newBlockedStatus ? "User blocked!" : "User unblocked!");
         setSuccessMessage(
@@ -262,49 +261,56 @@ const ManagerUserManagementPage = () => {
         setShowError(true);
       }
     }
-  }, [employeeToBlock]);
+  }, [employeeToBlock, fetchEmployees]);
 
   const cancelBlock = useCallback(() => {
     setBlockDialogOpen(false);
     setEmployeeToBlock(null);
   }, []);
 
-  const handleSaveEdit = useCallback((updated) => {
-    authenticatedAxios
-      .put(`${USERS_URL}/${updated.id}`, {
-        username: updated.username,
-        role: updated.role,
-        branchId: updated.branchId,
-        phoneNumber: updated.phoneNumber,
-        address: updated.address,
-        isActive: updated.isActive,
-      })
-      .then((response) => {
-        setEmployees((prev) =>
-          prev.map((e) => (e.id === response.data.id ? response.data : e))
-        );
+  const handleSaveEdit = useCallback(
+    async (updated) => {
+      try {
+        await authenticatedAxios.put(`${USERS_URL}/${updated.id}`, {
+          username: updated.username,
+          role: updated.role,
+          branchId: updated.branchId,
+          phoneNumber: updated.phoneNumber,
+          address: updated.address,
+          isActive: updated.isActive,
+        });
+
+        // Refetch the user list after successful update
+        await fetchEmployees();
+
         setSuccessTitle("Profile updated!");
         setSuccessMessage("Your profile has been updated successfully.");
         setShowSuccess(true);
         console.log("User updated successfully");
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Failed to update user:", error);
         setError("Failed to update user. Please try again.");
-      });
-    setEditModalOpen(false);
-    setSelectedEmployee(null);
-  }, []);
+      }
+      setEditModalOpen(false);
+      setSelectedEmployee(null);
+    },
+    [fetchEmployees]
+  );
 
-  const handleCreateEmployee = useCallback((newEmployee) => {
-    setEmployees((prev) => [...prev, newEmployee]);
-    setSuccessTitle("Employee added!");
-    setSuccessMessage(
-      `Login credentials has been sent to ${newEmployee.email}.`
-    );
-    setShowSuccess(true);
-    setAddOpen(false);
-  }, []);
+  const handleCreateEmployee = useCallback(
+    async (newEmployee) => {
+      // Refetch the user list after successful creation
+      await fetchEmployees();
+
+      setSuccessTitle("Employee added!");
+      setSuccessMessage(
+        `Login credentials has been sent to ${newEmployee.email}.`
+      );
+      setShowSuccess(true);
+      setAddOpen(false);
+    },
+    [fetchEmployees]
+  );
 
   const handleCloseView = useCallback(() => {
     setModalOpen(false);

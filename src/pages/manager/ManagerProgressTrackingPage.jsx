@@ -20,6 +20,7 @@ import {
 } from "@mui/icons-material";
 import UserLayout from "../../layouts/user/UserLayout";
 import AdminLayout from "../../layouts/admin/AdminLayout";
+import ManagerLayout from "../../layouts/manager/ManagerLayout";
 import ManagerProgressTaskCard from "../../components/dashboard/manager/ManagerProgressTaskCard";
 import { getManagerProgressTrackingTasks } from "../../services/managerProgressTrackingService";
 import { useAuth } from "../../contexts/AuthContext";
@@ -252,12 +253,21 @@ const ManagerProgressTrackingPage = () => {
     );
   };
 
-  const Layout = user?.role === "admin" ? AdminLayout : UserLayout;
+  const Layout =
+    user?.role === "admin"
+      ? AdminLayout
+      : user?.role === "manager"
+      ? ManagerLayout
+      : UserLayout;
   console.log(
     "User role:",
     user?.role,
     "Using layout:",
-    Layout === AdminLayout ? "AdminLayout" : "UserLayout"
+    Layout === AdminLayout
+      ? "AdminLayout"
+      : Layout === ManagerLayout
+      ? "ManagerLayout"
+      : "UserLayout"
   );
   return (
     <Layout>
