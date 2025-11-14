@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,10 +7,10 @@ import {
   DialogContentText,
   IconButton,
   Typography,
-  Box
-} from '@mui/material';
-import { X, AlertTriangle, CheckCircle, Info, XCircle } from 'lucide-react';
-import { Button } from './button';
+  Box,
+} from "@mui/material";
+import { X, AlertTriangle, CheckCircle, Info, XCircle } from "lucide-react";
+import { Button } from "./button";
 
 export const ConfirmationDialog = ({
   open = false,
@@ -22,17 +22,17 @@ export const ConfirmationDialog = ({
   cancelText = "Cancel",
   type = "warning", // warning, danger, info, success
   loading = false,
-  maxWidth = "sm"
+  maxWidth = "sm",
 }) => {
   const getIcon = () => {
     switch (type) {
-      case 'danger':
+      case "danger":
         return <XCircle className="text-red-500" size={48} />;
-      case 'warning':
+      case "warning":
         return <AlertTriangle className="text-yellow-500" size={48} />;
-      case 'success':
+      case "success":
         return <CheckCircle className="text-green-500" size={48} />;
-      case 'info':
+      case "info":
       default:
         return <Info className="text-blue-500" size={48} />;
     }
@@ -40,15 +40,15 @@ export const ConfirmationDialog = ({
 
   const getConfirmButtonColor = () => {
     switch (type) {
-      case 'danger':
-        return 'error';
-      case 'warning':
-        return 'warning';
-      case 'success':
-        return 'success';
-      case 'info':
+      case "danger":
+        return "error";
+      case "warning":
+        return "warning";
+      case "success":
+        return "success";
+      case "info":
       default:
-        return 'primary';
+        return "primary";
     }
   };
 
@@ -58,31 +58,44 @@ export const ConfirmationDialog = ({
       onClose={onClose}
       maxWidth={maxWidth}
       fullWidth
+      BackdropProps={{
+        sx: {
+          backdropFilter: "blur(4px)",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+        },
+      }}
       PaperProps={{
         sx: {
           borderRadius: 2,
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-        }
+          boxShadow:
+            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        },
       }}
     >
-      <Box sx={{ position: 'relative', p: 2 }}>
+      <Box sx={{ position: "relative", p: 2 }}>
         <IconButton
           onClick={onClose}
           sx={{
-            position: 'absolute',
+            position: "absolute",
             right: 8,
             top: 8,
-            color: 'grey.500'
+            color: "grey.500",
           }}
           size="small"
         >
           <X size={20} />
         </IconButton>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', mt: 2 }}>
-          <Box sx={{ mb: 2 }}>
-            {getIcon()}
-          </Box>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            mt: 2,
+          }}
+        >
+          <Box sx={{ mb: 2 }}>{getIcon()}</Box>
 
           <DialogTitle sx={{ p: 0, mb: 1 }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -91,12 +104,16 @@ export const ConfirmationDialog = ({
           </DialogTitle>
 
           <DialogContent sx={{ p: 0, mb: 3 }}>
-            <DialogContentText sx={{ color: 'text.secondary', fontSize: '0.95rem' }}>
+            <DialogContentText
+              sx={{ color: "text.secondary", fontSize: "0.95rem" }}
+            >
               {message}
             </DialogContentText>
           </DialogContent>
 
-          <DialogActions sx={{ p: 0, gap: 1, width: '100%', justifyContent: 'center' }}>
+          <DialogActions
+            sx={{ p: 0, gap: 1, width: "100%", justifyContent: "center" }}
+          >
             <Button
               onClick={onClose}
               variant="outlined"
@@ -111,7 +128,7 @@ export const ConfirmationDialog = ({
               disabled={loading}
               sx={{ minWidth: 100 }}
             >
-              {loading ? 'Processing...' : confirmText}
+              {loading ? "Processing..." : confirmText}
             </Button>
           </DialogActions>
         </Box>
@@ -127,17 +144,17 @@ export const AlertDialog = ({
   message = "This is an alert message.",
   buttonText = "OK",
   type = "info", // warning, danger, info, success
-  maxWidth = "sm"
+  maxWidth = "sm",
 }) => {
   const getIcon = () => {
     switch (type) {
-      case 'danger':
+      case "danger":
         return <XCircle className="text-red-500" size={48} />;
-      case 'warning':
+      case "warning":
         return <AlertTriangle className="text-yellow-500" size={48} />;
-      case 'success':
+      case "success":
         return <CheckCircle className="text-green-500" size={48} />;
-      case 'info':
+      case "info":
       default:
         return <Info className="text-blue-500" size={48} />;
     }
@@ -145,15 +162,15 @@ export const AlertDialog = ({
 
   const getButtonColor = () => {
     switch (type) {
-      case 'danger':
-        return 'error';
-      case 'warning':
-        return 'warning';
-      case 'success':
-        return 'success';
-      case 'info':
+      case "danger":
+        return "error";
+      case "warning":
+        return "warning";
+      case "success":
+        return "success";
+      case "info":
       default:
-        return 'primary';
+        return "primary";
     }
   };
 
@@ -163,31 +180,44 @@ export const AlertDialog = ({
       onClose={onClose}
       maxWidth={maxWidth}
       fullWidth
+      BackdropProps={{
+        sx: {
+          backdropFilter: "blur(4px)",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+        },
+      }}
       PaperProps={{
         sx: {
           borderRadius: 2,
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-        }
+          boxShadow:
+            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        },
       }}
     >
-      <Box sx={{ position: 'relative', p: 2 }}>
+      <Box sx={{ position: "relative", p: 2 }}>
         <IconButton
           onClick={onClose}
           sx={{
-            position: 'absolute',
+            position: "absolute",
             right: 8,
             top: 8,
-            color: 'grey.500'
+            color: "grey.500",
           }}
           size="small"
         >
           <X size={20} />
         </IconButton>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', mt: 2 }}>
-          <Box sx={{ mb: 2 }}>
-            {getIcon()}
-          </Box>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            mt: 2,
+          }}
+        >
+          <Box sx={{ mb: 2 }}>{getIcon()}</Box>
 
           <DialogTitle sx={{ p: 0, mb: 1 }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -196,12 +226,14 @@ export const AlertDialog = ({
           </DialogTitle>
 
           <DialogContent sx={{ p: 0, mb: 3 }}>
-            <DialogContentText sx={{ color: 'text.secondary', fontSize: '0.95rem' }}>
+            <DialogContentText
+              sx={{ color: "text.secondary", fontSize: "0.95rem" }}
+            >
               {message}
             </DialogContentText>
           </DialogContent>
 
-          <DialogActions sx={{ p: 0, width: '100%', justifyContent: 'center' }}>
+          <DialogActions sx={{ p: 0, width: "100%", justifyContent: "center" }}>
             <Button
               onClick={onClose}
               color={getButtonColor()}

@@ -6,7 +6,11 @@ import {
   Typography,
   Box,
   CircularProgress,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { publicAxios } from "../../utils/axiosConfig.js";
@@ -16,6 +20,7 @@ import AuthFormContainer from "./AuthFormContainer";
 import { AUTH_URL } from "../../config/apiEndpoints";
 
 const SignIn = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -170,12 +175,9 @@ const SignIn = () => {
           }}
         />
 
-        <Typography variant="body2" sx={{ mb: 1, color: "#64748b" }}>
-          Password
-        </Typography>
         <TextField
           placeholder="Enter your password"
-          type="password"
+          type={showPassword ? "text" : "password"}
           variant="outlined"
           fullWidth
           margin="normal"
@@ -184,15 +186,40 @@ const SignIn = () => {
           onChange={handleChange}
           required
           disabled={loading}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={() => setShowPassword((s) => !s)}
+                  edge="end"
+                >
+                  {showPassword ? (
+                    <VisibilityOff
+                      sx={{ color: "#64748b", filter: "blur(0.5px)" }}
+                    />
+                  ) : (
+                    <Visibility
+                      sx={{ color: "#94a3b8", filter: "blur(0.5px)" }}
+                    />
+                  )}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#f8fafc",
+              backgroundColor: "#f1f5f9", // lighter autofill color
               borderRadius: 2,
               color: "#0f172a",
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
+              "& input:-webkit-autofill": {
+                WebkitBoxShadow: "0 0 0 30px #f1f5f9 inset !important",
+                WebkitTextFillColor: "#0f172a !important",
+              },
             },
           }}
         />

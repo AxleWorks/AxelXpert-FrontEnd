@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
+import { TextField } from "@mui/material";
 import { Label } from "../../ui/label";
-import { toast } from "../../ui/toast";
 import { Box, CircularProgress, IconButton } from "@mui/material";
 
 const ChangePasswordCard = ({
@@ -16,96 +15,60 @@ const ChangePasswordCard = ({
   saving,
   username,
 }) => {
-  const [lastValidationState, setLastValidationState] = useState({});
-  const [validationTimeout, setValidationTimeout] = useState(null);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (validationTimeout) {
-        clearTimeout(validationTimeout);
-      }
-    };
-  }, [validationTimeout]);
-
-  const showValidationMessage = (type, title, description, delay = 500) => {
-    // Clear any existing timeout
-    if (validationTimeout) {
-      clearTimeout(validationTimeout);
-    }
-    
-    const timeout = setTimeout(() => {
-      if (type === "error") {
-        toast.error(title, { description });
-      } else if (type === "success") {
-        toast.success(title, { description });
-      }
-    }, delay);
-    
-    setValidationTimeout(timeout);
-  };
-
   const validatePasswordRequirement = (password, username, currentPassword) => {
     if (!password) return { valid: false, requirements: [] };
-    
+
     const requirements = [
-      { text: "At least 8 characters", valid: password.length >= 8, key: "length" },
-      { text: "One uppercase letter (A-Z)", valid: /[A-Z]/.test(password), key: "uppercase" },
-      { text: "One lowercase letter (a-z)", valid: /[a-z]/.test(password), key: "lowercase" },
+      {
+        text: "At least 8 characters",
+        valid: password.length >= 8,
+        key: "length",
+      },
+      {
+        text: "One uppercase letter (A-Z)",
+        valid: /[A-Z]/.test(password),
+        key: "uppercase",
+      },
+      {
+        text: "One lowercase letter (a-z)",
+        valid: /[a-z]/.test(password),
+        key: "lowercase",
+      },
       { text: "One digit (0-9)", valid: /\d/.test(password), key: "digit" },
-      { text: "One symbol (!@#$%^&*...)", valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password), key: "symbol" },
-      { text: "Cannot contain username", valid: username ? !password.toLowerCase().includes(username.toLowerCase()) : true, key: "username" },
-      { text: "Different from current password", valid: currentPassword ? password !== currentPassword : true, key: "current" },
+      {
+        text: "One symbol (!@#$%^&*...)",
+        valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+        key: "symbol",
+      },
+      {
+        text: "Cannot contain username",
+        valid: username
+          ? !password.toLowerCase().includes(username.toLowerCase())
+          : true,
+        key: "username",
+      },
+      {
+        text: "Different from current password",
+        valid: currentPassword ? password !== currentPassword : true,
+        key: "current",
+      },
     ];
 
-    const allValid = requirements.every(req => req.valid);
-    
+    const allValid = requirements.every((req) => req.valid);
+
     return { valid: allValid, requirements };
   };
 
-  const passwordValidation = validatePasswordRequirement(passwordData.newPassword, username, passwordData.currentPassword);
-
-  const showValidationFeedback = (validation) => {
-    const invalidReqs = validation.requirements.filter(req => !req.valid);
-    
-    if (invalidReqs.length > 0) {
-      // Show all invalid requirements at once, but only if they changed
-      const currentInvalidKeys = invalidReqs.map(req => req.key).sort().join(',');
-      if (lastValidationState.invalidKeys !== currentInvalidKeys) {
-        toast.error("Password Requirements", {
-          description: invalidReqs.map(req => `• ${req.text}`).join('\n'),
-        });
-        setLastValidationState({ invalidKeys: currentInvalidKeys, isValid: false });
-      }
-    } else if (validation.valid && validation.requirements.length > 0 && !lastValidationState.isValid) {
-      toast.success("Password Requirements", {
-        description: "All requirements met! ✓",
-      });
-      setLastValidationState({ invalidKeys: '', isValid: true });
-    }
-  };
+  const passwordValidation = validatePasswordRequirement(
+    passwordData.newPassword,
+    username,
+    passwordData.currentPassword
+  );
 
   const handlePasswordInput = (field, value) => {
     handlePasswordChange(field, value);
-    
-    if (field === "newPassword") {
-      // Clear previous timeout
-      if (validationTimeout) {
-        clearTimeout(validationTimeout);
-      }
-      
-      if (value.length > 0) {
-        // Debounced validation feedback
-        const timeout = setTimeout(() => {
-          const validation = validatePasswordRequirement(value, username, passwordData.currentPassword);
-          showValidationFeedback(validation);
-        }, 500); // Show feedback after 500ms of no typing
-        
-        setValidationTimeout(timeout);
-      } else {
-        setLastValidationState({});
-      }
-    }
+
+    // Removed real-time toast notifications - only show on submit
   };
   return (
     <Card
@@ -150,137 +113,243 @@ const ChangePasswordCard = ({
         </CardTitle>
       </CardHeader>
       <CardContent sx={{ p: 4, pt: 2 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
-          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>Current Password</Label>
-          <Box sx={{ position: "relative" }}>
-            <Input
-              type={showPasswords.current ? "text" : "password"}
-              placeholder="Enter current password"
-              value={passwordData.currentPassword}
-              onChange={(e) => {
-                const value = e.target.value;
-                handlePasswordInput("currentPassword", value);
-                
-                // Only validate if both passwords exist and have content
-                if (value.length > 0 && passwordData.newPassword && passwordData.newPassword.length > 0) {
-                  if (value === passwordData.newPassword) {
-                    showValidationMessage("error", "Invalid Password", "New password cannot be the same as current password", 500);
-                  }
-                }
-              }}
-              sx={{ 
-                pr: 6,
-                "& .MuiInputBase-root": {
-                  borderRadius: 2,
-                  fontSize: "1rem",
-                  py: 1.5,
-                },
-              }}
-            />
-            <IconButton
-              sx={{
-                position: "absolute",
-                right: 8,
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-              onClick={() => togglePasswordVisibility("current")}
-              size="small"
-            >
-              {showPasswords.current ? <EyeOff size={20} /> : <Eye size={20} />}
-            </IconButton>
-          </Box>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            marginBottom: "24px",
+          }}
+        >
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>
+            Current Password
+          </Label>
+          <TextField
+            type={showPasswords.current ? "text" : "password"}
+            variant="outlined"
+            value={passwordData.currentPassword}
+            onChange={(e) => {
+              const value = e.target.value;
+              handlePasswordInput("currentPassword", value);
+            }}
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={() => togglePasswordVisibility("current")}
+                  edge="end"
+                  size="small"
+                >
+                  {showPasswords.current ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </IconButton>
+              ),
+            }}
+            sx={{
+              borderRadius: 2,
+              fontSize: "1rem",
+              py: 1.5,
+              mb: 1,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+              },
+            }}
+            error={
+              passwordData.currentPassword &&
+              passwordData.newPassword &&
+              passwordData.currentPassword === passwordData.newPassword
+            }
+          />
+          {/* Current Password Validation */}
+          {passwordData.currentPassword &&
+            passwordData.newPassword &&
+            passwordData.currentPassword === passwordData.newPassword && (
+              <Box sx={{ mt: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    fontSize: "0.875rem",
+                    color: "error.main",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      bgcolor: "transparent",
+                      border: `2px solid error.main`,
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "error.main",
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ×
+                    </span>
+                  </Box>
+                  <span>
+                    New password cannot be the same as current password
+                  </span>
+                </Box>
+              </Box>
+            )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
-          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>New Password</Label>
-          <Box sx={{ position: "relative" }}>
-            <Input
-              type={showPasswords.new ? "text" : "password"}
-              placeholder="Enter new password"
-              value={passwordData.newPassword}
-              onChange={(e) => handlePasswordInput("newPassword", e.target.value)}
-              onFocus={() => {
-                if (passwordData.newPassword.length === 0) {
-                  toast.info("Password Requirements", {
-                    description: "Must be 8+ chars with uppercase, lowercase, digit & symbol. Cannot contain username or be same as current password.",
-                  });
-                }
-              }}
-              sx={{ 
-                pr: 6,
-                "& .MuiInputBase-root": {
-                  borderRadius: 2,
-                  fontSize: "1rem",
-                  py: 1.5,
-                  borderColor: passwordData.newPassword 
-                    ? (passwordValidation.valid ? "success.main" : "error.main")
-                    : "inherit",
-                },
-              }}
-            />
-            <IconButton
-              sx={{
-                position: "absolute",
-                right: 8,
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-              onClick={() => togglePasswordVisibility("new")}
-              size="small"
-            >
-              {showPasswords.new ? <EyeOff size={20} /> : <Eye size={20} />}
-            </IconButton>
-          </Box>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            marginBottom: "24px",
+          }}
+        >
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>
+            New Password
+          </Label>
+          <TextField
+            type={showPasswords.new ? "text" : "password"}
+            variant="outlined"
+            value={passwordData.newPassword}
+            onChange={(e) => handlePasswordInput("newPassword", e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={() => togglePasswordVisibility("new")}
+                  edge="end"
+                  size="small"
+                >
+                  {showPasswords.new ? <EyeOff size={20} /> : <Eye size={20} />}
+                </IconButton>
+              ),
+            }}
+            sx={{
+              borderRadius: 2,
+              fontSize: "1rem",
+              py: 1.5,
+              mb: 1,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+              },
+            }}
+            error={passwordData.newPassword && !passwordValidation.valid}
+          />
+          {/* Password Requirements Display */}
+          {passwordData.newPassword && (
+            <Box sx={{ mt: 1 }}>
+              {passwordValidation.requirements
+                .filter((req) => !req.valid)
+                .map((req, index) => (
+                  <Box
+                    key={req.key}
+                    sx={{
+                      fontSize: "0.875rem",
+                      color: "error.main",
+                      mb: 0.5,
+                    }}
+                  >
+                    • {req.text}
+                  </Box>
+                ))}
+              {passwordValidation.requirements.filter((req) => !req.valid)
+                .length === 0 &&
+                passwordData.newPassword && (
+                  <Box
+                    sx={{
+                      fontSize: "0.875rem",
+                      color: "success.main",
+                      mb: 0.5,
+                    }}
+                  >
+                    ✓ All requirements met!
+                  </Box>
+                )}
+            </Box>
+          )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "32px" }}>
-          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>Confirm New Password</Label>
-          <Box sx={{ position: "relative" }}>
-            <Input
-              type={showPasswords.confirm ? "text" : "password"}
-              placeholder="Confirm new password"
-              value={passwordData.confirmPassword}
-              onChange={(e) => {
-                const value = e.target.value;
-                handlePasswordInput("confirmPassword", value);
-                
-                if (value.length > 0 && passwordData.newPassword) {
-                  if (value !== passwordData.newPassword) {
-                    showValidationMessage("error", "Password Mismatch", "Confirmation password does not match new password", 800);
-                  } else {
-                    showValidationMessage("success", "Password Match", "Passwords match! ✓", 800);
-                  }
-                }
-              }}
-              sx={{ 
-                pr: 6,
-                "& .MuiInputBase-root": {
-                  borderRadius: 2,
-                  fontSize: "1rem",
-                  py: 1.5,
-                },
-              }}
-            />
-            <IconButton
-              sx={{
-                position: "absolute",
-                right: 8,
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-              onClick={() => togglePasswordVisibility("confirm")}
-              size="small"
-            >
-              {showPasswords.confirm ? <EyeOff size={20} /> : <Eye size={20} />}
-            </IconButton>
-          </Box>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            marginBottom: "32px",
+          }}
+        >
+          <Label sx={{ fontWeight: 600, fontSize: "0.95rem", mb: 1 }}>
+            Confirm New Password
+          </Label>
+          <TextField
+            type={showPasswords.confirm ? "text" : "password"}
+            variant="outlined"
+            value={passwordData.confirmPassword}
+            onChange={(e) => {
+              const value = e.target.value;
+              handlePasswordInput("confirmPassword", value);
+            }}
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={() => togglePasswordVisibility("confirm")}
+                  edge="end"
+                  size="small"
+                >
+                  {showPasswords.confirm ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </IconButton>
+              ),
+            }}
+            sx={{
+              borderRadius: 2,
+              fontSize: "1rem",
+              py: 1.5,
+              mb: 1,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+              },
+            }}
+            error={
+              passwordData.confirmPassword &&
+              passwordData.confirmPassword !== passwordData.newPassword
+            }
+          />
+          {/* Confirm Password Validation */}
+          {passwordData.confirmPassword && passwordData.newPassword && (
+            <Box sx={{ mt: 1 }}>
+              <Box
+                sx={{
+                  fontSize: "0.875rem",
+                  color:
+                    passwordData.confirmPassword === passwordData.newPassword
+                      ? "success.main"
+                      : "error.main",
+                }}
+              >
+                {passwordData.confirmPassword === passwordData.newPassword
+                  ? "✓ Passwords match"
+                  : "× Passwords do not match"}
+              </Box>
+            </Box>
+          )}
         </div>
 
-        <Box 
-          sx={{ 
-            display: "flex", 
-            justifyContent: "center", 
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
             pt: 4,
             pb: 2,
             mt: 3,

@@ -264,21 +264,32 @@ const SignUp = () => {
                   onClick={() => setShowPassword((s) => !s)}
                   edge="end"
                 >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                  {showPassword ? (
+                    <VisibilityOff
+                      sx={{ color: "#64748b", filter: "blur(0.5px)" }}
+                    />
+                  ) : (
+                    <Visibility
+                      sx={{ color: "#94a3b8", filter: "blur(0.5px)" }}
+                    />
+                  )}
                 </IconButton>
               </InputAdornment>
             ),
           }}
           sx={{
             mb: 2,
-
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#f8fafc",
+              backgroundColor: "#f1f5f9", // lighter autofill color
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
               color: "#0f172a",
+              "& input:-webkit-autofill": {
+                WebkitBoxShadow: "0 0 0 30px #f1f5f9 inset !important",
+                WebkitTextFillColor: "#0f172a !important",
+              },
             },
           }}
         />
@@ -306,21 +317,32 @@ const SignUp = () => {
                   onClick={() => setShowConfirmPassword((s) => !s)}
                   edge="end"
                 >
-                  {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                  {showConfirmPassword ? (
+                    <VisibilityOff
+                      sx={{ color: "#64748b", filter: "blur(0.5px)" }}
+                    />
+                  ) : (
+                    <Visibility
+                      sx={{ color: "#94a3b8", filter: "blur(0.5px)" }}
+                    />
+                  )}
                 </IconButton>
               </InputAdornment>
             ),
           }}
           sx={{
             mb: 2,
-
             "& .MuiOutlinedInput-root": {
-              backgroundColor: "#f8fafc",
+              backgroundColor: "#f1f5f9", // lighter autofill color
               borderRadius: 2,
               "& fieldset": { border: "1px solid #e2e8f0" },
               "&:hover fieldset": { borderColor: "#3b82f6" },
               "&.Mui-focused fieldset": { borderColor: "#3b82f6" },
               color: "#0f172a",
+              "& input:-webkit-autofill": {
+                WebkitBoxShadow: "0 0 0 30px #f1f5f9 inset !important",
+                WebkitTextFillColor: "#0f172a !important",
+              },
             },
           }}
         />
