@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: axelxpert-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: axelxpert
+  template:
+    metadata:
+      labels:
+        app: axelxpert
+    spec:
+      containers:
+      - name: axelxpert-container
+        image: minulck/axelxpert:frontend
+        ports:
+        - containerPort: 5173  # Adjust to your app's port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: axelxpert-service
+spec:
+  selector:
+    app: axelxpert
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5173  # Adjust to your app's port
+  type: NodePort  # Changed from LoadBalancer for better Docker Desktop compatibility
