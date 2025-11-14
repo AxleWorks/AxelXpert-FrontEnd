@@ -393,7 +393,10 @@ const CustomerBookingModal = ({
     (s) => s.id === formData.serviceType
   );
 
-  const vehicleTypes = apiVehicles.length > 0 ? [...new Set(apiVehicles.map(v => v.type).filter(Boolean))] : ["Car", "Truck", "SUV", "Van", "Bike"];
+  const vehicleTypes =
+    apiVehicles.length > 0
+      ? [...new Set(apiVehicles.map((v) => v.type).filter(Boolean))]
+      : ["Car", "Truck", "SUV", "Van", "Bike"];
 
   const paperStyle = {
     position: "absolute",
@@ -515,7 +518,6 @@ const CustomerBookingModal = ({
                       error={!!errors.customerPhone}
                       helperText={errors.customerPhone}
                       placeholder="e.g., +1 234 567 8900"
-                      disabled
                       InputProps={{
                         sx: { fontSize: "16px" },
                       }}

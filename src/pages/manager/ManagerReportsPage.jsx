@@ -76,6 +76,8 @@ const ManagerReportsPage = () => {
   const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [userBranchName, setUserBranchName] = useState(null);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [completedBookingsCount, setCompletedBookingsCount] = useState(0);
+  const [activeBranchesCount, setActiveBranchesCount] = useState(0);
   const [filters, setFilters] = useState({
     startDate: new Date(new Date().getFullYear(), 0, 1)
       .toISOString()
@@ -137,6 +139,9 @@ const ManagerReportsPage = () => {
           vehicles: vehicles.length,
         });
 
+        console.log("Sample service:", services[0]);
+        console.log("Sample booking:", bookings[0]);
+
         setBranches(branches);
         setServices(services);
         setAppointments(bookings);
@@ -178,6 +183,25 @@ const ManagerReportsPage = () => {
         []
       );
       setReportData(processedData);
+
+      // Calculate completed bookings count for display
+      const completed = appointments.filter(
+        (booking) =>
+          booking.status === "COMPLETED" ||
+          booking.status === "completed" ||
+          booking.status === "FINISHED" ||
+          booking.status === "finished"
+      );
+      setCompletedBookingsCount(completed.length);
+
+      // Calculate active branches count
+      const activeBranches = branches.filter((branch) => {
+        const branchBookings = appointments.filter(
+          (booking) => booking.branchId === branch.id
+        );
+        return branchBookings.length > 0;
+      });
+      setActiveBranchesCount(activeBranches.length);
     }
   }, [filters, initialLoadComplete, appointments, branches, services]);
 
@@ -259,27 +283,62 @@ const ManagerReportsPage = () => {
     // Calculate average completion time from service duration
     const completedBookings = filteredBookings.filter(
       (booking) =>
-        booking.status === "COMPLETED" || booking.status === "FINISHED"
+        booking.status === "COMPLETED" ||
+        booking.status === "completed" ||
+        booking.status === "FINISHED" ||
+        booking.status === "finished"
+    );
+
+    console.log("Completed bookings found:", completedBookings.length);
+    console.log(
+      "All booking statuses:",
+      filteredBookings.map((b) => b.status)
     );
 
     // Get average duration from services for completed bookings
-    const avgCompletionTime =
-      completedBookings.length > 0
-        ? completedBookings.reduce((sum, booking) => {
-            const service = safeServices.find(
-              (s) => s.id === booking.serviceId
-            );
-            const durationHours = service?.durationMinutes
-              ? service.durationMinutes / 60
-              : 1;
-            return sum + durationHours;
-          }, 0) / completedBookings.length
-        : 0;
+    // If service has durationMinutes, use that; otherwise try to calculate from actual booking times
+    let avgCompletionTime = 0;
+    if (completedBookings.length > 0) {
+      avgCompletionTime =
+        completedBookings.reduce((sum, booking) => {
+          const service = safeServices.find((s) => s.id === booking.serviceId);
+          let durationHours = 1; // default 1 hour
 
-    // Calculate branch efficiency (completed vs total bookings)
+          if (service?.durationMinutes) {
+            durationHours = service.durationMinutes / 60;
+          } else if (booking.startAt && booking.endAt) {
+            // Calculate from actual booking duration
+            const startTime = new Date(booking.startAt);
+            const endTime = new Date(booking.endAt);
+            const actualDurationMinutes = (endTime - startTime) / (1000 * 60);
+            durationHours = actualDurationMinutes / 60;
+          }
+
+          console.log(
+            "Service for booking:",
+            service,
+            "durationHours:",
+            durationHours
+          );
+          return sum + durationHours;
+        }, 0) / completedBookings.length;
+    } else {
+      // Fallback: use average duration of all services
+      const servicesWithDuration = safeServices.filter(
+        (s) => s.durationMinutes
+      );
+      if (servicesWithDuration.length > 0) {
+        avgCompletionTime =
+          servicesWithDuration.reduce((sum, service) => {
+            return sum + service.durationMinutes / 60;
+          }, 0) / servicesWithDuration.length;
+      }
+    }
+
+    // Calculate branch efficiency - using branch utilization (active branches / total branches)
     const branchEfficiency =
-      totalAppointments > 0
-        ? Math.round((completedBookings.length / totalAppointments) * 100)
+      safeBranches.length > 0
+        ? Math.round((activeBranchesCount / safeBranches.length) * 100)
         : 0;
 
     // Generate appointment trends from actual booking dates
@@ -341,13 +400,18 @@ const ManagerReportsPage = () => {
 
     // Calculate on-time completion based on start/end times
     const onTimeBookings = completedBookings.filter((booking) => {
+      if (!booking.startAt || !booking.endAt) return true; // Assume on-time if no data
+
       const service = safeServices.find((s) => s.id === booking.serviceId);
-      if (!service || !booking.startAt || !booking.endAt) return true; // Assume on-time if no data
+      let expectedDuration = 60; // default 60 minutes
+
+      if (service?.durationMinutes) {
+        expectedDuration = service.durationMinutes;
+      }
 
       const startTime = new Date(booking.startAt);
       const endTime = new Date(booking.endAt);
       const actualDuration = (endTime - startTime) / (1000 * 60); // minutes
-      const expectedDuration = service.durationMinutes || 60;
 
       return actualDuration <= expectedDuration * 1.1; // 10% tolerance
     });
@@ -421,7 +485,7 @@ const ManagerReportsPage = () => {
       serviceCategoryData: finalServiceCategoryData,
       performanceMetrics: {
         customerSatisfaction: 0, // Would need separate feedback/rating endpoint
-        employeeUtilization: Math.min(100, Math.max(0, branchEfficiency + 10)), // Based on efficiency
+        employeeUtilization: Math.min(100, Math.max(0, branchEfficiency + 10)), // Based on branch utilization
         repeatCustomers: repeatCustomerPercentage,
         avgRevenuePerJob,
         onTimeCompletion,
@@ -665,18 +729,28 @@ const ManagerReportsPage = () => {
           />
           <KPICard
             title="Avg Completion Time"
-            value={`${reportData.kpis.avgCompletionTime} hrs`}
+            value={
+              reportData.kpis.avgCompletionTime > 0
+                ? `${reportData.kpis.avgCompletionTime} hrs`
+                : "N/A"
+            }
             icon={Clock}
             color="bg-secondary"
-            trend={`Based on ${reportData.serviceCategoryData.length} services`}
+            trend={
+              completedBookingsCount > 0
+                ? `Based on ${completedBookingsCount} completed bookings`
+                : `Based on ${
+                    services.filter((s) => s.durationMinutes).length
+                  } services`
+            }
             trendUp={reportData.kpis.avgCompletionTime > 0}
           />
           <KPICard
-            title="Branch Efficiency"
+            title="Branch Utilization"
             value={`${reportData.kpis.branchEfficiency}%`}
             icon={TrendingUp}
             color="bg-accent"
-            trend={`${reportData.revenueByBranch.length} active branches`}
+            trend={`${activeBranchesCount} of ${branches.length} branches active`}
             trendUp={reportData.kpis.branchEfficiency > 50}
           />
         </Box>
@@ -875,7 +949,7 @@ const ManagerReportsPage = () => {
                         : "warning.main",
                   }}
                 >
-                  Based on efficiency
+                  Based on branch utilization
                 </Typography>
               </Paper>
 
@@ -957,7 +1031,9 @@ const ManagerReportsPage = () => {
                   On-Time Completion
                 </Typography>
                 <Typography variant="h4" sx={{ fontWeight: 600 }}>
-                  {reportData.performanceMetrics.onTimeCompletion}%
+                  {completedBookingsCount > 0
+                    ? `${reportData.performanceMetrics.onTimeCompletion}%`
+                    : "N/A"}
                 </Typography>
                 <Typography
                   variant="body2"
@@ -968,7 +1044,9 @@ const ManagerReportsPage = () => {
                         : "warning.main",
                   }}
                 >
-                  Based on service duration
+                  {completedBookingsCount > 0
+                    ? "Based on service duration"
+                    : "No completed bookings"}
                 </Typography>
               </Paper>
 

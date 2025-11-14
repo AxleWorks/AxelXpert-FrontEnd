@@ -64,7 +64,11 @@ import {
 const ManagerDashboard = () => {
   const [selectedStat, setSelectedStat] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingRevenue, setLoadingRevenue] = useState(true);
+  const [loadingBranches, setLoadingBranches] = useState(true);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [loadingBookings, setLoadingBookings] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(null);
   const [revenueData, setRevenueData] = useState([]);
@@ -77,42 +81,85 @@ const ManagerDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchStats();
+    fetchRevenue();
+    fetchBranches();
+    fetchServices();
+    fetchBookings();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchStats = async () => {
     try {
-      setLoading(true);
-      setError(null);
-
-      const [statsData, revenue, branches, services, bookings] =
-        await Promise.all([
-          dashboardService.getManagerStats(),
-          dashboardService.getRevenueData(),
-          dashboardService.getBranchPerformance(),
-          dashboardService.getServiceDistribution(),
-          dashboardService.getRecentBookings(),
-        ]);
-
+      setLoadingStats(true);
+      const statsData = await dashboardService.getManagerStats();
       setStats(statsData);
+    } catch (err) {
+      console.error("Error fetching stats:", err);
+      setError("Failed to load statistics.");
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const fetchRevenue = async () => {
+    try {
+      setLoadingRevenue(true);
+      const revenue = await dashboardService.getRevenueData();
       setRevenueData(Array.isArray(revenue) ? revenue : []);
+    } catch (err) {
+      console.error("Error fetching revenue:", err);
+      setError("Failed to load revenue data.");
+    } finally {
+      setLoadingRevenue(false);
+    }
+  };
+
+  const fetchBranches = async () => {
+    try {
+      setLoadingBranches(true);
+      const branches = await dashboardService.getBranchPerformance();
       setBranchPerformance(Array.isArray(branches) ? branches : []);
+    } catch (err) {
+      console.error("Error fetching branches:", err);
+      setError("Failed to load branch performance.");
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
+
+  const fetchServices = async () => {
+    try {
+      setLoadingServices(true);
+      const services = await dashboardService.getServiceDistribution();
       setServiceDistribution(Array.isArray(services) ? services : []);
+    } catch (err) {
+      console.error("Error fetching services:", err);
+      setError("Failed to load service distribution.");
+    } finally {
+      setLoadingServices(false);
+    }
+  };
+
+  const fetchBookings = async () => {
+    try {
+      setLoadingBookings(true);
+      const bookings = await dashboardService.getRecentBookings();
       setRecentBookings(Array.isArray(bookings) ? bookings : []);
     } catch (err) {
-      console.error("Error fetching dashboard data:", err);
-      setError(
-        "Failed to load dashboard data. Please check your connection and try again."
-      );
-      // Set empty arrays to prevent map errors
-      setStats(null);
-      setRevenueData([]);
-      setBranchPerformance([]);
-      setServiceDistribution([]);
-      setRecentBookings([]);
+      console.error("Error fetching bookings:", err);
+      setError("Failed to load recent bookings.");
     } finally {
-      setLoading(false);
+      setLoadingBookings(false);
     }
+  };
+
+  const refreshAll = () => {
+    setError(null);
+    fetchStats();
+    fetchRevenue();
+    fetchBranches();
+    fetchServices();
+    fetchBookings();
   };
 
   const handleStatClick = (stat) => {
@@ -132,7 +179,7 @@ const ManagerDashboard = () => {
           value: stats.revenue?.value || "$0",
           icon: <AttachMoneyIcon />,
           color: "#10b981",
-          trend: stats.revenue?.trend || "",
+
           details: stats.revenue?.details || [],
         },
         {
@@ -216,31 +263,6 @@ const ManagerDashboard = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <Container
-        maxWidth="xl"
-        sx={{
-          py: 4,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "60vh",
-        }}
-      >
-        <Box sx={{ textAlign: "center" }}>
-          <CircularProgress size={60} thickness={4} />
-          <Typography
-            variant="h6"
-            sx={{ mt: 2, color: theme.palette.text.secondary }}
-          >
-            Loading management dashboard...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-
   return (
     <Container maxWidth="xl" sx={{ py: 2 }}>
       {error && (
@@ -252,7 +274,7 @@ const ManagerDashboard = () => {
               aria-label="refresh"
               color="inherit"
               size="small"
-              onClick={fetchDashboardData}
+              onClick={refreshAll}
             >
               <RefreshIcon fontSize="inherit" />
             </IconButton>
@@ -316,11 +338,38 @@ const ManagerDashboard = () => {
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {statsConfig.map((stat, index) => (
-          <Grid size={{ xs: 12, sm: 6, lg: 2.4 }} key={index}>
-            <StatCard {...stat} onClick={() => handleStatClick(stat)} />
+        {loadingStats ? (
+          <Grid size={{ xs: 12 }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: `1px solid ${theme.palette.divider}`,
+                p: 3,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: 200,
+              }}
+            >
+              <Box sx={{ textAlign: "center" }}>
+                <CircularProgress size={40} />
+                <Typography
+                  variant="body2"
+                  sx={{ mt: 2, color: theme.palette.text.secondary }}
+                >
+                  Loading statistics...
+                </Typography>
+              </Box>
+            </Card>
           </Grid>
-        ))}
+        ) : (
+          statsConfig.map((stat, index) => (
+            <Grid size={{ xs: 12, sm: 6, lg: 2.4 }} key={index}>
+              <StatCard {...stat} onClick={() => handleStatClick(stat)} />
+            </Grid>
+          ))
+        )}
       </Grid>
 
       {/* Revenue Chart */}
@@ -340,81 +389,104 @@ const ManagerDashboard = () => {
           >
             Revenue & Performance Trends
           </Typography>
-          <ResponsiveContainer width="100%" height={350}>
-            <ComposedChart data={Array.isArray(revenueData) ? revenueData : []}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke={theme.palette.divider}
-              />
-              <XAxis
-                dataKey="month"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-              />
-              <YAxis
-                yAxisId="left"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-              />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: theme.palette.background.paper,
-                  border: `1px solid ${theme.palette.divider}`,
-                  borderRadius: "8px",
-                  boxShadow: isDark
-                    ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
-                    : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                  color: theme.palette.text.primary,
-                }}
-              />
-              <Legend />
-              <Area
-                yAxisId="left"
-                type="monotone"
-                dataKey="revenue"
-                stroke="#e11d48"
-                fill="url(#revenueGradient)"
-                strokeWidth={3}
-                name="Revenue ($)"
-              />
-              <Bar
-                yAxisId="right"
-                dataKey="services"
-                fill="#10b981"
-                radius={[4, 4, 0, 0]}
-                name="Services"
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="customers"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                name="Customers"
-              />
-              <defs>
-                <linearGradient
-                  id="revenueGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
+          {loadingRevenue ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: 350,
+              }}
+            >
+              <Box sx={{ textAlign: "center" }}>
+                <CircularProgress size={40} />
+                <Typography
+                  variant="body2"
+                  sx={{ mt: 2, color: theme.palette.text.secondary }}
                 >
-                  <stop offset="5%" stopColor="#e11d48" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#e11d48" stopOpacity={0.05} />
-                </linearGradient>
-              </defs>
-            </ComposedChart>
-          </ResponsiveContainer>
+                  Loading revenue data...
+                </Typography>
+              </Box>
+            </Box>
+          ) : (
+            <ResponsiveContainer width="100%" height={350}>
+              <ComposedChart
+                data={Array.isArray(revenueData) ? revenueData : []}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={theme.palette.divider}
+                />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+                />
+                <YAxis
+                  yAxisId="left"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: theme.palette.background.paper,
+                    border: `1px solid ${theme.palette.divider}`,
+                    borderRadius: "8px",
+                    boxShadow: isDark
+                      ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
+                      : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    color: theme.palette.text.primary,
+                  }}
+                />
+                <Legend />
+                <Area
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#e11d48"
+                  fill="url(#revenueGradient)"
+                  strokeWidth={3}
+                  name="Revenue ($)"
+                />
+                <Bar
+                  yAxisId="right"
+                  dataKey="services"
+                  fill="#10b981"
+                  radius={[4, 4, 0, 0]}
+                  name="Services"
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="customers"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  name="Customers"
+                />
+                <defs>
+                  <linearGradient
+                    id="revenueGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="5%" stopColor="#e11d48" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#e11d48" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+              </ComposedChart>
+            </ResponsiveContainer>
+          )}
         </Card>
       </Box>
 
@@ -438,51 +510,74 @@ const ManagerDashboard = () => {
             >
               Branch Performance Comparison
             </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={Array.isArray(branchPerformance) ? branchPerformance : []}
+            {loadingBranches ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: 300,
+                }}
               >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={theme.palette.divider}
-                />
-                <XAxis
-                  dataKey="branch"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: theme.palette.background.paper,
-                    border: `1px solid ${theme.palette.divider}`,
-                    borderRadius: "8px",
-                    boxShadow: isDark
-                      ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
-                      : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                    color: theme.palette.text.primary,
-                  }}
-                />
-                <Legend />
-                <Bar
-                  dataKey="services"
-                  fill="#e11d48"
-                  radius={[4, 4, 0, 0]}
-                  name="Services"
-                />
-                <Bar
-                  dataKey="efficiency"
-                  fill="#10b981"
-                  radius={[4, 4, 0, 0]}
-                  name="Efficiency (%)"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+                <Box sx={{ textAlign: "center" }}>
+                  <CircularProgress size={40} />
+                  <Typography
+                    variant="body2"
+                    sx={{ mt: 2, color: theme.palette.text.secondary }}
+                  >
+                    Loading branch performance...
+                  </Typography>
+                </Box>
+              </Box>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={
+                    Array.isArray(branchPerformance) ? branchPerformance : []
+                  }
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={theme.palette.divider}
+                  />
+                  <XAxis
+                    dataKey="branch"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: theme.palette.background.paper,
+                      border: `1px solid ${theme.palette.divider}`,
+                      borderRadius: "8px",
+                      boxShadow: isDark
+                        ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
+                        : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      color: theme.palette.text.primary,
+                    }}
+                  />
+                  <Legend />
+                  <Bar
+                    dataKey="services"
+                    fill="#e11d48"
+                    radius={[4, 4, 0, 0]}
+                    name="Services"
+                  />
+                  <Bar
+                    dataKey="efficiency"
+                    fill="#10b981"
+                    radius={[4, 4, 0, 0]}
+                    name="Efficiency (%)"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </Card>
         </Grid>
 
@@ -504,30 +599,51 @@ const ManagerDashboard = () => {
             >
               Service Distribution
             </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={
-                    Array.isArray(serviceDistribution)
-                      ? serviceDistribution
-                      : []
-                  }
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
-                  }
-                >
-                  {Array.isArray(serviceDistribution) &&
-                    serviceDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {loadingServices ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: 300,
+                }}
+              >
+                <Box sx={{ textAlign: "center" }}>
+                  <CircularProgress size={40} />
+                  <Typography
+                    variant="body2"
+                    sx={{ mt: 2, color: theme.palette.text.secondary }}
+                  >
+                    Loading service distribution...
+                  </Typography>
+                </Box>
+              </Box>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={
+                      Array.isArray(serviceDistribution)
+                        ? serviceDistribution
+                        : []
+                    }
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    dataKey="value"
+                    label={({ name, percent }) =>
+                      `${name} ${(percent * 100).toFixed(0)}%`
+                    }
+                  >
+                    {Array.isArray(serviceDistribution) &&
+                      serviceDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </Card>
         </Grid>
       </Grid>
@@ -640,67 +756,92 @@ const ManagerDashboard = () => {
               </Button>
             </Box>
             <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 600 }}>Customer</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Service</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Branch</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Array.isArray(recentBookings) &&
-                    recentBookings.map((booking) => (
-                      <TableRow key={booking.id} hover>
-                        <TableCell>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 2,
-                            }}
-                          >
-                            <Avatar
-                              sx={{ width: 32, height: 32, bgcolor: "#e11d48" }}
+              {loadingBookings ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    py: 8,
+                  }}
+                >
+                  <Box sx={{ textAlign: "center" }}>
+                    <CircularProgress size={40} />
+                    <Typography
+                      variant="body2"
+                      sx={{ mt: 2, color: theme.palette.text.secondary }}
+                    >
+                      Loading recent bookings...
+                    </Typography>
+                  </Box>
+                </Box>
+              ) : (
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Customer</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Service</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Branch</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {Array.isArray(recentBookings) &&
+                      recentBookings.map((booking) => (
+                        <TableRow key={booking.id} hover>
+                          <TableCell>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                              }}
                             >
-                              {booking.customer.charAt(0)}
-                            </Avatar>
-                            {booking.customer}
-                          </Box>
-                        </TableCell>
-                        <TableCell>{booking.service}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={booking.branch}
-                            size="small"
-                            variant="outlined"
-                            sx={{ fontWeight: 500 }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={booking.status}
-                            size="small"
-                            color={getStatusColor(booking.status)}
-                          />
-                        </TableCell>
-                        <TableCell>{booking.date}</TableCell>
-                        <TableCell>
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            color="success.main"
-                          >
-                            {booking.amount}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
+                              <Avatar
+                                sx={{
+                                  width: 32,
+                                  height: 32,
+                                  bgcolor: "#e11d48",
+                                }}
+                              >
+                                {booking.customer.charAt(0)}
+                              </Avatar>
+                              {booking.customer}
+                            </Box>
+                          </TableCell>
+                          <TableCell>{booking.service}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={booking.branch}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontWeight: 500 }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={booking.status}
+                              size="small"
+                              color={getStatusColor(booking.status)}
+                            />
+                          </TableCell>
+                          <TableCell>{booking.date}</TableCell>
+                          <TableCell>
+                            <Typography
+                              variant="body2"
+                              fontWeight={600}
+                              color="success.main"
+                            >
+                              {booking.amount}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              )}
             </TableContainer>
           </Card>
         </Grid>

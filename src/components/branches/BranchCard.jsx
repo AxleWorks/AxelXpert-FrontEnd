@@ -91,16 +91,18 @@ const BranchCard = ({ branch, onEdit, onDelete, isManager }) => {
           fontWeight={700}
           gutterBottom
           sx={{
-            color: isDark ? "grey.50" : "grey.900",
-            mb: 2.5,
-            fontSize: "1.15rem",
+            color: "text.primary",
+            pb: 4,
+            fontSize: { xs: "1.05rem", sm: "1.15rem", md: "1.2rem" },
             letterSpacing: "-0.01em",
-            lineHeight: 1.3,
+
             overflow: "hidden",
             textOverflow: "ellipsis",
             display: "-webkit-box",
-            WebkitLineClamp: 2,
+            WebkitLineClamp: 3,
             WebkitBoxOrient: "vertical",
+            overflowWrap: "break-word",
+            wordBreak: "break-word",
           }}
         >
           {branch.name}

@@ -53,7 +53,10 @@ export const Input = ({
               </IconButton>
             </InputAdornment>
           ) : null,
-        style: { color: "#000000", backgroundColor: "#ffffff" },
+        style: {
+          color: theme.palette.text.primary,
+          backgroundColor: theme.palette.background.paper,
+        },
       }}
       sx={{
         "& .MuiOutlinedInput-root": {
